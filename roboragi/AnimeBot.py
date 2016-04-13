@@ -3,8 +3,7 @@ AnimeBot.py
 Acts as the "main" file and ties all the other functionality together.
 '''
 
-import praw
-from praw.handlers import MultiprocessHandler
+import discord as dapi
 import re
 import traceback
 import requests
@@ -19,36 +18,31 @@ TIME_BETWEEN_PM_CHECKS = 60 #in seconds
 
 try:
     import Config
-    USERNAME = Config.username
+    USEREMAIL = Config.useremail
     PASSWORD = Config.password
-    USERAGENT = Config.useragent
-    REDDITAPPID = Config.redditappid
-    REDDITAPPSECRET = Config.redditappsecret
-    REFRESHTOKEN = Config.refreshtoken
-    SUBREDDITLIST = Config.get_formatted_subreddit_list()
+    CHANNELLIST = Config.get_formatted_channel_list()
 except ImportError:
     pass
 
-reddit = praw.Reddit(user_agent=USERNAME)
+client = dapi.Client()
 
-#the subreddits where expanded requests are disabled
-disableexpanded = ['animesuggest']
+#the servers where expanded requests are disabled
+disableexpanded = ['']
 
-#subreddits I'm actively avoiding
-exiled = ['anime']
+#servers I'm actively avoiding
+exiled = ['']
 
-#Sets up Reddit for PRAW
-def setupReddit():
+#Sets up Discord API
+def setupDiscord():
     try:
-        print('Setting up Reddit')
-        reddit.set_oauth_app_info(client_id=REDDITAPPID, client_secret=REDDITAPPSECRET, redirect_uri='http://127.0.0.1:65010/' 'authorize_callback')
-        reddit.refresh_access_information(REFRESHTOKEN)
-        print('Reddit successfully set up')
+        print('Setting up Discord')
+        await client.start(USEREMAIL, PASSWORD)
+        print('Discord successfully set up')
     except Exception as e:
-        print('Error with setting up Reddit: ' + str(e))
+        print('Error with setting up Discord: ' + str(e))
 
-#function for processing edit requests via pm
-def process_pms():
+#function for processing edit requests
+def process_edits():
     for msg in reddit.get_unread(limit=None):
         if (msg.subject == 'username mention'):
             if (('{' and '}') in msg.body) or (('<' and '>') in msg.body):
@@ -61,7 +55,7 @@ def process_pms():
                     mentionedComment = reddit.get_info(thing_id=msg.name)
                     mentionedComment.refresh()
 
-                    if not (DatabaseHandler.commentExists(mentionedComment.id)):
+                    if not (DatabaseHandler.messageExists(mentionedComment.id)):
                         if str(mentionedComment.subreddit).lower() in Config.subredditlist:
                             continue
 
@@ -96,207 +90,188 @@ def process_pms():
                 except Exception as e:
                     print(e)
 
-#process dat comment
-def process_comment(comment, is_edit=False):
+#process dat message
+def process_message(message, is_edit=False):
     #Anime/Manga requests that are found go into separate arrays
     animeArray = []
     mangaArray = []
 
     #ignores all "code" markup (i.e. anything between backticks)
-    comment.body = re.sub(r"\`(?s)(.*?)\`", "", comment.body)
-    
-    #This checks for requests. First up we check all known tags for the !stats request
-    if re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', comment.body, re.S) is not None:
-        username = re.search('[uU]\/([A-Za-z0-9_-]+?)(>|}|$)', comment.body, re.S)
-        subreddit = re.search('[rR]\/([A-Za-z0-9_]+?)(>|}|$)', comment.body, re.S)
+    cleanMessage = re.sub(r"\`(?s)(.*?)\`", "", message.clean_content)
 
-        if username:
-            commentReply = CommentBuilder.buildStatsComment(username=username.group(1))
-        elif subreddit:
-            commentReply = CommentBuilder.buildStatsComment(subreddit=subreddit.group(1))
+    #The basic algorithm here is:
+    #If it's an expanded request, build a reply using the data in the braces, clear the arrays, add the reply to the relevant array and ignore everything else.
+    #If it's a normal request, build a reply using the data in the braces, add the reply to the relevant array.
+
+    #Counts the number of expanded results vs total results. If it's not just a single expanded result, they all get turned into normal requests.
+    numOfRequest = 0
+    numOfExpandedRequest = 0
+    forceNormal = False
+    for match in re.finditer("\{{2}([^}]*)\}{2}|\<{2}([^>]*)\>{2}", cleanMessage, re.S):
+        numOfRequest += 1
+        numOfExpandedRequest += 1
+
+    for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))|(?<=(?<!\<)\<)([^\<\>]*)(?=\>(?!\>))", cleanMessage, re.S):
+        numOfRequest += 1
+
+    if (numOfExpandedRequest >= 1) and (numOfRequest > 1):
+        forceNormal = True
+
+    #Expanded Anime
+    for match in re.finditer("\{{2}([^}]*)\}{2}", cleanMessage, re.S):
+        reply = ''
+        if (forceNormal) or (str(message.channel).lower() in disableexpanded):
+            reply = Search.buildAnimeReply(match.group(1), False)
         else:
-            commentReply = CommentBuilder.buildStatsComment()
+            reply = Search.buildAnimeReply(match.group(1), True)
+
+        if (reply is not None):
+            animeArray.append(reply)
+
+    #Normal Anime
+    for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))", cleanMessage, re.S):
+        reply = Search.buildAnimeReply(match.group(1), False)
+
+        if (reply is not None):
+            animeArray.append(reply)
+
+    #Expanded Manga
+    #NORMAL EXPANDED
+    for match in re.finditer("\<{2}([^>]*)\>{2}(?!(:|\>))", cleanMessage, re.S):
+        reply = ''
+
+        if (forceNormal) or (str(message.channel).lower() in disableexpanded):
+            reply = Search.buildMangaReply(match.group(1), False)
+        else:
+            reply = Search.buildMangaReply(match.group(1), True)
+
+        if (reply is not None):
+            mangaArray.append(reply)
+
+    #AUTHOR SEARCH EXPANDED
+    for match in re.finditer("\<{2}([^>]*)\>{2}:\(([^)]+)\)", cleanMessage, re.S):
+        reply = ''
+
+        if (forceNormal) or (str(message.channel).lower() in disableexpanded):
+            reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), False)
+        else:
+            reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), True)
+
+        if (reply is not None):
+            mangaArray.append(reply)
+
+    #Normal Manga
+    #NORMAL
+    for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]+)\>(?!(:|\>))", cleanMessage, re.S):
+        reply = Search.buildMangaReply(match.group(1), False)
+
+        if (reply is not None):
+            mangaArray.append(reply)
+
+    #AUTHOR SEARCH
+    for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]*)\>:\(([^)]+)\)", cleanMessage, re.S):
+        reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), False)
+
+        if (reply is not None):
+            mangaArray.append(reply)
+
+    #Here is where we create the final reply to be posted
+
+    #The final message reply. We add stuff to this progressively.
+    messageReply = ''
+
+    #Basically just to keep track of people posting the same title multiple times (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
+    postedAnimeTitles = []
+    postedMangaTitles = []
+
+    #Adding all the anime to the final message. If there's manga too we split up all the paragraphs and indent them in Reddit markup by adding a '>', then recombine them
+    for i, animeReply in enumerate(animeArray):
+        if not (i is 0):
+            messageReply += '\n\n'
+
+        if not (animeReply['title'] in postedAnimeTitles):
+            postedAnimeTitles.append(animeReply['title'])
+            messageReply += animeReply['message']
+
+
+    if mangaArray:
+        messageReply += '\n\n'
+
+    #Adding all the manga to the final message
+    for i, mangaReply in enumerate(mangaArray):
+        if not (i is 0):
+            messageReply += '\n\n'
+
+        if not (mangaReply['title'] in postedMangaTitles):
+            postedMangaTitles.append(mangaReply['title'])
+            messageReply += mangaReply['message']
+
+    #If there are more than 10 requests, shorten them all
+    if not (messageReply is '') and (len(animeArray) + len(mangaArray) >= 10):
+        messageReply = re.sub(r"\^\((.*?)\)", "", messageReply, flags=re.M)
+
+    #If there was actually something found, add the signature and post the message to Reddit. Then, add the message to the "already seen" database.
+    if not (messageReply is ''):
+        messageReply += Config.getSignature(message.permalink)
+
+    if is_edit:
+        return messageReply
     else:
-        
-        #The basic algorithm here is:
-        #If it's an expanded request, build a reply using the data in the braces, clear the arrays, add the reply to the relevant array and ignore everything else.
-        #If it's a normal request, build a reply using the data in the braces, add the reply to the relevant array.
+        try:
+            print("message made.\n")
+            return messageReply
+        except praw.errors.Forbidden:
+            print('Request from banned subreddit: ' + str(message.channel) + '\n')
+        except Exception:
+            traceback.print_exc()
 
-        #Counts the number of expanded results vs total results. If it's not just a single expanded result, they all get turned into normal requests.
-        numOfRequest = 0
-        numOfExpandedRequest = 0
-        forceNormal = False
-
-        for match in re.finditer("\{{2}([^}]*)\}{2}|\<{2}([^>]*)\>{2}", comment.body, re.S):
-            numOfRequest += 1
-            numOfExpandedRequest += 1
-            
-        for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))|(?<=(?<!\<)\<)([^\<\>]*)(?=\>(?!\>))", comment.body, re.S):
-            numOfRequest += 1
-
-        if (numOfExpandedRequest >= 1) and (numOfRequest > 1):
-            forceNormal = True
-
-        #Expanded Anime
-        for match in re.finditer("\{{2}([^}]*)\}{2}", comment.body, re.S):
-            reply = ''
-
-            if (forceNormal) or (str(comment.subreddit).lower() in disableexpanded):
-                reply = Search.buildAnimeReply(match.group(1), False, comment)
-            else:
-                reply = Search.buildAnimeReply(match.group(1), True, comment)                    
-
-            if (reply is not None):
-                animeArray.append(reply)
-
-        #Normal Anime  
-        for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))", comment.body, re.S):
-            reply = Search.buildAnimeReply(match.group(1), False, comment)
-            
-            if (reply is not None):
-                animeArray.append(reply)
-
-        #Expanded Manga
-        #NORMAL EXPANDED
-        for match in re.finditer("\<{2}([^>]*)\>{2}(?!(:|\>))", comment.body, re.S):
-            reply = ''
-            
-            if (forceNormal) or (str(comment.subreddit).lower() in disableexpanded):
-                reply = Search.buildMangaReply(match.group(1), False, comment)
-            else:
-                reply = Search.buildMangaReply(match.group(1), True, comment)
-
-            if (reply is not None):
-                mangaArray.append(reply)
-
-        #AUTHOR SEARCH EXPANDED
-        for match in re.finditer("\<{2}([^>]*)\>{2}:\(([^)]+)\)", comment.body, re.S):
-            reply = ''
-            
-            if (forceNormal) or (str(comment.subreddit).lower() in disableexpanded):
-                reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), False, comment)
-            else:
-                reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), True, comment)
-
-            if (reply is not None):
-                mangaArray.append(reply)
-
-        #Normal Manga
-        #NORMAL
-        for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]+)\>(?!(:|\>))", comment.body, re.S):
-            reply = Search.buildMangaReply(match.group(1), False, comment)
-
-            if (reply is not None):
-                mangaArray.append(reply)
-
-        #AUTHOR SEARCH
-        for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]*)\>:\(([^)]+)\)", comment.body, re.S):
-            reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), False, comment)
-
-            if (reply is not None):
-                mangaArray.append(reply)
-            
-        #Here is where we create the final reply to be posted
-
-        #The final comment reply. We add stuff to this progressively.
-        commentReply = ''
-
-        #Basically just to keep track of people posting the same title multiple times (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
-        postedAnimeTitles = []
-        postedMangaTitles = []
-
-        #Adding all the anime to the final comment. If there's manga too we split up all the paragraphs and indent them in Reddit markup by adding a '>', then recombine them
-        for i, animeReply in enumerate(animeArray):
-            if not (i is 0):
-                commentReply += '\n\n'
-
-            if not (animeReply['title'] in postedAnimeTitles):
-                postedAnimeTitles.append(animeReply['title'])
-                commentReply += animeReply['comment']
-            
-
-        if mangaArray:
-            commentReply += '\n\n'
-
-        #Adding all the manga to the final comment
-        for i, mangaReply in enumerate(mangaArray):
-            if not (i is 0):
-                commentReply += '\n\n'
-            
-            if not (mangaReply['title'] in postedMangaTitles):
-                postedMangaTitles.append(mangaReply['title'])
-                commentReply += mangaReply['comment']
-
-        #If there are more than 10 requests, shorten them all 
-        if not (commentReply is '') and (len(animeArray) + len(mangaArray) >= 10):
-            commentReply = re.sub(r"\^\((.*?)\)", "", commentReply, flags=re.M)
-
-    #If there was actually something found, add the signature and post the comment to Reddit. Then, add the comment to the "already seen" database.
-    if not (commentReply is ''):
-        commentReply += Config.getSignature(comment.permalink)
-
-        if is_edit:
-            return commentReply
-        else:
-            try:
-                comment.reply(commentReply)
-                print("Comment made.\n")
-            except praw.errors.Forbidden:
-                print('Request from banned subreddit: ' + str(comment.subreddit) + '\n')
-            except Exception:
-                traceback.print_exc()
-
-            try:
-                DatabaseHandler.addComment(comment.id, comment.author.name, comment.subreddit, True)
-            except:
-                traceback.print_exc()
+        try:
+            DatabaseHandler.addMessage(message.id, message.author.name, message.channel, True)
+        except:
+            traceback.print_exc()
     else:
         try:
             if is_edit:
                 return None
             else:
-                DatabaseHandler.addComment(comment.id, comment.author.name, comment.subreddit, False)
+                DatabaseHandler.addMessage(message.id, message.author.name, message.channel, False)
         except:
             traceback.print_exc()
-    
+
 
 #The main function
 def start():
-    print('Starting comment stream:')
-    last_checked_pms = time.time()
-
-    #This opens a constant stream of comments. It will loop until there's a major error (usually this means the Reddit access token needs refreshing)
-    comment_stream = praw.helpers.comment_stream(reddit, SUBREDDITLIST, limit=250, verbosity=0)
-
-    for comment in comment_stream:
-
-        # check if it's time to check the PMs
-        if (time.time() - last_checked_pms) > TIME_BETWEEN_PM_CHECKS:
-            process_pms()
-            last_checked_pms = time.time()
-
-        #Is the comment valid (i.e. it's not made by Roboragi and I haven't seen it already). If no, try to add it to the "already seen pile" and skip to the next comment. If yes, keep going.
-        if not (Search.isValidComment(comment, reddit)):
+    print('Starting message stream:')
+    for message in client.messages:
+        #Is the message valid (i.e. it's not made by Roboragi and I haven't seen it already). If no, try to add it to the "already seen pile" and skip to the next message. If yes, keep going.
+        if not (Search.isValidmessage(message)):
             try:
-                if not (DatabaseHandler.commentExists(comment.id)):
-                    DatabaseHandler.addComment(comment.id, comment.author.name, comment.subreddit, False)
+                if not (DatabaseHandler.messageExists(message.id)):
+                    DatabaseHandler.addMessage(message.id, message.author.name, message.channel, False)
             except:
                 pass
             continue
 
-        process_comment(comment)
+        process_message(message)
 
-
+#Overwrite on_message so we can run our stuff
+def dapi.on_message(message):
+	print('Message recieved')
+	for channel in CHANNELLIST:
+		if(str(message.chanel).lower() == channel.lower()):
+			#Is the message valid (i.e. it's not made by Roboragi and I haven't seen it already). If no, try to add it to the "already seen pile" and skip to the next message. If yes, keep going.
+			if not (Search.isValidmessage(message)):
+				try:
+					if not (DatabaseHandler.messageExists(message.id)):
+						DatabaseHandler.addMessage(message.id, message.author.name, message.channel, False)
+				except:
+					pass
+				continue
+				
+			process_message(message)
+			
 # ------------------------------------#
 #Here's the stuff that actually gets run
 
-#Initialise Reddit.
-setupReddit()
-
-#Loop the comment stream until the Reddit access token expires. Then get a new access token and start the stream again.
-while 1:
-    try:        
-        start()
-    except Exception as e:
-        traceback.print_exc()
-        pass
+#Initialise Discord.
+setupDiscord()

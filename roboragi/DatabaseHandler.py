@@ -35,16 +35,16 @@ def setup():
 
     #Create requests table
     try:
-        cur.execute('CREATE TABLE requests ( id SERIAL PRIMARY KEY, name varchar(320), type varchar(16), requester varchar(50), subreddit varchar(50), requesttimestamp timestamp DEFAULT current_timestamp)')
+        cur.execute('CREATE TABLE requests ( id SERIAL PRIMARY KEY, name varchar(320), type varchar(16), requester varchar(50), channel varchar(50), requesttimestamp timestamp DEFAULT current_timestamp)')
         conn.commit()
     except Exception as e:
         #traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
 
-    #Create comments table
+    #Create messages table
     try:
-        cur.execute('CREATE TABLE comments ( commentid varchar(16) PRIMARY KEY, requester varchar(50), subreddit varchar(50), hadRequest boolean)')
+        cur.execute('CREATE TABLE messages ( messageid varchar(16) PRIMARY KEY, requester varchar(50), channel varchar(50), hadRequest boolean)')
         conn.commit()
     except Exception as e:
         #traceback.print_exc()
@@ -55,22 +55,22 @@ setup()
 
 #--------------------------------------#
 
-# Adds a comment to the "already seen" database. Also handles submissions, which have a similar ID structure.
-def addComment(commentid, requester, subreddit, hadRequest):
+# Adds a message to the "already seen" database. Also handles submissions, which have a similar ID structure.
+def addMessage(messageid, requester, channel, hadRequest):
     try:
-        subreddit = str(subreddit).lower()
+        channel = str(channel).lower()
         
-        cur.execute('INSERT INTO comments (commentid, requester, subreddit, hadRequest) VALUES (%s, %s, %s, %s)', (commentid, requester, subreddit, hadRequest))
+        cur.execute('INSERT INTO messages (messageid, requester, channel, hadRequest) VALUES (%s, %s, %s, %s)', (messageid, requester, channel, hadRequest))
         conn.commit()
     except Exception as e:
         #traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
 
-#Returns true if the comment/submission has already been checked.
-def commentExists(commentid):
+#Returns true if the message/submission has already been checked.
+def messageExists(messageid):
     try:
-        cur.execute('SELECT * FROM comments WHERE commentid = %s', (commentid,))
+        cur.execute('SELECT * FROM messages WHERE messageid = %s', (messageid,))
         if (cur.fetchone()) is None:
             conn.commit()
             return False
@@ -84,24 +84,24 @@ def commentExists(commentid):
         return True
         
 #Adds a request to the request-tracking database. rType is either "Anime" or "Manga".
-def addRequest(name, rType, requester, subreddit):
+def addRequest(name, rType, requester, channel):
     try:
-        subreddit = str(subreddit).lower()
+        channel = str(channel).lower()
 
-        if ('nihilate' not in subreddit):
-            cur.execute('INSERT INTO requests (name, type, requester, subreddit) VALUES (%s, %s, %s, %s)', (name, rType, requester, subreddit))
+        if ('nihilate' not in channel):
+            cur.execute('INSERT INTO requests (name, type, requester, channel) VALUES (%s, %s, %s, %s)', (name, rType, requester, channel))
             conn.commit()
     except Exception as e:
         #traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
 
-#Returns an object which contains data about the overall database stats (i.e. ALL subreddits).
+#Returns an object which contains data about the overall database stats (i.e. ALL channels).
 def getBasicStats(top_media_number=5, top_username_number=5):
     try:
         basicStatDict = {}
 
-        cur.execute("SELECT COUNT(*) FROM comments")
+        cur.execute("SELECT COUNT(*) FROM messages")
         totalComments = int(cur.fetchone()[0])
         basicStatDict['totalComments'] = totalComments
         
@@ -113,7 +113,7 @@ def getBasicStats(top_media_number=5, top_username_number=5):
         dNames = int(cur.fetchone()[0])
         basicStatDict['uniqueNames'] = dNames
 
-        cur.execute("SELECT COUNT(DISTINCT subreddit) FROM requests;")
+        cur.execute("SELECT COUNT(DISTINCT channel) FROM requests;")
         dSubreddits = int(cur.fetchone()[0])
         basicStatDict['uniqueSubreddits'] = dSubreddits
 
@@ -150,7 +150,7 @@ def getBasicStats(top_media_number=5, top_username_number=5):
         conn.commit()
         return None
 
-#Returns an object which contains request-specifc data. Basically just used for the expanded comments.
+#Returns an object which contains request-specifc data. Basically just used for the expanded messages.
 def getRequestStats(requestName, isManga):
     try:
         basicRequestDict = {}
@@ -169,7 +169,7 @@ def getRequestStats(requestName, isManga):
         if requestTotal == 0:
             return None
 
-        cur.execute("SELECT COUNT(DISTINCT subreddit) FROM requests WHERE name = %s AND type = %s", (requestName, requestType))
+        cur.execute("SELECT COUNT(DISTINCT channel) FROM requests WHERE name = %s AND type = %s", (requestName, requestType))
         dSubreddits = int(cur.fetchone()[0])
         basicRequestDict['uniqueSubreddits'] = dSubreddits
 
@@ -184,17 +184,17 @@ def getRequestStats(requestName, isManga):
         conn.commit()
         return None
 
-#Returns an object which contains data about the overall database stats (i.e. ALL subreddits).
+#Returns an object which contains data about the overall database stats (i.e. ALL channels).
 def getUserStats(username, top_media_number=5):
     try:
         basicUserStatDict = {}
         username = str(username).lower()
         
-        cur.execute("SELECT COUNT(1) FROM comments where LOWER(requester) = %s", (username,))
+        cur.execute("SELECT COUNT(1) FROM messages where LOWER(requester) = %s", (username,))
         totalUserComments = int(cur.fetchone()[0])
         basicUserStatDict['totalUserComments'] = totalUserComments
         
-        cur.execute("SELECT COUNT(1) FROM comments")
+        cur.execute("SELECT COUNT(1) FROM messages")
         totalNumComments = int(cur.fetchone()[0])
         totalCommentsAsPercentage = (float(totalUserComments)/totalNumComments) * 100
         basicUserStatDict['totalUserCommentsAsPercentage'] = totalCommentsAsPercentage
@@ -221,12 +221,12 @@ def getUserStats(username, top_media_number=5):
         basicUserStatDict['uniqueRequests'] = uniqueRequests
 
         
-        cur.execute('''select r.subreddit, count(r.subreddit), total.totalcount from requests r
-            inner join (select subreddit, count(subreddit) as totalcount from requests
-            group by subreddit) total on total.subreddit = r.subreddit
+        cur.execute('''select r.channel, count(r.channel), total.totalcount from requests r
+            inner join (select channel, count(channel) as totalcount from requests
+            group by channel) total on total.channel = r.channel
             where LOWER(requester) = %s
-            group by r.subreddit, total.totalcount
-            order by count(r.subreddit) desc
+            group by r.channel, total.totalcount
+            order by count(r.channel) desc
             limit 1
             ''', (username,))
         favouriteSubredditStats = cur.fetchone()
@@ -252,27 +252,27 @@ def getUserStats(username, top_media_number=5):
         conn.commit()
         return None
         
-#Similar to getBasicStats - returns an object which contains data about a specific subreddit.
-def getSubredditStats(subredditName, top_media_number=5, top_username_number=5):
+#Similar to getBasicStats - returns an object which contains data about a specific channel.
+def getSubredditStats(channelName, top_media_number=5, top_username_number=5):
     try:
         basicSubredditDict = {}
-        subredditName = subredditName.lower()
+        channelName = channelName.lower()
 
-        cur.execute("SELECT COUNT(*) FROM comments WHERE subreddit = %s", (subredditName,))
+        cur.execute("SELECT COUNT(*) FROM messages WHERE channel = %s", (channelName,))
         totalComments = int(cur.fetchone()[0])
         basicSubredditDict['totalComments'] = totalComments
 
         cur.execute("SELECT COUNT(*) FROM requests;")
         total = int(cur.fetchone()[0])
         
-        cur.execute("SELECT COUNT(*) FROM requests WHERE subreddit = %s", (subredditName,))
+        cur.execute("SELECT COUNT(*) FROM requests WHERE channel = %s", (channelName,))
         sTotal = int(cur.fetchone()[0])
         basicSubredditDict['total'] = sTotal
 
         if sTotal == 0:
             return None
 
-        cur.execute("SELECT COUNT(DISTINCT (name, type)) FROM requests WHERE subreddit = %s", (subredditName,))
+        cur.execute("SELECT COUNT(DISTINCT (name, type)) FROM requests WHERE channel = %s", (channelName,))
         dNames = int(cur.fetchone()[0])
         basicSubredditDict['uniqueNames'] = dNames
 
@@ -283,7 +283,7 @@ def getSubredditStats(subredditName, top_media_number=5, top_username_number=5):
         basicSubredditDict['meanValuePerRequest'] = meanValue
 
         variance = 0
-        cur.execute("SELECT name, type, count(name) FROM requests WHERE subreddit = %s GROUP by name, type", (subredditName,))
+        cur.execute("SELECT name, type, count(name) FROM requests WHERE channel = %s GROUP by name, type", (channelName,))
         for entry in cur.fetchall():
             variance += (entry[2] - meanValue) * (entry[2] - meanValue)
 
@@ -291,13 +291,13 @@ def getSubredditStats(subredditName, top_media_number=5, top_username_number=5):
         stdDev = sqrt(variance)
         basicSubredditDict['standardDeviation'] = stdDev
 
-        cur.execute("SELECT name, type, COUNT(name) FROM requests WHERE subreddit = %s GROUP BY name, type ORDER BY COUNT(name) DESC, name ASC LIMIT %s", (subredditName, top_media_number))
+        cur.execute("SELECT name, type, COUNT(name) FROM requests WHERE channel = %s GROUP BY name, type ORDER BY COUNT(name) DESC, name ASC LIMIT %s", (channelName, top_media_number))
         topRequests = cur.fetchall()
         basicSubredditDict['topRequests'] = []
         for request in topRequests:
             basicSubredditDict['topRequests'].append(request)
         
-        cur.execute("SELECT requester, COUNT(requester) FROM requests WHERE subreddit = %s GROUP BY requester ORDER BY COUNT(requester) DESC, requester ASC LIMIT %s", (subredditName, top_username_number))
+        cur.execute("SELECT requester, COUNT(requester) FROM requests WHERE channel = %s GROUP BY requester ORDER BY COUNT(requester) DESC, requester ASC LIMIT %s", (channelName, top_username_number))
         topRequesters = cur.fetchall()
         basicSubredditDict['topRequesters'] = []
         for requester in topRequesters:

@@ -38,7 +38,7 @@ except sqlite3.Error as e:
     print(e)
 
 #Builds a manga reply from multiple sources
-def buildMangaReply(searchText, isExpanded, baseComment, blockTracking=False):
+def buildMangaReply(searchText, isExpanded, blockTracking=False):
     try:
         ani = None
         mal = None
@@ -119,9 +119,6 @@ def buildMangaReply(searchText, isExpanded, baseComment, blockTracking=False):
                                 if ap:
                                     break
                                 ap = AniP.getMangaURL(synonym)
-
-                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
             except:
                 traceback.print_exc()
                 pass
@@ -133,7 +130,7 @@ def buildMangaReply(searchText, isExpanded, baseComment, blockTracking=False):
         return None
 
 #Builds a manga search for a specific series by a specific author
-def buildMangaReplyWithAuthor(searchText, authorName, isExpanded, baseComment, blockTracking=False):
+def buildMangaReplyWithAuthor(searchText, authorName, isExpanded, blockTracking=False):
     try:        
         ani = Anilist.getMangaWithAuthor(searchText, authorName)
         mal = None
@@ -155,9 +152,6 @@ def buildMangaReplyWithAuthor(searchText, authorName, isExpanded, baseComment, b
                     titleToAdd = mal['title']
                 else:
                     titleToAdd = ani['title_english']
-
-                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
             except:
                 traceback.print_exc()
                 pass
@@ -169,7 +163,7 @@ def buildMangaReplyWithAuthor(searchText, authorName, isExpanded, baseComment, b
         return None
 
 #Builds an anime reply from multiple sources
-def buildAnimeReply(searchText, isExpanded, baseComment, blockTracking=False):
+def buildAnimeReply(searchText, isExpanded, blockTracking=False):
     try:
 
         mal = {'search_function': MAL.getAnimeDetails,
@@ -267,8 +261,6 @@ def buildAnimeReply(searchText, isExpanded, baseComment, blockTracking=False):
                 if ani['result']:
                     titleToAdd = ani['result']['title_romaji']
 
-                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Anime', baseComment.author.name, baseComment.subreddit)
             except:
                 traceback.print_exc()
                 pass
@@ -279,35 +271,18 @@ def buildAnimeReply(searchText, isExpanded, baseComment, blockTracking=False):
         traceback.print_exc()
         return None
 
-#Checks if the bot is the parent of this comment.
-def isBotAParent(comment, reddit):
-    try:
-        parentComment = reddit.get_info(thing_id=comment.parent_id)
-
-        if (parentComment.author.name == USERNAME):
-            return True
-        else:
-            return False
-            
-    except:
-        #traceback.print_exc()
-        return False
-
 #Checks if the comment is valid (i.e. not already seen, not a post by Roboragi and the parent commenter isn't Roboragi)
-def isValidComment(comment, reddit):
+def isValidComment(message):
     try:
-        if (DatabaseHandler.commentExists(comment.id)):
+        if (DatabaseHandler.messageExists(message.id)):
             return False
 
         try:
-            if (comment.author.name == USERNAME):
-                DatabaseHandler.addComment(comment.id, comment.author.name, comment.subreddit, False)
+            if (message.author.name == USERNAME):
+                DatabaseHandler.addMessage(message.id, message.author.name, message.channel, False)
                 return False
         except:
             pass
-
-        if (isBotAParent(comment, reddit)):
-            return False
 
         return True
         
@@ -318,12 +293,12 @@ def isValidComment(comment, reddit):
 #Checks if a submission is valid (i.e. not already seen, not a submission by Roboragi). This WAS used before, but I have since removed the functionality it was relevant to.
 def isValidSubmission(submission):
     try:
-        if (DatabaseHandler.commentExists(submission.id)):
+        if (DatabaseHandler.messageExists(submission.id)):
             return False
 
         try:
             if (submission.author.name == 'Roboragi'):
-                DatabaseHandler.addComment(submission.id, submission.author.name, submission.subreddit, False)
+                DatabaseHandler.addMessage(submission.id, submission.author.name, submission.subreddit, False)
                 return False
         except:
             pass
