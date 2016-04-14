@@ -1,7 +1,6 @@
-#Bot Info
+#Bot Info - Register your bot here: https://discordapp.com/developers/applications/me
 username='username'
-useremail='email@email.com'
-password='password'
+token='token'
 
 #Database Info
 dbname='discordoragi'

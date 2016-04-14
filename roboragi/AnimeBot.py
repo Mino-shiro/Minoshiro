@@ -18,8 +18,7 @@ import Config
 try:
 	import Config
 	print('Getting Config Info')
-	USEREMAIL = Config.useremail
-	PASSWORD = Config.password
+	TOKEN = Config.token
 except ImportError:
 	pass
 
@@ -198,4 +197,4 @@ async def on_message(message):
 
 #Initialise Discord.
 print('Starting Bot')
-client.run('MTcwMTUxMzA0MDkyNTgxODg5.CfEhQA.Jdj992DvWSXdlOLXBJGnAPrgV3I')
+client.run(TOKEN)
