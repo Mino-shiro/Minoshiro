@@ -1,0 +1,18 @@
+#Bot Info
+username='username'
+useremail='email@email.com'
+password='password'
+
+#Database Info
+dbname='discordoragi'
+dbuser='discordoragi'
+dbpassword='password'
+dbhost='localhost'
+
+#Mal Info - Follow the instructions here: http://myanimelist.net/forum/?topicid=692311
+maluseragent=''
+malauth=''
+
+#Anilist Info - Create an account on AniList the go to the developer tab on your profile page
+aniclient=''
+anisecret=''
