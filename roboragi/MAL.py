@@ -11,11 +11,12 @@ import traceback
 import difflib
 
 try:
-    import Config
-    MALUSERAGENT = Config.maluseragent
-    MALAUTH = Config.malauth
+	import Config
+	print('Setting up MAL Connection')
+	MALUSERAGENT = Config.maluseragent
+	MALAUTH = Config.malauth
 except ImportError:
-    pass
+	pass
 
 mal = requests.Session()
 

@@ -271,8 +271,8 @@ def buildAnimeReply(searchText, isExpanded, blockTracking=False):
         traceback.print_exc()
         return None
 
-#Checks if the comment is valid (i.e. not already seen, not a post by Roboragi and the parent commenter isn't Roboragi)
-def isValidComment(message):
+#Checks if the message is valid (i.e. not already seen, not a post by Roboragi and the parent commenter isn't Roboragi)
+def isValidMessage(message):
     try:
         if (DatabaseHandler.messageExists(message.id)):
             return False
