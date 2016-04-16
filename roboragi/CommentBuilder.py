@@ -315,26 +315,26 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
         #---------- BUILDING THE COMMENT ----------#
                 
         #----- TITLE -----#
-        comment += '**' + title.strip() + '** - ('
+        comment += '**' + title.strip() + '** - \n\n'
 
         #----- LINKS -----#
         urlComments = []
         
         if malURL is not None:
-            urlComments.append('[MAL](' + malURL + ')')
+            urlComments.append(malURL)
         if apURL is not None:
-            urlComments.append('[A-P](' + apURL + ')')
+            urlComments.append(apURL)
         if aniURL is not None:
-            urlComments.append('[ANI](' + aniURL + ')')
+            urlComments.append(aniURL)
         if muURL is not None:
-            urlComments.append('[MU](' + muURL + ')')
+            urlComments.append(muURL)
 
         for i, link in enumerate(urlComments):
             if i is not 0:
-                comment += ', '
+                comment += '\n\n'
             comment += link
 
-        comment += ')'
+        comment += '\n\n'
 
         #----- JAPANESE TITLE -----#
         if (isExpanded):
