@@ -129,7 +129,7 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
         #---------- BUILDING THE COMMENT ----------#
                 
         #----- TITLE -----#
-        comment += '**' + title.strip() + '** - ('
+        comment += '**' + title.strip() + '** - \n\n'
 
         #----- LINKS -----#
         urlComments = []
@@ -159,11 +159,11 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
-                    comment += '^^' + word
+                    comment += word
 
         #----- INFO LINE -----#            
         if (isExpanded):
-            comment += '\n\n^('
+            comment += '\n\n('
 
             if cType:
                 comment += '**' + cType + '** | '
@@ -196,7 +196,7 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
             comment += 'None'
             
         if (isExpanded) and (stats is not None):
-            comment += '  \n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' subreddit(s)^) ^- ^' + str(round(stats['totalAsPercentage'],3)) + '% ^of ^all ^requests'
+            comment += '  \n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' subreddit(s)) - ' + str(round(stats['totalAsPercentage'],3)) + '% of all requests'
         else:
             comment += ')'
 
@@ -207,7 +207,7 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
             hours, countdown = divmod(countdown, 60*60)
             minutes, countdown = divmod(countdown, 60)
                                
-            comment += '\n\n^(Episode ' + str(nextEpisode) + ' airs in ' + str(days) + ' days, ' + str(hours) + ' hours, ' + str(minutes) + ' minutes)'
+            comment += '\n\n(Episode ' + str(nextEpisode) + ' airs in ' + str(days) + ' days, ' + str(hours) + ' hours, ' + str(minutes) + ' minutes)'
 
         #----- DESCRIPTION -----#
         if (isExpanded):
@@ -345,12 +345,12 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
-                    comment += '^^' + word
+                    comment += word
 
         #----- INFO LINE -----#
         
         if (isExpanded):
-            comment += '\n\n^('
+            comment += '\n\n('
 
             if cType:
                 if cType == 'Novel':
@@ -369,7 +369,7 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
             if genres:
                 comment += ' | **Genres:** '
         else:
-            comment += '\n\n^('
+            comment += '\n\n('
 
             if cType:
                 if cType == 'Novel':
@@ -395,7 +395,7 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
                 comment += genre
             
         if (isExpanded) and (stats is not None):
-            comment += '  \n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' subreddit(s)^) ^- ^' + str(round(stats['totalAsPercentage'],3)) + '% ^of ^all ^requests'
+            comment += '  \n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' subreddit(s)) - ' + str(round(stats['totalAsPercentage'],3)) + '% of all requests'
         else:
             comment += ')'
 
