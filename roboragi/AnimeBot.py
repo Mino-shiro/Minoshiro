@@ -134,7 +134,7 @@ async def process_message(message):
 
 		if not (animeReply['title'] in postedAnimeTitles):
 			postedAnimeTitles.append(animeReply['title'])
-			messageReply += animeReply['message']
+			messageReply += animeReply['comment']
 
 
 	if mangaArray:
@@ -147,7 +147,7 @@ async def process_message(message):
 
 		if not (mangaReply['title'] in postedMangaTitles):
 			postedMangaTitles.append(mangaReply['title'])
-			messageReply += mangaReply['message']
+			messageReply += mangaReply['comment']
 
 	#If there are more than 10 requests, shorten them all
 	if not (messageReply is '') and (len(animeArray) + len(mangaArray) >= 10):
