@@ -8,9 +8,9 @@ dbuser='discordoragi'
 dbpassword='password'
 dbhost='localhost'
 
-#Mal Info - Follow the instructions here: http://myanimelist.net/forum/?topicid=692311
-maluseragent=''
-malauth=''
+#Mal Info
+maluseragent='' # A basic description of your program
+malauth='' # Follow the instructions here: http://en.wikipedia.org/wiki/Basic_access_authentication
 
 #Anilist Info - Create an account on AniList the go to the developer tab on your profile page
 aniclient=''
