@@ -49,9 +49,9 @@ If you see `NameError: name 'MALAUTH' is not defined` then your setup is working
 ####Windows
 Run the following commands in a Command Prompt with Administrator Access  
 `pip install git+https://github.com/Rapptz/discord.py@async`  
-`pip install http://weebobot.no-ip.info/discordoragi/lxml-3.6.0-cp35-cp35m-win32.whl`  
-`pip install http://weebobot.no-ip.info/discordoragi/pyquery-1.2.13-py2-none-any.whl`  
-`pip install http://weebobot.no-ip.info/discordoragi/psycopg2-2.6.1-cp35-cp35m-win32.whl`  
+`pip install http://jwolff52.github.io/Discordoragi/lxml-3.6.0-cp35-cp35m-win32.whl`  
+`pip install http://jwolff52.github.io/Discordoragi/pyquery-1.2.13-py2-none-any.whl`  
+`pip install http://jwolff52.github.io/Discordoragi/psycopg2-2.6.1-cp35-cp35m-win32.whl`  
 `pip install -r requirements.txt`  
 
 Test out our setup by running `python roboragi/AnimeBot.py` from the root directory of the repository.  
