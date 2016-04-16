@@ -155,7 +155,7 @@ async def process_message(message):
 
 	#If there was actually something found, add the signature and post the message to Reddit. Then, add the message to the "already seen" database.
 	if not (messageReply is ''):
-		messageReply += Config.getSignature(message.permalink)
+		messageReply += Config.getSignature()
 
 		if is_edit:
 			await client.send_message(message.channel, messageReply)
