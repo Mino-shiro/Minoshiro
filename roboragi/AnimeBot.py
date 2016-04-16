@@ -193,7 +193,7 @@ async def on_message(message):
 		except:
 			pass
 	else:
-		process_message(message)
+		await process_message(message)
 			
 # ------------------------------------#
 #Here's the stuff that actually gets run
