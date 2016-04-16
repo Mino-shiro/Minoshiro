@@ -135,22 +135,20 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
         urlComments = []
         
         if malURL is not None:
-            urlComments.append('[MAL](' + malURL + ')')
+            urlComments.append(malURL)
         if apURL is not None:
-            urlComments.append('[A-P](' + apURL + ')')
+            urlComments.append(apURL)
         if hb is not None:
-            urlComments.append('[HB](' + hbURL + ')')
+            urlComments.append(hbURL)
         if ani is not None:
-            urlComments.append('[ANI](' + aniURL + ')')
+            urlComments.append(aniURL)
         if anidbURL is not None:
-            urlComments.append('[ADB](' + anidbURL + ')')
-
+            urlComments.append(anidbURL)
+			
         for i, link in enumerate(urlComments):
             if i is not 0:
-                comment += ', '
+                comment += '\n\n'
             comment += link
-
-        comment += ')'
 
         #----- JAPANESE TITLE -----#
         if (isExpanded):
@@ -177,7 +175,7 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
 
             comment += ' | **Genres:** '
         else:
-            comment += '\n\n^('
+            comment += '\n\n('
 
             if cType:
                 comment += cType + ' | '
