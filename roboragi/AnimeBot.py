@@ -161,10 +161,10 @@ async def process_message(message, is_edit=False):
 			await client.send_message(message.channel, messageReply)
 		else:
 			try:
-				print("message made.\n")
+				print("Message created.\n")
 				await client.send_message(message.channel, messageReply)
-			except praw.errors.Forbidden:
-				print('Request from banned subreddit: ' + str(message.channel) + '\n')
+			except discord.errors.Forbidden:
+				print('Request from banned channel: ' + str(message.channel) + '\n')
 			except Exception:
 				traceback.print_exc()
 
