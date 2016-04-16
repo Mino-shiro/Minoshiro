@@ -34,7 +34,7 @@ async def on_ready():
     print(client.user.id)
     print('------')
 	
-async def process_message(message):
+async def process_message(message, is_edit=False):
 	#Anime/Manga requests that are found go into separate arrays
 	animeArray = []
 	mangaArray = []
