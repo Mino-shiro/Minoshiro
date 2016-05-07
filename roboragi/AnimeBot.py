@@ -75,16 +75,16 @@ async def process_message(message, is_edit=False):
 		for match in re.finditer("\{{2}([^}]*)\}{2}", cleanMessage, re.S):
 			reply = ''
 			if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-				reply = Search.buildAnimeReply(match.group(1), False)
+				reply = Search.buildAnimeReply(match.group(1), message, False)
 			else:
-				reply = Search.buildAnimeReply(match.group(1), True)
+				reply = Search.buildAnimeReply(match.group(1), message, True)
 
 			if (reply is not None):
 				animeArray.append(reply)
 
 		#Normal Anime
 		for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))", cleanMessage, re.S):
-			reply = Search.buildAnimeReply(match.group(1), False)
+			reply = Search.buildAnimeReply(match.group(1), message, False)
 
 			if (reply is not None):
 				animeArray.append(reply)
@@ -95,9 +95,9 @@ async def process_message(message, is_edit=False):
 			reply = ''
 
 			if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-				reply = Search.buildMangaReply(match.group(1), False)
+				reply = Search.buildMangaReply(match.group(1), message, False)
 			else:
-				reply = Search.buildMangaReply(match.group(1), True)
+				reply = Search.buildMangaReply(match.group(1), message, True)
 
 			if (reply is not None):
 				mangaArray.append(reply)
@@ -107,9 +107,9 @@ async def process_message(message, is_edit=False):
 			reply = ''
 
 			if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-				reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), False)
+				reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False)
 			else:
-				reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), True)
+				reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, True)
 
 			if (reply is not None):
 				mangaArray.append(reply)
@@ -117,14 +117,14 @@ async def process_message(message, is_edit=False):
 		#Normal Manga
 		#NORMAL
 		for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]+)\>(?!(:|\>))", cleanMessage, re.S):
-			reply = Search.buildMangaReply(match.group(1), False)
+			reply = Search.buildMangaReply(match.group(1), message, False)
 
 			if (reply is not None):
 				mangaArray.append(reply)
 
 		#AUTHOR SEARCH
 		for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]*)\>:\(([^)]+)\)", cleanMessage, re.S):
-			reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), False)
+			reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False)
 
 			if (reply is not None):
 				mangaArray.append(reply)

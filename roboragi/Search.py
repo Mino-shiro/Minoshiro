@@ -38,7 +38,7 @@ except sqlite3.Error as e:
     print(e)
 
 #Builds a manga reply from multiple sources
-def buildMangaReply(searchText, isExpanded, blockTracking=False):
+def buildMangaReply(searchText, isExpanded, message, blockTracking=False):
     try:
         ani = None
         mal = None
@@ -119,8 +119,8 @@ def buildMangaReply(searchText, isExpanded, blockTracking=False):
                                 if ap:
                                     break
                                 ap = AniP.getMangaURL(synonym)
-                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
+                if not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author, message.server)
             except:
                 traceback.print_exc()
                 pass
@@ -132,7 +132,7 @@ def buildMangaReply(searchText, isExpanded, blockTracking=False):
         return None
 
 #Builds a manga search for a specific series by a specific author
-def buildMangaReplyWithAuthor(searchText, authorName, isExpanded, blockTracking=False):
+def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, blockTracking=False):
     try:        
         ani = Anilist.getMangaWithAuthor(searchText, authorName)
         mal = None
@@ -155,8 +155,8 @@ def buildMangaReplyWithAuthor(searchText, authorName, isExpanded, blockTracking=
                 else:
                     titleToAdd = ani['title_english']
 				
-                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
+                if not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author, message.server)
             except:
                 traceback.print_exc()
                 pass
@@ -168,7 +168,7 @@ def buildMangaReplyWithAuthor(searchText, authorName, isExpanded, blockTracking=
         return None
 
 #Builds an anime reply from multiple sources
-def buildAnimeReply(searchText, isExpanded, blockTracking=False):
+def buildAnimeReply(searchText, isExpanded, message, blockTracking=False):
     try:
 
         mal = {'search_function': MAL.getAnimeDetails,
@@ -266,8 +266,8 @@ def buildAnimeReply(searchText, isExpanded, blockTracking=False):
                 if ani['result']:
                     titleToAdd = ani['result']['title_romaji']
 
-                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
+                if not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'Anime', message.author, message.server)
             except:
                 traceback.print_exc()
                 pass
