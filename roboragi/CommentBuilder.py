@@ -427,7 +427,7 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
 #Builds a stats comment
 def buildStatsComment(server=None, username=None):
     try:
-        statComment = ''"
+        statComment = ''
         receipt = '(S) Request successful: Stats'
         
         if username:

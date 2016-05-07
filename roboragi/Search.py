@@ -119,8 +119,8 @@ def buildMangaReply(searchText, isExpanded, blockTracking=False):
                                 if ap:
                                     break
                                 ap = AniP.getMangaURL(synonym)
-				if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-					DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
+                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
             except:
                 traceback.print_exc()
                 pass
@@ -155,8 +155,8 @@ def buildMangaReplyWithAuthor(searchText, authorName, isExpanded, blockTracking=
                 else:
                     titleToAdd = ani['title_english']
 				
-				if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-					DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
+                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
             except:
                 traceback.print_exc()
                 pass
@@ -266,8 +266,8 @@ def buildAnimeReply(searchText, isExpanded, blockTracking=False):
                 if ani['result']:
                     titleToAdd = ani['result']['title_romaji']
 
-				if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-					DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
+                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', baseComment.author.name, baseComment.subreddit)
             except:
                 traceback.print_exc()
                 pass

@@ -42,12 +42,14 @@ async def process_message(message, is_edit=False):
 	#ignores all "code" markup (i.e. anything between backticks)
 	cleanMessage = re.sub(r"\`(?s)(.*?)\`", "", message.clean_content)
 
-	if re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', comment.body, re.S) is not None && (username = re.search('[@]([A-Za-z0-9_-]+?)(>|}|$)', comment.body, re.S)) is not None:
-		messageReply = CommentBuilder.buildStatsComment(username=username.group(1))
-	elif re.search('({!sstats.*?}|{{!sstats.*?}}|<!sstats.*?>|<<!sstats.*?>>)', comment.body, re.S) is not None:
-		server = re.search('([A-Za-z0-9_]+?)(>|}|$)', comment.body, re.S)
-        messageReply = CommentBuilder.buildStatsComment(subreddit=server.group(1))
-	elif re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', comment.body, re.S) is not None:
+	sender = re.search('[@]([A-Za-z0-9_-]+?)(>|}|$)', cleanMessage, re.S)
+	
+	if re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', cleanMessage, re.S) is not None and sender is not None:
+		messageReply = CommentBuilder.buildStatsComment(username=sender.group(1))
+	if re.search('({!sstats.*?}|{{!sstats.*?}}|<!sstats.*?>|<<!sstats.*?>>)', cleanMessage, re.S) is not None:
+		server = re.search('([A-Za-z0-9_]+?)(>|}|$)', cleanMessage, re.S)
+		messageReply = CommentBuilder.buildStatsComment(subreddit=server.group(1))
+	elif re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', cleanMessage, re.S) is not None:
 		messageReply = CommentBuilder.buildStatsComment()
 	else:
 		
