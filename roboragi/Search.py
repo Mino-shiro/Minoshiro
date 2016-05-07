@@ -38,7 +38,7 @@ except sqlite3.Error as e:
     print(e)
 
 #Builds a manga reply from multiple sources
-def buildMangaReply(searchText, isExpanded, message, blockTracking=False):
+def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
     try:
         ani = None
         mal = None
@@ -168,7 +168,7 @@ def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, block
         return None
 
 #Builds an anime reply from multiple sources
-def buildAnimeReply(searchText, isExpanded, message, blockTracking=False):
+def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
     try:
 
         mal = {'search_function': MAL.getAnimeDetails,
