@@ -202,6 +202,7 @@ async def on_message(message):
 			if not (DatabaseHandler.messageExists(message.id)):
 				DatabaseHandler.addMessage(message.id, message.author.name, message.channel.server, False)
 		except:
+			print(e)
 			pass
 	else:
 		await process_message(message)
