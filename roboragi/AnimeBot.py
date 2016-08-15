@@ -14,6 +14,7 @@ import Search
 import CommentBuilder
 import DatabaseHandler
 import Config
+import Reference
 
 try:
 	import Config

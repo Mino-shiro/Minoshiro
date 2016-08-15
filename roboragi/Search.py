@@ -9,6 +9,8 @@ import AniDB
 import Hummingbird
 import Anilist
 import MU
+import NU
+import LNDB
 
 import CommentBuilder
 import DatabaseHandler
@@ -71,13 +73,25 @@ def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
             #If it hits either, add it to the request-tracking DB.
             ani = Anilist.getMangaDetails(searchText)
             
-            if not (ani is None):
-                mal = MAL.getMangaDetails(ani['title_romaji'])
+            if ani:
+                try:
+                    mal = MAL.getMangaDetails(ani['title_romaji'])
+                except:
+                    pass
+
+                if not mal:
+                    try:
+                        mal = MAL.getMangaDetails(ani['title_english'])
+                    except:
+                        pass
+
+                if not mal:
+                    mal = MAL.getMangaDetails(searchText)
 
             else:
                 mal = MAL.getMangaDetails(searchText)
 
-                if not (mal is None):
+                if mal:
                     ani = Anilist.getMangaDetails(mal['title'])    
 
         #----- Finally... -----#
@@ -87,7 +101,10 @@ def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
                 if mal:
                     titleToAdd = mal['title']
                 else:
-                    titleToAdd = ani['title_english']
+                    try:
+                        titleToAdd = ani['title_english']
+                    except:
+                        titleToAdd = ani['title_romaji']
 
                 
                 if not alternateLinks:
@@ -170,7 +187,6 @@ def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, block
 #Builds an anime reply from multiple sources
 def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
     try:
-
         mal = {'search_function': MAL.getAnimeDetails,
                 'synonym_function': MAL.getSynonyms,
                 'checked_synonyms': [],
@@ -227,7 +243,8 @@ def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
                 
         else:
             data_sources = [ani, hb, mal]
-            aux_sources = [ap, adb]
+            #aux_sources = [ap, adb]
+            aux_sources = [ap]
 
             synonyms = set([searchText])
 
@@ -277,6 +294,122 @@ def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
     except Exception as e:
         traceback.print_exc()
         return None
+
+#Builds an LN reply from multiple sources
+def buildLightNovelReply(searchText, isExpanded, baseComment, blockTracking=False):
+    try:
+        mal = {'search_function': MAL.getLightNovelDetails,
+                'synonym_function': MAL.getSynonyms,
+                'checked_synonyms': [],
+                'result': None}
+        ani = {'search_function': Anilist.getLightNovelDetails,
+                'synonym_function': Anilist.getSynonyms,
+                'checked_synonyms': [],
+                'result': None}
+        nu = {'search_function': NU.getLightNovelURL,
+                'result': None}
+        lndb = {'search_function': LNDB.getLightNovelURL,
+                'result': None}
+        
+        try:
+            sqlCur.execute('SELECT dbLinks FROM synonyms WHERE type = "LN" and lower(name) = ?', [searchText.lower()])
+        except sqlite3.Error as e:
+            print(e)
+
+        alternateLinks = sqlCur.fetchone()
+
+        if (alternateLinks):
+            synonym = json.loads(alternateLinks[0])
+
+            if synonym:
+                malsyn = None
+                if 'mal' in synonym and synonym['mal']:
+                    malsyn = synonym['mal']
+
+                anisyn = None
+                if 'ani' in synonym and synonym['ani']:
+                    anisyn = synonym['ani']
+
+                nusyn = None
+                if 'nu' in synonym and synonym['nu']:
+                    nusyn = synonym['nu']
+
+                lndbsyn = None
+                if 'lndb' in synonym and synonym['lndb']:
+                    lndbsyn = synonym['lndb']
+
+                mal['result'] = MAL.getLightNovelDetails(malsyn[0],malsyn[1]) if malsyn else None
+                ani['result'] = Anilist.getMangaDetailsById(anisyn) if anisyn else None
+                nu['result'] = NU.getLightNovelById(nusyn) if nusyn else None
+                lndb['result'] = LNDB.getLightNovelById(lndbsyn) if lndbsyn else None
+                
+        else:
+            data_sources = [ani, mal]
+            aux_sources = [nu, lndb]
+
+            synonyms = set([searchText])
+
+            for x in range(len(data_sources)):
+                for source in data_sources:
+                    if source['result']:
+                        break
+                    else:
+                        for synonym in synonyms:
+                            if synonym in source['checked_synonyms']:
+                                continue
+
+                            source['result'] = source['search_function'](synonym)
+                            source['checked_synonyms'].append(synonym)
+
+                            if source['result']:
+                                break
+
+                    if source['result']:
+                        synonyms.update([synonym.lower() for synonym in source['synonym_function'](source['result'])])
+
+            for source in aux_sources:
+                for synonym in synonyms:     
+                    source['result'] = source['search_function'](synonym)
+
+                    if source['result']:
+                        break
+
+        if ani['result'] or mal['result']:
+            try:
+                titleToAdd = ''
+                if mal['result']:
+                    titleToAdd = mal['result']['title']
+                if ani['result']:
+                    try:
+                        titleToAdd = ani['result']['title_romaji']
+                    except:
+                        titleToAdd = ani['result']['title_english']
+
+                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'LN', baseComment.author.name, baseComment.subreddit)
+            except:
+                traceback.print_exc()
+                pass
+        
+        return CommentBuilder.buildLightNovelComment(isExpanded, mal['result'], ani['result'], nu['result'], lndb['result'])
+
+    except Exception as e:
+        traceback.print_exc()
+        return None
+
+#Checks if the bot is the parent of this comment.
+def isBotAParent(comment, reddit):
+    try:
+        parentComment = reddit.get_info(thing_id=comment.parent_id)
+
+        if (parentComment.author.name == USERNAME):
+            return True
+        else:
+            return False
+            
+    except:
+        #traceback.print_exc()
+        return False
 
 #Checks if the message is valid (i.e. not already seen, not a post by Roboragi and the parent commenter isn't Roboragi)
 def isValidMessage(message):

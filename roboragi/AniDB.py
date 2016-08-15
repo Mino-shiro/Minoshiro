@@ -15,7 +15,7 @@ def getAnimeURL(searchText):
     try:
         html = req.get('http://anisearch.outrance.pl/?task=search&query=' + searchText, timeout=10)
         req.close()
-        anidb = pq(html.content)
+        anidb = pq(html.content)    
     except:
         req.close()
         return None
