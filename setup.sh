@@ -11,12 +11,5 @@ echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
 echo 'eval "$(pyenv init -)"' >> ~/.bashrc
 echo 'eval "$(pyenv virtualenvwrapper)"' >> ~/.bashrc
 
-PS1='$ '
-. ~/.bashrc
-
-pyenv install 3.5.2
-
-pyvenv venv
-source venv/bin/activate
-
-pip install -r requirements.txt
+echo 'You need to Run ". ~/.bashrc && sh setup2.sh"'
+sleep '5'
