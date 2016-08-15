@@ -38,16 +38,16 @@ def setup():
         cur.execute('CREATE TABLE requests ( id SERIAL PRIMARY KEY, name varchar(320), type varchar(16), requester varchar(50), channel varchar(50), requesttimestamp timestamp DEFAULT current_timestamp)')
         conn.commit()
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
 
     #Create messages table
     try:
-        cur.execute('CREATE TABLE messages ( messageid varchar(16) PRIMARY KEY, requester varchar(50), channel varchar(50), hadRequest boolean)')
+        cur.execute('CREATE TABLE messages ( messageid varchar(32) PRIMARY KEY, requester varchar(50), channel varchar(50), hadRequest boolean)')
         conn.commit()
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
 
@@ -63,7 +63,7 @@ def addMessage(messageid, requester, channel, hadRequest):
         cur.execute('INSERT INTO messages (messageid, requester, channel, hadRequest) VALUES (%s, %s, %s, %s)', (messageid, requester, channel, hadRequest))
         conn.commit()
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
 
@@ -78,7 +78,7 @@ def messageExists(messageid):
             conn.commit()
             return True
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
         return True
@@ -89,10 +89,10 @@ def addRequest(name, rType, requester, channel):
         channel = str(channel).lower()
 
         if ('nihilate' not in channel):
-            cur.execute('INSERT INTO requests (name, type, requester, channel) VALUES (%s, %s, %s, %s)', (name, rType, requester, channel))
+            cur.execute('INSERT INTO requests (name, type, requester, channel) VALUES (%s, %s, %s, %s)', (name, rType, str(requester), channel))
             conn.commit()
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
 
