@@ -200,9 +200,9 @@ async def on_message(message):
 	if not (Search.isValidMessage(message)):
 		try:
 			if not (DatabaseHandler.messageExists(message.id)):
-				DatabaseHandler.addMessage(message.id, message.author.name, message.channel.server, False)
-		except:
-			print(e)
+				DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+		except Exception:
+			traceback.print_exc()
 			pass
 	else:
 		await process_message(message)

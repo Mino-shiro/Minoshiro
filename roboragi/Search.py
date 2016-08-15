@@ -286,7 +286,7 @@ def isValidMessage(message):
 
         try:
             if (message.author.name == USERNAME):
-                DatabaseHandler.addMessage(message.id, message.author.name, message.channel, False)
+                DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
                 return False
         except:
             pass
