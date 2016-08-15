@@ -38,6 +38,7 @@ async def process_message(message, is_edit=False):
 	#Anime/Manga requests that are found go into separate arrays
 	animeArray = []
 	mangaArray = []
+	lnArray = []
 
 	#ignores all "code" markup (i.e. anything between backticks)
 	cleanMessage = re.sub(r"\`(?s)(.*?)\`", "", message.clean_content)
@@ -129,6 +130,25 @@ async def process_message(message, is_edit=False):
 			if (reply is not None):
 				mangaArray.append(reply)
 
+        #Expanded LN
+        for match in re.finditer("\]{2}([^]]*)\[{2}", comment.body, re.S):
+            reply = ''
+
+            if (forceNormal) or (str(comment.subreddit).lower() in disableexpanded):
+                reply = Search.buildLightNovelReply(match.group(1), False, comment)
+            else:
+                reply = Search.buildLightNovelReply(match.group(1), True, comment)                    
+
+            if (reply is not None):
+                lnArray.append(reply)
+
+        #Normal LN  
+        for match in re.finditer("(?<=(?<!\])\])([^\]\[]*)(?=\[(?!\[))", comment.body, re.S):
+            reply = Search.buildLightNovelReply(match.group(1), False, comment)
+            
+            if (reply is not None):
+                lnArray.append(reply)
+
 		#Here is where we create the final reply to be posted
 
 		#The final message reply. We add stuff to this progressively.
@@ -137,6 +157,7 @@ async def process_message(message, is_edit=False):
 		#Basically just to keep track of people posting the same title multiple times (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
 		postedAnimeTitles = []
 		postedMangaTitles = []
+        postedLNTitles = []
 
 		#Adding all the anime to the final message. If there's manga too we split up all the paragraphs and indent them in Reddit markup by adding a '>', then recombine them
 		for i, animeReply in enumerate(animeArray):
@@ -159,6 +180,18 @@ async def process_message(message, is_edit=False):
 			if not (mangaReply['title'] in postedMangaTitles):
 				postedMangaTitles.append(mangaReply['title'])
 				messageReply += mangaReply['comment']
+
+        if lnArray:
+            commentReply += '\n\n'
+
+        #Adding all the manga to the final comment
+        for i, lnReply in enumerate(lnArray):
+            if not (i is 0):
+                commentReply += '\n\n'
+            
+            if not (lnReply['title'] in postedLNTitles):
+                postedLNTitles.append(lnReply['title'])
+                commentReply += lnReply['comment']
 
 		#If there are more than 10 requests, shorten them all
 		if not (messageReply is '') and (len(animeArray) + len(mangaArray) >= 10):
