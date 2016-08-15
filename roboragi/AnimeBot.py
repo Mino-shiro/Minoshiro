@@ -164,33 +164,33 @@ async def process_message(message, is_edit=False):
 		if not (messageReply is '') and (len(animeArray) + len(mangaArray) >= 10):
 			messageReply = re.sub(r"\^\((.*?)\)", "", messageReply, flags=re.M)
 
-		#If there was actually something found, add the signature and post the message to Reddit. Then, add the message to the "already seen" database.
-		if not (messageReply is ''):
-			messageReply += Config.getSignature()
+	#If there was actually something found, add the signature and post the message to Reddit. Then, add the message to the "already seen" database.
+	if not (messageReply is ''):
+		messageReply += Config.getSignature()
 
-			if is_edit:
-				await client.send_message(message.channel, messageReply)
-			else:
-				try:
-					print("Message created.\n")
-					await client.send_message(message.channel, messageReply)
-				except discord.errors.Forbidden:
-					print('Request from banned channel: ' + str(message.channel) + '\n')
-				except Exception:
-					traceback.print_exc()
-
-				try:
-					DatabaseHandler.addMessage(message.id, message.author.name, message.server, True)
-				except:
-					traceback.print_exc()
+		if is_edit:
+			await client.send_message(message.channel, messageReply)
 		else:
 			try:
-				if is_edit:
-					return None
-				else:
-					DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+				print("Message created.\n")
+				await client.send_message(message.channel, messageReply)
+			except discord.errors.Forbidden:
+				print('Request from banned channel: ' + str(message.channel) + '\n')
+			except Exception:
+				traceback.print_exc()
+			
+			try:
+				DatabaseHandler.addMessage(message.id, message.author.name, message.server, True)
 			except:
 				traceback.print_exc()
+	else:
+		try:
+			if is_edit:
+				return None
+			else:
+				DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+		except:
+			traceback.print_exc()
 
 #Overwrite on_message so we can run our stuff
 @client.event
