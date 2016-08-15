@@ -46,7 +46,7 @@ def getSynonyms(request):
     
 #Sets up the connection to Anilist. You need a token to get stuff from them, which expires every hour.
 def setup():
-	print('Setting up AniList')
+    print('Setting up AniList')
     try:
         request = req.post('https://anilist.co/api/auth/access_token', params={'grant_type':'client_credentials', 'client_id':ANICLIENT, 'client_secret':ANISECRET})
         req.close()

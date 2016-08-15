@@ -296,7 +296,7 @@ def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
         return None
 
 #Builds an LN reply from multiple sources
-def buildLightNovelReply(searchText, isExpanded, baseComment, blockTracking=False):
+def buildLightNovelReply(searchText, isExpanded, message, blockTracking=False):
     try:
         mal = {'search_function': MAL.getLightNovelDetails,
                 'synonym_function': MAL.getSynonyms,
@@ -385,8 +385,8 @@ def buildLightNovelReply(searchText, isExpanded, baseComment, blockTracking=Fals
                     except:
                         titleToAdd = ani['result']['title_english']
 
-                if (str(baseComment.subreddit).lower is not 'nihilate') and (str(baseComment.subreddit).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'LN', baseComment.author.name, baseComment.subreddit)
+                if (str(message.server).lower is not 'nihilate') and (str(message.server).lower is not 'roboragi') and not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'LN', message.author.name, message.server)
             except:
                 traceback.print_exc()
                 pass

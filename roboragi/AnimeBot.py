@@ -108,7 +108,7 @@ async def process_message(message, is_edit=False):
 		for match in re.finditer("\<{2}([^>]*)\>{2}:\(([^)]+)\)", cleanMessage, re.S):
 			reply = ''
 
-			if (forceNormal) or (str(message.channel).lower() in disableexpanded):
+			if (forceNormal) or (str(message.server).lower() in disableexpanded):
 				reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False)
 			else:
 				reply = Search.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, True)
@@ -132,23 +132,23 @@ async def process_message(message, is_edit=False):
 				mangaArray.append(reply)
 
         #Expanded LN
-        for match in re.finditer("\]{2}([^]]*)\[{2}", comment.body, re.S):
-            reply = ''
+		for match in re.finditer("\]{2}([^]]*)\[{2}", cleanMessage, re.S):
+			reply = ''
 
-            if (forceNormal) or (str(comment.subreddit).lower() in disableexpanded):
-                reply = Search.buildLightNovelReply(match.group(1), False, comment)
-            else:
-                reply = Search.buildLightNovelReply(match.group(1), True, comment)                    
+			if (forceNormal) or (str(message.server).lower() in disableexpanded):
+				reply = Search.buildLightNovelReply(match.group(1), False, message)
+			else:
+				reply = Search.buildLightNovelReply(match.group(1), True, message)                    
 
-            if (reply is not None):
-                lnArray.append(reply)
+			if (reply is not None):
+				lnArray.append(reply)
 
-        #Normal LN  
-        for match in re.finditer("(?<=(?<!\])\])([^\]\[]*)(?=\[(?!\[))", comment.body, re.S):
-            reply = Search.buildLightNovelReply(match.group(1), False, comment)
-            
-            if (reply is not None):
-                lnArray.append(reply)
+		#Normal LN  
+		for match in re.finditer("(?<=(?<!\])\])([^\]\[]*)(?=\[(?!\[))", cleanMessage, re.S):
+			reply = Search.buildLightNovelReply(match.group(1), False, message)
+			
+			if (reply is not None):
+				lnArray.append(reply)
 
 		#Here is where we create the final reply to be posted
 
@@ -158,7 +158,7 @@ async def process_message(message, is_edit=False):
 		#Basically just to keep track of people posting the same title multiple times (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
 		postedAnimeTitles = []
 		postedMangaTitles = []
-        postedLNTitles = []
+		postedLNTitles = []
 
 		#Adding all the anime to the final message. If there's manga too we split up all the paragraphs and indent them in Reddit markup by adding a '>', then recombine them
 		for i, animeReply in enumerate(animeArray):
@@ -182,17 +182,17 @@ async def process_message(message, is_edit=False):
 				postedMangaTitles.append(mangaReply['title'])
 				messageReply += mangaReply['comment']
 
-        if lnArray:
-            commentReply += '\n\n'
+		if lnArray:
+			messageReply += '\n\n'
 
-        #Adding all the manga to the final comment
-        for i, lnReply in enumerate(lnArray):
-            if not (i is 0):
-                commentReply += '\n\n'
+		#Adding all the manga to the final comment
+		for i, lnReply in enumerate(lnArray):
+			if not (i is 0):
+				commentReply += '\n\n'
             
-            if not (lnReply['title'] in postedLNTitles):
-                postedLNTitles.append(lnReply['title'])
-                commentReply += lnReply['comment']
+			if not (lnReply['title'] in postedLNTitles):
+				postedLNTitles.append(lnReply['title'])
+				messageReply += lnReply['comment']
 
 		#If there are more than 10 requests, shorten them all
 		if not (messageReply is '') and (len(animeArray) + len(mangaArray) >= 10):
