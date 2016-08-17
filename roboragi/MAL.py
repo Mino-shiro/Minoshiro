@@ -8,6 +8,7 @@ Handles all of the connections to MyAnimeList.
 import xml.etree.cElementTree as ET
 import requests
 import traceback
+import pprint
 import difflib
 
 try:
@@ -37,10 +38,12 @@ def getSynonyms(request):
 def getAnimeDetails(searchText, animeId=None):
     try:
         try:
-            request = mal.get('http://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip())
+            request = mal.get('http://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10)
+            mal.close()
         except:
             setup()
-            request = mal.get('http://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip())
+            request = mal.get('http://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10)
+            mal.close()
         
         convertedRequest = convertShittyXML(request.text)
         rawList = ET.fromstring(convertedRequest)
@@ -87,6 +90,7 @@ def getAnimeDetails(searchText, animeId=None):
         
     except Exception:
         #traceback.print_exc()
+        mal.close()
         return None
 
 #Given a list, it finds the closest anime series it can.
@@ -158,10 +162,12 @@ def getClosestFromDescription(mangaList, descriptionToCheck):
 def getMangaCloseToDescription(searchText, descriptionToCheck):
     try:
         try:
-            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip())
+            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
+            mal.close()
         except:
             setup()
-            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip())
+            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
+            mal.close()
 
         convertedRequest = convertShittyXML(request.text)
         rawList = ET.fromstring(convertedRequest)
@@ -205,18 +211,23 @@ def getMangaCloseToDescription(searchText, descriptionToCheck):
 
         return getClosestFromDescription(closeManga, descriptionToCheck)
     except:
+        mal.close()
         traceback.print_exc()
         return None
     
+def getLightNovelDetails(searchText, lnId=None):
+    return getMangaDetails(searchText, lnId, True)
 
 #Returns the closest manga series given a specific search term. Again, MAL returns XML, so we conver it ourselves
-def getMangaDetails(searchText, mangaId=None):
+def getMangaDetails(searchText, mangaId=None, isLN=False):
     try:
         try:
-            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip())
+            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
+            mal.close()
         except:
             setup()
-            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip())
+            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
+            mal.close()
 
         convertedRequest = convertShittyXML(request.text)
         rawList = ET.fromstring(convertedRequest)
@@ -254,7 +265,13 @@ def getMangaDetails(searchText, mangaId=None):
                      'synopsis': synopsis,
                      'image': image }
 
-            mangaList.append(data)
+            #ignore or allow LNs
+            if 'novel' in mangaType.lower():
+                if isLN:
+                    mangaList.append(data)
+            else:
+                if not isLN:
+                    mangaList.append(data)
 
         if mangaId:
             closestManga = getThingById(mangaId, mangaList)
@@ -267,7 +284,8 @@ def getMangaDetails(searchText, mangaId=None):
             return None
 
     except:
-        traceback.print_exc()
+        mal.close()
+        #traceback.print_exc()
         return None
 
 #Returns a list of manga with titles very close to the search text. Current unused because MAL's API is shit and doesn't return author names.

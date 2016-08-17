@@ -6,6 +6,7 @@ Handles all connections to the database. The database runs on PostgreSQL and is 
 import psycopg2
 from math import sqrt
 import traceback
+import AnimeBot
 
 DBNAME = ''
 DBUSER = ''
@@ -150,14 +151,12 @@ def getBasicStats(serverID, top_media_number=5, top_username_number=5):
         conn.commit()
         return None
 
-#Returns an object which contains request-specifc data. Basically just used for the expanded messages.
-def getRequestStats(requestName, isManga):
+#Returns an object which contains request-specifc data. Basically just used for the expanded comments.
+def getRequestStats(requestName, type):
     try:
         basicRequestDict = {}
 
-        requestType = 'Anime'
-        if (isManga):
-            requestType = 'Manga'
+        requestType = type
 
         cur.execute("SELECT COUNT(*) FROM requests")
         total = int(cur.fetchone()[0])
@@ -256,23 +255,27 @@ def getUserStats(username, top_media_number=5):
 def getSubredditStats(serverName, top_media_number=5, top_username_number=5):
     try:
         basicSubredditDict = {}
-        serverName = serverName.lower()
+        server = AnimeBot.getServerFromName(serverName.lower())
+        print(serverName+"\n")
+        print(server.name+"\n")
+        print(server.id+"\n")
+        serverID = server.id
 
-        cur.execute("SELECT COUNT(*) FROM messages WHERE server = %s", (serverName,))
+        cur.execute("SELECT COUNT(*) FROM messages WHERE server = %s", (serverID,))
         totalComments = int(cur.fetchone()[0])
         basicSubredditDict['totalComments'] = totalComments
 
         cur.execute("SELECT COUNT(*) FROM requests;")
         total = int(cur.fetchone()[0])
         
-        cur.execute("SELECT COUNT(*) FROM requests WHERE server = %s", (serverName,))
+        cur.execute("SELECT COUNT(*) FROM requests WHERE server = %s", (serverID,))
         sTotal = int(cur.fetchone()[0])
         basicSubredditDict['total'] = sTotal
 
         if sTotal == 0:
             return None
 
-        cur.execute("SELECT COUNT(DISTINCT (name, type)) FROM requests WHERE server = %s", (serverName,))
+        cur.execute("SELECT COUNT(DISTINCT (name, type)) FROM requests WHERE server = %s", (serverID,))
         dNames = int(cur.fetchone()[0])
         basicSubredditDict['uniqueNames'] = dNames
 
@@ -283,7 +286,7 @@ def getSubredditStats(serverName, top_media_number=5, top_username_number=5):
         basicSubredditDict['meanValuePerRequest'] = meanValue
 
         variance = 0
-        cur.execute("SELECT name, type, count(name) FROM requests WHERE server = %s GROUP by name, type", (serverName,))
+        cur.execute("SELECT name, type, count(name) FROM requests WHERE server = %s GROUP by name, type", (serverID,))
         for entry in cur.fetchall():
             variance += (entry[2] - meanValue) * (entry[2] - meanValue)
 
@@ -291,13 +294,13 @@ def getSubredditStats(serverName, top_media_number=5, top_username_number=5):
         stdDev = sqrt(variance)
         basicSubredditDict['standardDeviation'] = stdDev
 
-        cur.execute("SELECT name, type, COUNT(name) FROM requests WHERE server = %s GROUP BY name, type ORDER BY COUNT(name) DESC, name ASC LIMIT %s", (serverName, top_media_number))
+        cur.execute("SELECT name, type, COUNT(name) FROM requests WHERE server = %s GROUP BY name, type ORDER BY COUNT(name) DESC, name ASC LIMIT %s", (serverID, top_media_number))
         topRequests = cur.fetchall()
         basicSubredditDict['topRequests'] = []
         for request in topRequests:
             basicSubredditDict['topRequests'].append(request)
         
-        cur.execute("SELECT requester, COUNT(requester) FROM requests WHERE server = %s GROUP BY requester ORDER BY COUNT(requester) DESC, requester ASC LIMIT %s", (serverName, top_username_number))
+        cur.execute("SELECT requester, COUNT(requester) FROM requests WHERE server = %s GROUP BY requester ORDER BY COUNT(requester) DESC, requester ASC LIMIT %s", (serverID, top_username_number))
         topRequesters = cur.fetchall()
         basicSubredditDict['topRequesters'] = []
         for requester in topRequesters:
@@ -307,6 +310,7 @@ def getSubredditStats(serverName, top_media_number=5, top_username_number=5):
         
         return basicSubredditDict
     except Exception as e:
+        traceback.print_exc()
         cur.execute('ROLLBACK')
         conn.commit()
         return None
