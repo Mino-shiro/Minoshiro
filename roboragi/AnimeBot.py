@@ -180,7 +180,7 @@ async def process_message(message, is_edit=False):
 				traceback.print_exc()
 			
 			try:
-				DatabaseHandler.addMessage(message.id, message.author.name, message.server, True)
+				DatabaseHandler.addMessage(message.id, message.author.id, message.server, True)
 			except:
 				traceback.print_exc()
 	else:
@@ -188,7 +188,7 @@ async def process_message(message, is_edit=False):
 			if is_edit:
 				return None
 			else:
-				DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+				DatabaseHandler.addMessage(message.id, message.author.id, message.server, False)
 		except:
 			traceback.print_exc()
 
@@ -200,7 +200,7 @@ async def on_message(message):
 	if not (Search.isValidMessage(message)):
 		try:
 			if not (DatabaseHandler.messageExists(message.id)):
-				DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+				DatabaseHandler.addMessage(message.id, message.author.id, message.server, False)
 		except Exception:
 			traceback.print_exc()
 			pass

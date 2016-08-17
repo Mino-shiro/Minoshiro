@@ -58,7 +58,7 @@ setup()
 # Adds a message to the "already seen" database. Also handles submissions, which have a similar ID structure.
 def addMessage(messageid, requester, server, hadRequest):
     try:
-        server = str(server).lower()
+        server = server.id.lower()
         
         cur.execute('INSERT INTO messages (messageid, requester, server, hadRequest) VALUES (%s, %s, %s, %s)', (messageid, requester, server, hadRequest))
         conn.commit()
@@ -86,7 +86,7 @@ def messageExists(messageid):
 #Adds a request to the request-tracking database. rType is either "Anime" or "Manga".
 def addRequest(name, rType, requester, server):
     try:
-        server = str(server).lower()
+        server = server.id.lower()
 
         if ('nihilate' not in server):
             cur.execute('INSERT INTO requests (name, type, requester, server) VALUES (%s, %s, %s, %s)', (name, rType, requester, server))
@@ -97,7 +97,7 @@ def addRequest(name, rType, requester, server):
         conn.commit()
 
 #Returns an object which contains data about the overall database stats (i.e. ALL servers).
-def getBasicStats(top_media_number=5, top_username_number=5):
+def getBasicStats(serverID, top_media_number=5, top_username_number=5):
     try:
         basicStatDict = {}
 
@@ -135,7 +135,7 @@ def getBasicStats(top_media_number=5, top_username_number=5):
         for request in topRequests:
             basicStatDict['topRequests'].append(request)
 
-        cur.execute("SELECT requester, COUNT(requester) FROM requests GROUP BY requester ORDER BY COUNT(requester) DESC, requester ASC LIMIT %s", (top_username_number,))
+        cur.execute("SELECT requester, COUNT(requester), server, COUNT(server) FROM requests WHERE server = %s GROUP BY requester, server ORDER BY COUNT(requester) DESC, requester ASC, COUNT(server) DESC, server ASC LIMIT %s", (serverID, top_username_number,))
         topRequesters = cur.fetchall()
         basicStatDict['topRequesters'] = []
         for requester in topRequesters:

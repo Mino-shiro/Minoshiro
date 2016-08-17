@@ -120,7 +120,7 @@ def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
                                     break
                                 ap = AniP.getMangaURL(synonym)
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.name, message.server)
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.id, message.server)
             except:
                 traceback.print_exc()
                 pass
@@ -156,7 +156,7 @@ def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, block
                     titleToAdd = ani['title_english']
 				
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.name, message.server)
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.id, message.server)
             except:
                 traceback.print_exc()
                 pass
@@ -267,7 +267,7 @@ def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
                     titleToAdd = ani['result']['title_romaji']
 
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Anime', message.author.name, message.server)
+                    DatabaseHandler.addRequest(titleToAdd, 'Anime', message.author.id, message.server)
             except:
                 traceback.print_exc()
                 pass
@@ -286,7 +286,7 @@ def isValidMessage(message):
 
         try:
             if (message.author.name == USERNAME):
-                DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+                DatabaseHandler.addMessage(message.id, message.author.id, message.server, False)
                 return False
         except:
             pass

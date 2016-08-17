@@ -6,6 +6,7 @@ Takes the data given to it by search and formats it into a comment
 import re
 from os import linesep
 import traceback
+import AnimeBot
 import DatabaseHandler
 import pprint
 
@@ -424,8 +425,8 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
         #traceback.print_exc()
         return None
 
-#Builds a stats comment
-def buildStatsComment(server=None, username=None):
+#Builds a stats comment. If it is basic stats the default server id is the Discordoragi help server
+def buildStatsComment(server=None, username=None, serverID="171004769069039616"):
     try:
         statComment = ''
         receipt = '(S) Request successful: Stats'
@@ -449,6 +450,7 @@ def buildStatsComment(server=None, username=None):
                 
             receipt += ' - /u/' + username
         elif server:
+            serverID = server.id
             server = str(server)
             serverStats = DatabaseHandler.getSubredditStats(server.lower())
             
@@ -481,7 +483,7 @@ def buildStatsComment(server=None, username=None):
                
             receipt += ' - ' + server
         else:
-            basicStats = DatabaseHandler.getBasicStats()
+            basicStats = DatabaseHandler.getBasicStats(serverID)
             
             #The overall stats section
             statComment += '**Overall Stats**\n\n'
@@ -504,8 +506,9 @@ def buildStatsComment(server=None, username=None):
 
             statComment += 'The most frequent requesters overall are:  \n'
             for i, requester in enumerate(basicStats['topRequesters']):
-                statComment += str(i + 1) + '. /u/' + str(requester[0]) + ' (' + str(requester[1]) + ' requests)  \n'
+                statComment += str(i + 1) + '. ' + str(AnimeBot.getUsernameFromID(requester[0], )) + ' (' + str(requester[1]) + ' requests)  \n'
                 
+            statComment += '\n'
             receipt += ' - Basic'
             
         print(receipt)
