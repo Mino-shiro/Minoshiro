@@ -3,36 +3,27 @@ AnimeBot.py
 Acts as the "main" file and ties all the other functionality together.
 '''
 
-import discord
 import asyncio
 import re
 import traceback
 import requests
 import time
 
+import Discord
 import Search
 import CommentBuilder
 import DatabaseHandler
 import Config
 import Reference
 
-try:
-	import Config
-	print('Getting Config Info')
-	TOKEN = Config.token
-except ImportError:
-	pass
-
-client = discord.Client()
-
 #the servers where expanded requests are disabled
 disableexpanded = ['']
 
-@client.event
+@Discord.client.event
 async def on_ready():
     print('Logged in as')
-    print(client.user.name)
-    print(client.user.id)
+    print(Discord.client.user.name)
+    print(Discord.client.user.id)
     print('------')
 	
 async def process_message(message, is_edit=False):
@@ -203,11 +194,11 @@ async def process_message(message, is_edit=False):
 		messageReply += Config.getSignature()
 
 		if is_edit:
-			await client.send_message(message.channel, messageReply)
+			await Discord.client.send_message(message.channel, messageReply)
 		else:
 			try:
 				print("Message created.\n")
-				await client.send_message(message.channel, messageReply)
+				await Discord.client.send_message(message.channel, messageReply)
 			except discord.errors.Forbidden:
 				print('Request from banned channel: ' + str(message.channel) + '\n')
 			except Exception:
@@ -227,7 +218,7 @@ async def process_message(message, is_edit=False):
 			traceback.print_exc()
 
 #Overwrite on_message so we can run our stuff
-@client.event
+@Discord.client.event
 async def on_message(message):
 	print('Message recieved')
 	#Is the message valid (i.e. it's not made by Discordoragi and I haven't seen it already). If no, try to add it to the "already seen pile" and skip to the next message. If yes, keep going.
@@ -241,18 +232,9 @@ async def on_message(message):
 	else:
 		await process_message(message)
 			
-def getMemberFromID(userID, server):
-	return discord.utils.get(server.members, id=userID)
-
-def getServerFromID(serverID):
-	return discord.utils.get(AnimeBot.client.servers, id=serverID)
-
-def getServerFromName(serverName):
-	return discord.utils.get(AnimeBot.client.servers, name=serverName)
-			
 # ------------------------------------#
 #Here's the stuff that actually gets run
 
 #Initialise Discord.
 print('Starting Bot')
-client.run(TOKEN)
+Discord.run()

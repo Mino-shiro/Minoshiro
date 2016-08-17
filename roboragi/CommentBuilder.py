@@ -6,7 +6,7 @@ Takes the data given to it by search and formats it into a comment
 import re
 from os import linesep
 import traceback
-import AnimeBot
+import Discord
 import DatabaseHandler
 import pprint
 
@@ -693,7 +693,7 @@ def buildStatsComment(server=None, username=None, serverID="171004769069039616")
 
             statComment += 'The most frequent requesters overall are:  \n'
             for i, requester in enumerate(basicStats['topRequesters']):
-                statComment += str(i + 1) + '. ' + str(AnimeBot.getUsernameFromID(requester[0], )) + ' (' + str(requester[1]) + ' requests)  \n'
+                statComment += str(i + 1) + '. ' + str(Discord.getUsernameFromID(requester[0], )) + ' (' + str(requester[1]) + ' requests)  \n'
                 
             statComment += '\n'
             receipt += ' - Basic'
