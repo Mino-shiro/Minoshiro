@@ -36,8 +36,8 @@ sqlCur = sqlConn.cursor()
 
 try:
     sqlCur.execute('SELECT dbLinks FROM synonyms WHERE type = "Manga" and lower(name) = ?', ["despair simulator"])
-except sqlite3.Error as e:
-    print(e)
+except sqlite3.Error:
+    traceback.print_exc()
 
 #Builds a manga reply from multiple sources
 def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
@@ -137,7 +137,7 @@ def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
                                     break
                                 ap = AniP.getMangaURL(synonym)
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.name, message.server)
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.id, message.server.id)
             except:
                 traceback.print_exc()
                 pass
@@ -173,7 +173,7 @@ def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, block
                     titleToAdd = ani['title_english']
 				
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.name, message.server)
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.id, message.server.id)
             except:
                 traceback.print_exc()
                 pass
@@ -284,7 +284,7 @@ def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
                     titleToAdd = ani['result']['title_romaji']
 
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Anime', message.author.name, message.server)
+                    DatabaseHandler.addRequest(titleToAdd, 'Anime', message.author.id, message.server.id)
             except:
                 traceback.print_exc()
                 pass
@@ -386,7 +386,7 @@ def buildLightNovelReply(searchText, isExpanded, message, blockTracking=False):
                         titleToAdd = ani['result']['title_english']
 
                 if (str(message.server).lower is not 'nihilate') and (str(message.server).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'LN', message.author.name, message.server)
+                    DatabaseHandler.addRequest(titleToAdd, 'LN', message.author.id, message.server.id)
             except:
                 traceback.print_exc()
                 pass
@@ -419,7 +419,7 @@ def isValidMessage(message):
 
         try:
             if (message.author.name == USERNAME):
-                DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+                DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, False)
                 return False
         except:
             pass

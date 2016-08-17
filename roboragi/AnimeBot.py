@@ -50,7 +50,7 @@ async def process_message(message, is_edit=False):
 		messageReply = CommentBuilder.buildStatsComment(username=sender.group(1))
 	if re.search('({!sstats.*?}|{{!sstats.*?}}|<!sstats.*?>|<<!sstats.*?>>)', cleanMessage, re.S) is not None:
 		server = re.search('([A-Za-z0-9_]+?)(>|}|$)', cleanMessage, re.S)
-		messageReply = CommentBuilder.buildStatsComment(subreddit=server.group(1))
+		messageReply = CommentBuilder.buildStatsComment(server=server.group(1))
 	elif re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', cleanMessage, re.S) is not None:
 		messageReply = CommentBuilder.buildStatsComment()
 	else:
@@ -214,7 +214,7 @@ async def process_message(message, is_edit=False):
 				traceback.print_exc()
 			
 			try:
-				DatabaseHandler.addMessage(message.id, message.author.name, message.server, True)
+				DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, True)
 			except:
 				traceback.print_exc()
 	else:
@@ -222,7 +222,7 @@ async def process_message(message, is_edit=False):
 			if is_edit:
 				return None
 			else:
-				DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+				DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, False)
 		except:
 			traceback.print_exc()
 
@@ -234,12 +234,21 @@ async def on_message(message):
 	if not (Search.isValidMessage(message)):
 		try:
 			if not (DatabaseHandler.messageExists(message.id)):
-				DatabaseHandler.addMessage(message.id, message.author.name, message.server, False)
+				DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, False)
 		except Exception:
 			traceback.print_exc()
 			pass
 	else:
 		await process_message(message)
+			
+def getMemberFromID(userID, server):
+	return discord.utils.get(server.members, id=userID)
+
+def getServerFromID(serverID):
+	return discord.utils.get(AnimeBot.client.servers, id=serverID)
+
+def getServerFromName(serverName):
+	return discord.utils.get(AnimeBot.client.servers, name=serverName)
 			
 # ------------------------------------#
 #Here's the stuff that actually gets run

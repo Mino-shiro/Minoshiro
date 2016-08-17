@@ -502,26 +502,26 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
         #---------- BUILDING THE COMMENT ----------#
                 
         #----- TITLE -----#
-        comment += '**' + title.strip() + '** - ('
+        comment += '**' + title.strip() + '** -\n\n'
 
         #----- LINKS -----#
         urlComments = []
         
         if malURL is not None:
-            urlComments.append('[MAL](' + malURL + ')')
+            urlComments.append(malURL)
         if aniURL is not None:
-            urlComments.append('[ANI](' + aniURL + ')')
+            urlComments.append(aniURL)
         if nuURL is not None:
-            urlComments.append('[NU](' + nuURL + ')')
+            urlComments.append(nuURL)
         if lndbURL is not None:
-            urlComments.append('[LNDB](' + lndbURL + ')')
+            urlComments.append(lndbURL)
 
         for i, link in enumerate(urlComments):
             if i is not 0:
-                comment += ', '
+                comment += '\n '
             comment += link
 
-        comment += ')'
+        comment += '\n\n'
 
         #----- JAPANESE TITLE -----#
         if (isExpanded):
@@ -532,12 +532,12 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
-                    comment += '^^' + word
+                    comment +=  word
 
         #----- INFO LINE -----#
         
         if (isExpanded):
-            comment += '\n\n^('
+            comment += '\n\n('
 
             if cType:
                 if cType == 'Novel':
@@ -556,7 +556,7 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
             if genres:
                 comment += ' | **Genres:** '
         else:
-            comment += '\n\n^('
+            comment += '\n\n('
 
             if cType:
                 if cType == 'Novel':
