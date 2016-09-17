@@ -4,6 +4,7 @@ Used for communication with Discord
 '''
 
 import discord
+import asyncio
 
 try:
 	import Config
