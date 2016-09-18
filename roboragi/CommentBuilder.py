@@ -145,7 +145,7 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
             urlComments.append(aniURL)
         if anidbURL is not None:
             urlComments.append(anidbURL)
-			
+            
         for i, link in enumerate(urlComments):
             if i is not 0:
                 comment += '\n\n'

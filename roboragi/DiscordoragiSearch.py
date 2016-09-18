@@ -1,5 +1,5 @@
 '''
-Search.py
+DiscordoragiSearch .py
 Returns a built comment created from multiple databases when given a search term.
 '''
 
@@ -171,7 +171,7 @@ def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, block
                     titleToAdd = mal['title']
                 else:
                     titleToAdd = ani['title_english']
-				
+                
                 if not blockTracking:
                     DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.id, message.server.id)
             except:
@@ -420,25 +420,6 @@ def isValidMessage(message):
         try:
             if (message.author.name == USERNAME):
                 DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, False)
-                return False
-        except:
-            pass
-
-        return True
-        
-    except:
-        traceback.print_exc()
-        return False
-
-#Checks if a submission is valid (i.e. not already seen, not a submission by Roboragi). This WAS used before, but I have since removed the functionality it was relevant to.
-def isValidSubmission(submission):
-    try:
-        if (DatabaseHandler.messageExists(submission.id)):
-            return False
-
-        try:
-            if (submission.author.name == 'Roboragi'):
-                DatabaseHandler.addMessage(submission.id, submission.author.name, submission.subreddit, False)
                 return False
         except:
             pass
