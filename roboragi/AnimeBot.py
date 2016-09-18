@@ -10,7 +10,7 @@ import requests
 import time
 
 import Discord
-#import Search
+import Search
 import CommentBuilder
 import DatabaseHandler
 import Config
