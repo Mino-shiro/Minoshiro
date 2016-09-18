@@ -10,11 +10,7 @@ import requests
 import time
 
 import Discord
-<<<<<<< Updated upstream
-import Search
-=======
-import DiscordoragiSearch 
->>>>>>> Stashed changes
+import DiscordoragiSearch
 import CommentBuilder
 import DatabaseHandler
 import Config
