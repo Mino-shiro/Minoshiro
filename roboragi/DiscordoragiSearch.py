@@ -39,6 +39,25 @@ try:
 except sqlite3.Error:
     traceback.print_exc()
 
+#Checks if the message is valid (i.e. not already seen, not a post by Roboragi and the parent commenter isn't Roboragi)
+def isValidMessage(message):
+    try:
+        if (DatabaseHandler.messageExists(message.id)):
+            return False
+
+        try:
+            if (message.author.name == USERNAME):
+                DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, False)
+                return False
+        except:
+            pass
+
+        return True
+        
+    except:
+        traceback.print_exc()
+        return False
+
 #Builds a manga reply from multiple sources
 def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
     try:
@@ -411,21 +430,3 @@ def isBotAParent(comment, reddit):
         #traceback.print_exc()
         return False
 
-#Checks if the message is valid (i.e. not already seen, not a post by Roboragi and the parent commenter isn't Roboragi)
-def isValidMessage(message):
-    try:
-        if (DatabaseHandler.messageExists(message.id)):
-            return False
-
-        try:
-            if (message.author.name == USERNAME):
-                DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, False)
-                return False
-        except:
-            pass
-
-        return True
-        
-    except:
-        traceback.print_exc()
-        return False

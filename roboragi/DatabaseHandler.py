@@ -6,7 +6,6 @@ Handles all connections to the database. The database runs on PostgreSQL and is 
 import psycopg2
 from math import sqrt
 import traceback
-import AnimeBot
 
 DBNAME = ''
 DBUSER = ''
@@ -57,9 +56,9 @@ setup()
 #--------------------------------------#
 
 # Adds a message to the "already seen" database. Also handles submissions, which have a similar ID structure.
-def addMessage(messageid, requester, server, hadRequest):
+def addMessage(messageid, requester, serverid, hadRequest):
     try:
-        server = server.id.lower()
+        server = serverid.lower()
         
         cur.execute('INSERT INTO messages (messageid, requester, server, hadRequest) VALUES (%s, %s, %s, %s)', (messageid, requester, server, hadRequest))
         conn.commit()
@@ -85,9 +84,9 @@ def messageExists(messageid):
         return True
         
 #Adds a request to the request-tracking database. rType is either "Anime" or "Manga".
-def addRequest(name, rType, requester, server):
+def addRequest(name, rType, requester, serverid):
     try:
-        server = server.id.lower()
+        server = serverid.lower()
 
         if ('nihilate' not in server):
             cur.execute('INSERT INTO requests (name, type, requester, server) VALUES (%s, %s, %s, %s)', (name, rType, requester, server))
@@ -253,9 +252,10 @@ def getUserStats(username, top_media_number=5):
         
 #Similar to getBasicStats - returns an object which contains data about a specific server.
 def getSubredditStats(serverName, top_media_number=5, top_username_number=5):
+    from AnimeBot import getServerFromName
     try:
         basicSubredditDict = {}
-        server = AnimeBot.getServerFromName(serverName.lower())
+        server = getServerFromName(serverName.lower())
         print(serverName+"\n")
         print(server.name+"\n")
         print(server.id+"\n")

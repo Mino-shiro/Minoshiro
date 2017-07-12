@@ -191,7 +191,6 @@ async def process_message(message, is_edit=False):
 
     #If there was actually something found, add the signature and post the message to Reddit. Then, add the message to the "already seen" database.
     if not (messageReply is ''):
-        messageReply += Config.getSignature()
 
         if is_edit:
             await Discord.client.send_message(message.channel, messageReply)
@@ -220,9 +219,10 @@ async def process_message(message, is_edit=False):
 #Overwrite on_message so we can run our stuff
 @Discord.client.event
 async def on_message(message):
+    from DiscordoragiSearch import isValidMessage #local import here to fix attribute not found error
     print('Message recieved')
     #Is the message valid (i.e. it's not made by Discordoragi and I haven't seen it already). If no, try to add it to the "already seen pile" and skip to the next message. If yes, keep going.
-    if not (DiscordoragiSearch.isValidMessage(message)):
+    if not (isValidMessage(message)):
         try:
             if not (DatabaseHandler.messageExists(message.id)):
                 DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, False)
