@@ -1389,7 +1389,7 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
 def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail):
     import discord
     localFooterTitle='\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'
-    localFooter = "{anime}, <manga>, \]LN\[ | [FAQ](http://www.reddit.com/r/Roboragi/wiki/index) | [/r/](http://www.reddit.com/r/Roboragi/) | [Source](https://github.com/Nihilate/Roboragi) | [Synonyms](https://www.reddit.com/r/Roboragi/wiki/synonyms)"
+    localFooter = "{anime}, <manga>, \]LN\[ | [FAQ](https://github.com/dashwav/Discordoragi/wiki) | [/r/](http://www.reddit.com/r/Roboragi/) | [Source](https://github.com/dashwav/Discordoragi) | [Synonyms](https://www.reddit.com/r/Roboragi/wiki/synonyms)"
     try:
         embed = discord.Embed(title=embedTitle, description=embedLinks, type='rich')
         embed.set_thumbnail(url = embedThumbnail)
