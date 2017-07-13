@@ -2,7 +2,7 @@
 Discordoragi is a Discord bot based on [Roboragi](http://github.com/Nihilate/Roboragi) which creates anime and manga links from MAL, Hummingbird, Anilist, MangaUpdates and Anime-Planet when requested.
 
 ## How do I get this on my server?
-You can either use [this link](https://discordapp.com/oauth2/authorize?client_id=334909839572598785&scope=bot&permissions=19456) or you can set up a server with the bot running with your own credentials (although this will not pick up on any of the synonyms that are added to the main bot)
+You can either use [this link](https://discordapp.com/oauth2/authorize?client_id=334909839572598785&scope=bot&permissions=19456) or you can set up a server with the bot running with your own credentials (although this will not pick up on any of the synonyms that are added to the main bot). Installation instructions below:
 
 ## Installation
 Discordoragi is written in Python for use with Python 3.5+ It is not possible to use anything less as the Discord API is phasing out support for it. There's a requirements.txt if you want to test it out yourself, but you'll need to create a Config.py with your own information and set up a PostgreSQL database.
