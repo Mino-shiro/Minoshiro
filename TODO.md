@@ -1,10 +1,10 @@
 # To do...
 
-## Better MangaUpdates access
-Need to improve access to MangaUpdates. Current just scraping it, but it's primitive and inaccurate.
+## Threading
+Maybe, idk we will see how it handles scaling
 
-## Adding Visual Novels and Light Novels
-Might be worth adding visual novels and light novels to the bot.
+## Role checking
+Currently bot is checking for whether @everyone has embedlink perms so if it is given them seperate from the @everyone role it will still default to text message only
 
-## Improving AnimeBot.py's structure
-All the regex is currently pretty gross. Need to tidy it up. Would also be good to prepare for any changes that need to be made on a subreddit-specific basis.
+## Better install script
+Need to do testing on different OS's
