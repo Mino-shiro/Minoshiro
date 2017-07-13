@@ -33,8 +33,11 @@ async def process_message(message, is_edit=False):
     lnArray = []
 
     #Checks if bot has permissions to embed
-    defaultroleperm = message.channel.server.default_role.permissions
-    canEmbed = defaultroleperm.embed_links
+    canEmbed = message.channel.server.default_role.permissions.embed_links
+    if not canEmbed:
+        botMember = Discord.getMemberFromID(Config.clientid, message.server)
+        defaultroleperm = botMember.top_role.permissions
+        canEmbed = defaultroleperm.embed_links
     
     
 
