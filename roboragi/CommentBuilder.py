@@ -5,6 +5,7 @@ Takes the data given to it by search and formats it into a comment
 
 import re
 from os import linesep
+from discord import Embed
 import traceback
 
 import DatabaseHandler
@@ -707,7 +708,6 @@ def buildStatsComment(server=None, username=None, serverID="171004769069039616")
 
 # Builds an embed using the same data
 def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
-    import discord
     try:
         comment = ''
 
@@ -921,7 +921,6 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
 
 #sets up the embed for Mangas
 def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
-    import discord
     try:
         comment = ''
 
@@ -1109,7 +1108,6 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
 
 #sets up the embed for Light Novels
 def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
-    import discord
     try:
         comment = ''
 
@@ -1387,11 +1385,11 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
         return None
 
 def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail):
-    import discord
+    
     localFooterTitle='\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'
     localFooter = "{anime}, <manga>, \]LN\[ | [FAQ](https://github.com/dashwav/Discordoragi/wiki) | [/r/](http://www.reddit.com/r/Roboragi/) | [Source](https://github.com/dashwav/Discordoragi) | [Synonyms](https://www.reddit.com/r/Roboragi/wiki/synonyms)"
     try:
-        embed = discord.Embed(title=embedTitle, description=embedLinks, type='rich')
+        embed = Embed(title=embedTitle, description=embedLinks, type='rich')
         embed.set_thumbnail(url = embedThumbnail)
         embed.add_field(name='Info', value=embedContent)
         embed.add_field(name=localFooterTitle, value=localFooter)
