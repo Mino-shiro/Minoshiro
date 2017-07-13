@@ -94,7 +94,6 @@ def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
             
             if ani:
                 try:
-                    print("trying to get mal info")
                     mal = MAL.getMangaDetails(ani['title_romaji'])
                 except Exception as e:
                     print(e)
@@ -314,7 +313,6 @@ def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
             except:
                 traceback.print_exc()
                 pass
-        print("debug1")
         if not canEmbed:
             return CommentBuilder.buildAnimeComment(isExpanded, mal['result'], hb['result'], ani['result'], ap['result'], adb['result'])
         else:

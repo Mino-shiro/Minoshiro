@@ -36,7 +36,6 @@ def getSynonyms(request):
 
 #Returns the closest anime (as a Json-like object) it can find using the given searchtext. MAL returns XML (bleh) so we have to convert it ourselves.
 def getAnimeDetails(searchText, animeId=None):
-    print("trying to get mal anime")
     try:
         try:
             request = mal.get('https://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10)

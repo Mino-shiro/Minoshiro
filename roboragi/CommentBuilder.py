@@ -830,7 +830,6 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
             if i is not 0:
                 allLinks += ','
             allLinks += link
-        print("debug4")
         #----- JAPANESE TITLE -----#
         if (isExpanded):
             if jTitle is not None:
@@ -893,7 +892,7 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
         #----- DESCRIPTION -----#
         if (isExpanded):
             comment += '\n\n' + cleanupDescription(desc)
-        print("debug5")
+
         #----- END -----#
         receipt = '(A) Request successful: ' + title + ' - '
         if malURL is not None:
