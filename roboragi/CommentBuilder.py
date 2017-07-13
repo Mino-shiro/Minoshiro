@@ -830,8 +830,6 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
             if i is not 0:
                 allLinks += ','
             allLinks += link
-        
-        
         print("debug4")
         #----- JAPANESE TITLE -----#
         if (isExpanded):
