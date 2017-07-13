@@ -59,7 +59,7 @@ def isValidMessage(message):
         return False
 
 #Builds a manga reply from multiple sources
-def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
+def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracking=False):
     try:
         ani = None
         mal = None
@@ -94,8 +94,10 @@ def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
             
             if ani:
                 try:
+                    print("trying to get mal info")
                     mal = MAL.getMangaDetails(ani['title_romaji'])
-                except:
+                except Exception as e:
+                    print(e)
                     pass
 
                 if not mal:
@@ -161,14 +163,16 @@ def buildMangaReply(searchText, message, isExpanded, blockTracking=False):
                 traceback.print_exc()
                 pass
         
-        return CommentBuilder.buildMangaComment(isExpanded, mal, ani, mu, ap)
-        
+        if not canEmbed:
+            return CommentBuilder.buildMangaComment(isExpanded, mal, ani, mu, ap)
+        else:
+            return CommentBuilder.buildMangaEmbed(isExpanded, mal, ani, mu, ap)
     except Exception as e:
         traceback.print_exc()
         return None
 
 #Builds a manga search for a specific series by a specific author
-def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, blockTracking=False):
+def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, canEmbed, blockTracking=False):
     try:        
         ani = Anilist.getMangaWithAuthor(searchText, authorName)
         mal = None
@@ -197,14 +201,17 @@ def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, block
                 traceback.print_exc()
                 pass
             
-            return CommentBuilder.buildMangaComment(isExpanded, mal, ani, mu, ap)
+            if not canEmbed:
+                return CommentBuilder.buildMangaComment(isExpanded, mal, ani, mu, ap)
+            else:
+                return CommentBuilder.buildMangaEmbed(isExpanded, mal, ani, mu, ap)
     
     except Exception as e:
         traceback.print_exc()
         return None
 
 #Builds an anime reply from multiple sources
-def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
+def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=False):
     try:
         mal = {'search_function': MAL.getAnimeDetails,
                 'synonym_function': MAL.getSynonyms,
@@ -307,15 +314,18 @@ def buildAnimeReply(searchText, message, isExpanded, blockTracking=False):
             except:
                 traceback.print_exc()
                 pass
-        
-        return CommentBuilder.buildAnimeComment(isExpanded, mal['result'], hb['result'], ani['result'], ap['result'], adb['result'])
+        print("debug1")
+        if not canEmbed:
+            return CommentBuilder.buildAnimeComment(isExpanded, mal['result'], hb['result'], ani['result'], ap['result'], adb['result'])
+        else:
+            return CommentBuilder.buildAnimeEmbed(isExpanded, mal['result'], hb['result'], ani['result'], ap['result'], adb['result'])
 
     except Exception as e:
         traceback.print_exc()
         return None
 
 #Builds an LN reply from multiple sources
-def buildLightNovelReply(searchText, isExpanded, message, blockTracking=False):
+def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockTracking=False):
     try:
         mal = {'search_function': MAL.getLightNovelDetails,
                 'synonym_function': MAL.getSynonyms,
@@ -409,9 +419,10 @@ def buildLightNovelReply(searchText, isExpanded, message, blockTracking=False):
             except:
                 traceback.print_exc()
                 pass
-        
-        return CommentBuilder.buildLightNovelComment(isExpanded, mal['result'], ani['result'], nu['result'], lndb['result'])
-
+        if not canEmbed:
+            return CommentBuilder.buildLightNovelComment(isExpanded, mal['result'], ani['result'], nu['result'], lndb['result'])
+        else:
+            return CommentBuilder.buildLightNovelEmbed(isExpanded, mal['result'], ani['result'], nu['result'], lndb['result'])
     except Exception as e:
         traceback.print_exc()
         return None

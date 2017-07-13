@@ -32,18 +32,37 @@ async def process_message(message, is_edit=False):
     mangaArray = []
     lnArray = []
 
+    #Checks if bot has permissions to embed
+    defaultroleperm = message.channel.server.default_role.permissions
+    canEmbed = defaultroleperm.embed_links
+    
+    
+
     #ignores all "code" markup (i.e. anything between backticks)
     cleanMessage = re.sub(r"\`(?s)(.*?)\`", "", message.clean_content)
+    messageReply = ''
 
     sender = re.search('[@]([A-Za-z0-9_-]+?)(>|}|$)', cleanMessage, re.S)
     
     if re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', cleanMessage, re.S) is not None and sender is not None:
-        messageReply = CommentBuilder.buildStatsComment(username=sender.group(1))
+        if not canEmbed:
+            messageReply = CommentBuilder.buildStatsComment(username=sender.group(1))
+        else:
+            localEm = CommentBuilder.buildStatsEmbed(username=sender.group(1))
+            await Discord.client.send_message(message.channel, embed=localEm)
     if re.search('({!sstats.*?}|{{!sstats.*?}}|<!sstats.*?>|<<!sstats.*?>>)', cleanMessage, re.S) is not None:
         server = re.search('([A-Za-z0-9_]+?)(>|}|$)', cleanMessage, re.S)
-        messageReply = CommentBuilder.buildStatsComment(server=server.group(1))
+        if not canEmbed:
+            messageReply = CommentBuilder.buildStatsComment(server=server.group(1))
+        else:
+            localEm = ommentBuilder.buildStatsEmbed(server=server.group(1))
+            await Discord.client.send_message(message.channel, embed=localEm)
     elif re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', cleanMessage, re.S) is not None:
-        messageReply = CommentBuilder.buildStatsComment()
+        if not canEmbed:
+            messageReply = CommentBuilder.buildStatsComment()
+        else:
+            localEm = CommentBuilder.buildStatsEmbed()
+            await Discord.client.send_message(message.channel, embed=localEm)
     else:
         
         #The basic algorithm here is:
@@ -68,16 +87,16 @@ async def process_message(message, is_edit=False):
         for match in re.finditer("\{{2}([^}]*)\}{2}", cleanMessage, re.S):
             reply = ''
             if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-                reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, False)
+                reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
             else:
-                reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, True)
+                reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, True, canEmbed)
 
             if (reply is not None):
                 animeArray.append(reply)
 
         #Normal Anime
         for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))", cleanMessage, re.S):
-            reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, False)
+            reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
 
             if (reply is not None):
                 animeArray.append(reply)
@@ -88,9 +107,9 @@ async def process_message(message, is_edit=False):
             reply = ''
 
             if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-                reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, False)
+                reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
             else:
-                reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, True)
+                reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, True, canEmbed)
 
             if (reply is not None):
                 mangaArray.append(reply)
@@ -100,9 +119,9 @@ async def process_message(message, is_edit=False):
             reply = ''
 
             if (forceNormal) or (str(message.server).lower() in disableexpanded):
-                reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False)
+                reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False, canEmbed)
             else:
-                reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, True)
+                reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, True, canEmbed)
 
             if (reply is not None):
                 mangaArray.append(reply)
@@ -110,14 +129,14 @@ async def process_message(message, is_edit=False):
         #Normal Manga
         #NORMAL
         for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]+)\>(?!(:|\>))", cleanMessage, re.S):
-            reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, False)
+            reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
 
             if (reply is not None):
                 mangaArray.append(reply)
 
         #AUTHOR SEARCH
         for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]*)\>:\(([^)]+)\)", cleanMessage, re.S):
-            reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False)
+            reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False, canEmbed)
 
             if (reply is not None):
                 mangaArray.append(reply)
@@ -127,16 +146,16 @@ async def process_message(message, is_edit=False):
             reply = ''
 
             if (forceNormal) or (str(message.server).lower() in disableexpanded):
-                reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message)
+                reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
             else:
-                reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), True, message)                    
+                reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), True, message, canEmbed)                    
 
             if (reply is not None):
                 lnArray.append(reply)
 
         #Normal LN  
         for match in re.finditer("(?<=(?<!\])\])([^\]\[]*)(?=\[(?!\[))", cleanMessage, re.S):
-            reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message)
+            reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
             
             if (reply is not None):
                 lnArray.append(reply)
@@ -144,38 +163,39 @@ async def process_message(message, is_edit=False):
         #Here is where we create the final reply to be posted
 
         #The final message reply. We add stuff to this progressively.
+        postedAnimeTitles = []
+        postedMangaTitles = []
+        postedLNTitles = []
+    
         messageReply = ''
-
         #Basically just to keep track of people posting the same title multiple times (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
         postedAnimeTitles = []
         postedMangaTitles = []
         postedLNTitles = []
-
         #Adding all the anime to the final message. If there's manga too we split up all the paragraphs and indent them in Reddit markup by adding a '>', then recombine them
         for i, animeReply in enumerate(animeArray):
             if not (i is 0):
                 messageReply += '\n\n'
-
             if not (animeReply['title'] in postedAnimeTitles):
                 postedAnimeTitles.append(animeReply['title'])
-                messageReply += animeReply['comment']
-
-
+                if not canEmbed:
+                    messageReply += animeReply['comment']
+                else:
+                    messageReply = 'n/a'
         if mangaArray:
             messageReply += '\n\n'
-
         #Adding all the manga to the final message
         for i, mangaReply in enumerate(mangaArray):
             if not (i is 0):
                 messageReply += '\n\n'
-
             if not (mangaReply['title'] in postedMangaTitles):
                 postedMangaTitles.append(mangaReply['title'])
-                messageReply += mangaReply['comment']
-
+                if not canEmbed:
+                    messageReply += mangaReply['comment']
+                else: 
+                    messageReply = 'n/a'
         if lnArray:
             messageReply += '\n\n'
-
         #Adding all the manga to the final comment
         for i, lnReply in enumerate(lnArray):
             if not (i is 0):
@@ -183,21 +203,38 @@ async def process_message(message, is_edit=False):
             
             if not (lnReply['title'] in postedLNTitles):
                 postedLNTitles.append(lnReply['title'])
-                messageReply += lnReply['comment']
-
+                if not canEmbed:
+                    messageReply += lnReply['comment']
+                else:
+                    messageReply = 'N/A'
         #If there are more than 10 requests, shorten them all
         if not (messageReply is '') and (len(animeArray) + len(mangaArray) >= 10):
             messageReply = re.sub(r"\^\((.*?)\)", "", messageReply, flags=re.M)
-
     #If there was actually something found, add the signature and post the message to Reddit. Then, add the message to the "already seen" database.
     if not (messageReply is ''):
 
         if is_edit:
-            await Discord.client.send_message(message.channel, messageReply)
+            if not canEmbed:
+                await Discord.client.send_message(message.channel, messageReply)
+            else:
+                for i, animeReply in enumerate(animeArray):
+                    await Discord.client.send_message(message.channel, embed=animeReply['embed'])
+                for i, mangaReply in enumerate(mangaArray):
+                    await Discord.client.send_message(message.channel, embed=mangaReply['embed'])
+                for i, lnReply in enumerate(lnArray):
+                    await Discord.client.send_message(message.channel, embed=lnReply['embed'])
         else:
             try:
                 print("Message created.\n")
-                await Discord.client.send_message(message.channel, messageReply)
+                if not canEmbed:
+                    await Discord.client.send_message(message.channel, messageReply)
+                else:
+                    for i, animeReply in enumerate(animeArray):
+                        await Discord.client.send_message(message.channel, embed=animeReply['embed'])
+                    for i, mangaReply in enumerate(mangaArray):
+                        await Discord.client.send_message(message.channel, embed=mangaReply['embed'])
+                    for i, lnReply in enumerate(lnArray):
+                        await Discord.client.send_message(message.channel, embed=lnReply['embed'])
             except discord.errors.Forbidden:
                 print('Request from banned channel: ' + str(message.channel) + '\n')
             except Exception:

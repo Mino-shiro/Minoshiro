@@ -36,14 +36,19 @@ def getSynonyms(request):
 
 #Returns the closest anime (as a Json-like object) it can find using the given searchtext. MAL returns XML (bleh) so we have to convert it ourselves.
 def getAnimeDetails(searchText, animeId=None):
+    print("trying to get mal anime")
     try:
         try:
-            request = mal.get('http://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10)
+            request = mal.get('https://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10)
             mal.close()
-        except:
+        except Exception as e:
+            print(e)
             setup()
-            request = mal.get('http://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10)
-            mal.close()
+            try:
+                request = mal.get('https://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10)
+                mal.close()
+            except requests.exceptions.RequestException as e:  # This is the correct syntax
+                print(e) 
         
         convertedRequest = convertShittyXML(request.text)
         rawList = ET.fromstring(convertedRequest)
@@ -162,11 +167,11 @@ def getClosestFromDescription(mangaList, descriptionToCheck):
 def getMangaCloseToDescription(searchText, descriptionToCheck):
     try:
         try:
-            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
+            request = mal.get('https://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
             mal.close()
         except:
             setup()
-            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
+            request = mal.get('https://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
             mal.close()
 
         convertedRequest = convertShittyXML(request.text)
@@ -222,11 +227,11 @@ def getLightNovelDetails(searchText, lnId=None):
 def getMangaDetails(searchText, mangaId=None, isLN=False):
     try:
         try:
-            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
+            request = mal.get('https://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
             mal.close()
         except:
             setup()
-            request = mal.get('http://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
+            request = mal.get('https://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10)
             mal.close()
 
         convertedRequest = convertShittyXML(request.text)

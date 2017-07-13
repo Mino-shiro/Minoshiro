@@ -4,7 +4,7 @@ Discordoragi is a Discord bot based on [Roboragi](http://github.com/Nihilate/Rob
 ## Installation
 Discordoragi is written in Python for use with Python 3.5+ It is not possible to use anything less as the Discord API is phasing out support for it. There's a requirements.txt if you want to test it out yourself, but you'll need to create a Config.py with your own information and set up a PostgreSQL database.
 
-###Step 1:
+### Step 1:
 I recommend you install PyEnv if you are running linux, otherwise you can skip to step 3
 
 ```
@@ -20,19 +20,20 @@ echo 'eval "$(pyenv init -)"' >> ~/.bashrc
 echo 'pyenv virtualenvwrapper' >> ~/.bashrc
 ```
 You will need to close out of the terminal (or start a new SSH session) to finish instalation
-###Step 2:
+
+### Step 2:
 Next we will install Python 3.5.2 using PyEnv
 
 `pyenv install 3.5.2`
 
 NOTE: This installs Python 3.5.2 in a virtual environment (venv) and it cannot be accessed from outside of the venv.
 
-###Step 3:
+### Step 3:
 Next we are going to install all of our dependencies
 
-####Ubuntu
+#### Debian/Ubuntu
 First we need to install some packages:  
-`[sudo] apt-get install libffi-dev libxml2-dev libxslt-dev python3.5-dev libpq-dev -y`
+`[sudo] apt-get install libffi-dev libxml2-dev libxslt-dev python3 libpq-dev -y`
 
 Now from the root directory of the repositoy run the following - Skip this if you are not using PyEnv:  
 `pyvenv venv`  
@@ -45,7 +46,7 @@ Type the following to install all of our dependencies:
 Test out our setup by running `python roboragi/AnimeBot.py`  
 If you see `NameError: name 'MALAUTH' is not defined` then your setup is working up to this point!
 
-####Windows
+#### Windows (not tested)
 Run the following commands in a Command Prompt with Administrator Access  
 `pip install http://jwolff52.github.io/Discordoragi/lxml-3.6.0-cp35-cp35m-win32.whl`  
 `pip install http://jwolff52.github.io/Discordoragi/pyquery-1.2.13-py2-none-any.whl`  
@@ -55,16 +56,24 @@ Run the following commands in a Command Prompt with Administrator Access
 Test out our setup by running `python roboragi/AnimeBot.py` from the root directory of the repository.  
 If you see `NameError: name 'MALAUTH' is not defined` then your setup is working up to this point!
 
-###Step 4:
+### Step 4:
 Setting up your config  
 Copy the file `Config.py.example` to `Config.py`  
 Open `Config.py` up and enter the information that it asks for, visiting the given websites when required  
 You should be able to keep the `Database Info` the same if you are just testing, though you will want to change it if you are deploying.
 
-###Step 5:
+### Step 5:
 Creating your PostgreSQL Database
 
-//TODO:
+`[sudo] apt-get install postgresql`
+
+Log in using the default user created on install, and set up the database, as well as the user and password for the bot (I will be using the names that are in the Config.py.example)
+```
+sudo -u postgres psql
+postgres=# CREATE DATABASE discordoragi;
+postgres=# CREATE USER discordoragi WITH PASSWORD 'password';
+postgres=# GRANT ALL PRIVILEGES ON DATABASE discordoragi to discordoragi;
+```
 
 ## How it works
 
