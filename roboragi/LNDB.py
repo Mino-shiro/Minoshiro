@@ -5,20 +5,21 @@ Handles all LNDB information
 
 from pyquery import PyQuery as pq
 import requests
+import aiohttp
 import difflib
 import traceback
 import pprint
 import collections
 
-req = requests.Session()
+session = aiohttp.ClientSession()
 
-def getLightNovelURL(searchText):
+async def getLightNovelURL(searchText):
     try:
         searchText = searchText.replace(' ', '+')
-        html = req.get('http://lndb.info/search?text=' + searchText, timeout=10)
-        req.close()
+        async with session.get('http://lndb.info/search?text=' + searchText, timeout=10) as resp:
+            html = await resp.text()
 
-        lndb = pq(html.text)
+        lndb = pq(html)
 
         lnList = []
 
@@ -35,7 +36,6 @@ def getLightNovelURL(searchText):
         return closest['url']
     
     except Exception as e:
-        req.close()
         return None
 
 def findClosestLightNovel(searchText, lnList):

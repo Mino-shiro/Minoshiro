@@ -5,12 +5,13 @@ Handles all MangaUpdates information
 
 from pyquery import PyQuery as pq
 import requests
+import aiohttp
 import difflib
 import traceback
 import pprint
 import collections
 
-req = requests.Session()
+req = aiohttp.ClientSession()
 
 def findClosestManga(searchText, mangaList):
     try:
@@ -29,12 +30,13 @@ def findClosestManga(searchText, mangaList):
     except:
         return None
 
-def findAuthorURL(authorName):
+async def findAuthorURL(authorName):
     try:
         payload = {'search': authorName}
-        html = req.get('https://mangaupdates.com/authors.html', params=payload, timeout=10)
-        req.close()
-        mu = pq(html.text)
+        async with req.get('https://mangaupdates.com/authors.html', params=payload, timeout=10) as resp:
+            html = await resp.text()
+        
+        mu = pq(html)
         authorURL = None
 
         for thing in pq(mu).find('table tr td .text .pad'):
@@ -47,15 +49,16 @@ def findAuthorURL(authorName):
 
         return authorURL
     except:
-        req.close()
+        
         traceback.print_exc()
         return None
 
-def findSeriesURLViaAuthor(seriesName, authorName, authorURL):
+async def findSeriesURLViaAuthor(seriesName, authorName, authorURL):
     try:
-        html = req.get(authorURL, timeout=10)
-        req.close()
-        mu = pq(html.text)
+        async with req.get(authorURL, timeout=10) as resp:
+            html = await resp.text()
+        
+        mu = pq(html)
         authorURL = None
 
         authorName = authorName.lower()
@@ -82,22 +85,22 @@ def findSeriesURLViaAuthor(seriesName, authorName, authorURL):
 
         return authorURL
     except:
-        req.close()
+        
         traceback.print_exc()
         return None
 
-def getMangaWithAuthor(searchText, authorName):
+async def getMangaWithAuthor(searchText, authorName):
     try:
-        url = findAuthorURL(authorName)
+        url = await findAuthorURL(authorName)
         
         if not url:
             rearrangedAuthorNames = collections.deque(authorName.split(' '))
             rearrangedAuthorNames.rotate(-1)
             rearrangedName = ' '.join(rearrangedAuthorNames)
-            url = findAuthorURL(rearrangedName)
+            url = await findAuthorURL(rearrangedName)
 
         if url:
-            return findSeriesURLViaAuthor(searchText, authorName, url)
+            return await findSeriesURLViaAuthor(searchText, authorName, url)
         else:
             return None
         
@@ -105,13 +108,14 @@ def getMangaWithAuthor(searchText, authorName):
         traceback.print_exc()
         return None
 
-def getMangaURL(searchText):
+async def getMangaURL(searchText):
     try:
         payload = {'search': searchText}
-        html = req.get('https://mangaupdates.com/series.html', params=payload, timeout=10)
-        req.close()
+        async with req.get('https://mangaupdates.com/series.html', params=payload, timeout=10) as resp:
+            html = await resp.text()
+        
 
-        mu = pq(html.text)
+        mu = pq(html)
 
         mangaList = []
 
@@ -135,7 +139,7 @@ def getMangaURL(searchText):
         return closest['url']
     
     except:
-        req.close()
+        
         return None
 
 def getMangaURLById(mangaId):

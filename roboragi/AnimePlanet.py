@@ -1,5 +1,5 @@
 from pyquery import PyQuery as pq
-import requests
+import aiohttp
 import difflib
 import traceback
 import pprint
@@ -7,67 +7,64 @@ import collections
 
 BASE_URL = "http://www.anime-planet.com"
 
-req = requests.Session()
+session = aiohttp.ClientSession()
 
 def sanitiseSearchText(searchText):
     return searchText.replace('(TV)', 'TV')
 
-def getAnimeURL(searchText):
+async def getAnimeURL(searchText):
     try:
         searchText = sanitiseSearchText(searchText)
         
-        html = req.get(BASE_URL + "/anime/all?name=" + searchText.replace(" ", "%20"), timeout=10)
-        req.close()
-        ap = pq(html.text)
+        async with session.get(BASE_URL + "/anime/all?name=" + searchText.replace(" ", "%20"), timeout=10) as resp:
+            html = await resp.text()
+            ap = pq(html)
+            animeList = []
 
-        animeList = []
+            #If it's taken us to the search page
+            if ap.find('.cardDeck.pure-g.cd-narrow[data-type="anime"]'):
+                for entry in ap.find('.card.pure-1-6'):
+                    entryTitle = pq(entry).find('a').text()
+                    entryURL = pq(entry).find('a').attr('href')
+                    
+                    anime = {}
+                    anime['title'] = entryTitle
+                    anime['url'] = BASE_URL + entryURL
+                    animeList.append(anime)
 
-        #If it's taken us to the search page
-        if ap.find('.cardDeck.pure-g.cd-narrow[data-type="anime"]'):
-            for entry in ap.find('.card.pure-1-6'):
-                entryTitle = pq(entry).find('a').text()
-                entryURL = pq(entry).find('a').attr('href')
+                closestName = difflib.get_close_matches(searchText.lower(), [x['title'].lower() for x in animeList], 1, 0.85)[0]
+                closestURL = ''
                 
-                anime = {}
-                anime['title'] = entryTitle
-                anime['url'] = BASE_URL + entryURL
-                animeList.append(anime)
-
-            closestName = difflib.get_close_matches(searchText.lower(), [x['title'].lower() for x in animeList], 1, 0.85)[0]
-            closestURL = ''
+                for anime in animeList:
+                    if anime['title'].lower() == closestName:
+                        return anime['url']
+                
+            #Else if it's taken us right to the series page, get the url from the meta tag
+            else:
+                return ap.find("meta[property='og:url']").attr('content')
+            return None
             
-            for anime in animeList:
-                if anime['title'].lower() == closestName:
-                    return anime['url']
-            
-        #Else if it's taken us right to the series page, get the url from the meta tag
-        else:
-            return ap.find("meta[property='og:url']").attr('content')
-        return None
-            
-    except:
-        req.close()
+    except Exception as e:
         return None
 
 #Probably doesn't need to be split into two functions given how similar they are, but it might be worth keeping separate for the sake of issues between anime/manga down the line
-def getMangaURL(searchText, authorName=None):
+async def getMangaURL(searchText, authorName=None):
     try:
         if authorName:
-            html = req.get(BASE_URL + "/manga/all?name=" + searchText.replace(" ", "%20") + '&author=' + authorName.replace(" ", "%20"), timeout=10)
-            req.close()
-
-            if "No results found" in html.text:
+            async with sessions.get(BASE_URL + "/manga/all?name=" + searchText.replace(" ", "%20") + '&author=' + authorName.replace(" ", "%20"), timeout=10) as resp:
+                html = await resp.text()
+            if "No results found" in html:
                 rearrangedAuthorNames = collections.deque(authorName.split(' '))
                 rearrangedAuthorNames.rotate(-1)
                 rearrangedName = ' '.join(rearrangedAuthorNames)
-                html = req.get(BASE_URL + "/manga/all?name=" + searchText.replace(" ", "%20") + '&author=' + rearrangedName.replace(" ", "%20"), timeout=10)
-                req.close()
+                async with session.get(BASE_URL + "/manga/all?name=" + searchText.replace(" ", "%20") + '&author=' + rearrangedName.replace(" ", "%20"), timeout=10) as resp:
+                    html = await resp.text()
             
         else:
-            html = req.get(BASE_URL + "/manga/all?name=" + searchText.replace(" ", "%20"), timeout=10)
-            req.close()
+            async with session.get(BASE_URL + "/manga/all?name=" + searchText.replace(" ", "%20"), timeout=10) as resp:
+                html = await resp.text()
             
-        ap = pq(html.text)
+        ap = pq(html)
 
         mangaList = []
 
@@ -106,7 +103,6 @@ def getMangaURL(searchText, authorName=None):
         return None
             
     except:
-        req.close()
         return None
 
 def getAnimeURLById(animeId):

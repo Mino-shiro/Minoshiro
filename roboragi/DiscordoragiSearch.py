@@ -21,6 +21,7 @@ import time
 import sqlite3
 import json
 
+import asyncio
 import pprint
 
 USERNAME = ''
@@ -59,7 +60,7 @@ def isValidMessage(message):
         return False
 
 #Builds a manga reply from multiple sources
-def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracking=False):
+async def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracking=False):
     try:
         ani = None
         mal = None
@@ -76,43 +77,50 @@ def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
         if (alternateLinks):
             synonym = json.loads(alternateLinks[0])       
             
-            if (synonym['mal']):
-                mal = MAL.getMangaDetails(synonym['mal'][0], synonym['mal'][1])
-            if (synonym['ani']):
-                ani = Anilist.getMangaDetailsById(synonym['ani'])
-            if (synonym['mu']):
-                mu = MU.getMangaURLById(synonym['mu'])
-            if (synonym['ap']):
-                ap = AniP.getMangaURLById(synonym['ap'])
+            if 'mal' in synonym:
+                if (synonym['mal']):
+                    mal = await MAL.getMangaDetails(synonym['mal'][0], synonym['mal'][1])
+            
+            if 'ani' in synonym:
+	            if (synonym['ani']):
+	                ani = await Anilist.getMangaDetailsById(synonym['ani'])
+
+            if 'mu' in synonym:
+                if (synonym['mu']):
+                    mu = MU.getMangaURLById(synonym['mu'])
+                
+            if 'ap' in synonym:
+                if (synonym['ap']):
+                    ap = AniP.getMangaURLById(synonym['ap'])
 
         else:
             #Basic breakdown:
             #If Anilist finds something, use it to find the MAL version.
             #If hits either MAL or Ani, use it to find the MU version.
             #If it hits either, add it to the request-tracking DB.
-            ani = Anilist.getMangaDetails(searchText)
+            ani = await Anilist.getMangaDetails(searchText)
             
             if ani:
                 try:
-                    mal = MAL.getMangaDetails(ani['title_romaji'])
+                    mal = await MAL.getMangaDetails(ani['title_romaji'])
                 except Exception as e:
                     print(e)
                     pass
 
                 if not mal:
                     try:
-                        mal = MAL.getMangaDetails(ani['title_english'])
+                        mal = await MAL.getMangaDetails(ani['title_english'])
                     except:
                         pass
 
                 if not mal:
-                    mal = MAL.getMangaDetails(searchText)
+                    mal = await MAL.getMangaDetails(searchText)
 
             else:
-                mal = MAL.getMangaDetails(searchText)
+                mal = await MAL.getMangaDetails(searchText)
 
                 if mal:
-                    ani = Anilist.getMangaDetails(mal['title'])    
+                    ani = await Anilist.getMangaDetails(mal['title'])    
 
         #----- Finally... -----#
         if ani or mal:
@@ -130,32 +138,32 @@ def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
                 if not alternateLinks:
                     #MU stuff
                     if mal:
-                        mu = MU.getMangaURL(mal['title'])
+                        mu = await MU.getMangaURL(mal['title'])
                     else:
-                        mu = MU.getMangaURL(ani['title_romaji'])
+                        mu = await MU.getMangaURL(ani['title_romaji'])
 
                     #Do the anime-planet stuff
                     if mal and not ap:
                         if mal['title'] and not ap:
-                            ap = AniP.getMangaURL(mal['title'])
+                            ap = await AniP.getMangaURL(mal['title'])
                         if mal['english'] and not ap:
-                            ap = AniP.getMangaURL(mal['english'])
+                            ap = await AniP.getMangaURL(mal['english'])
                         if mal['synonyms'] and not ap:
                             for synonym in mal['synonyms']:
                                 if ap:
                                     break
-                                ap = AniP.getMangaURL(synonym)
+                                ap = await AniP.getMangaURL(synonym)
 
                     if ani and not ap:
                         if ani['title_english'] and not ap:
-                            ap = AniP.getMangaURL(ani['title_english'])
+                            ap = await AniP.getMangaURL(ani['title_english'])
                         if ani['title_romaji'] and not ap:
-                            ap = AniP.getMangaURL(ani['title_romaji'])
+                            ap = await AniP.getMangaURL(ani['title_romaji'])
                         if ani['synonyms'] and not ap:
                             for synonym in ani['synonyms']:
                                 if ap:
                                     break
-                                ap = AniP.getMangaURL(synonym)
+                                ap = await AniP.getMangaURL(synonym)
                 if not blockTracking:
                     DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.id, message.server.id)
             except:
@@ -171,20 +179,23 @@ def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
         return None
 
 #Builds a manga search for a specific series by a specific author
-def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, canEmbed, blockTracking=False):
+async def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, canEmbed, blockTracking=False):
     try:        
-        ani = Anilist.getMangaWithAuthor(searchText, authorName)
+        ani = await Anilist.getMangaWithAuthor(searchText, authorName)
         mal = None
         mu = None
         ap = None
         
         if ani:
-            mal = MAL.getMangaCloseToDescription(searchText, ani['description'])
-            ap = AniP.getMangaURL(ani['title_english'], authorName)
+            try:
+                mal = await MAL.getMangaCloseToDescription(searchText, ani['description'])
+                ap = await AniP.getMangaURL(ani['title_english'], authorName)
+            except Exception as e:
+                print(e)
         else:
-            ap = AniP.getMangaURL(searchText, authorName)
+            ap = await AniP.getMangaURL(searchText, authorName)
 
-        mu = MU.getMangaWithAuthor(searchText, authorName)
+        mu = await MU.getMangaWithAuthor(searchText, authorName)
 
         if ani:
             try:
@@ -210,17 +221,13 @@ def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, canEm
         return None
 
 #Builds an anime reply from multiple sources
-def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=False):
+async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=False):
     try:
         mal = {'search_function': MAL.getAnimeDetails,
                 'synonym_function': MAL.getSynonyms,
                 'checked_synonyms': [],
                 'result': None}
-        hb = {'search_function': Hummingbird.getAnimeDetails,
-                'synonym_function': Hummingbird.getSynonyms,
-                'checked_synonyms': [],
-                'result': None}
-        ani = {'search_function': Anilist.getAnimeDetails,
+        ani = {'search_function':  Anilist.getAnimeDetails,
                 'synonym_function': Anilist.getSynonyms,
                 'checked_synonyms': [],
                 'result': None}
@@ -243,11 +250,6 @@ def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
                 malsyn = None
                 if 'mal' in synonym and synonym['mal']:
                     malsyn = synonym['mal']
-
-                hbsyn = None
-                if 'hb' in synonym and synonym['hb']:
-                    hbsyn = synonym['hb']
-
                 anisyn = None
                 if 'ani' in synonym and synonym['ani']:
                     anisyn = synonym['ani']
@@ -260,14 +262,13 @@ def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
                 if 'adb' in synonym and synonym['adb']:
                     adbsyn = synonym['adb']
 
-                mal['result'] = MAL.getAnimeDetails(malsyn[0],malsyn[1]) if malsyn else None
-                hb['result'] = Hummingbird.getAnimeDetailsById(hbsyn) if hbsyn else None
-                ani['result'] = Anilist.getAnimeDetailsById(anisyn) if anisyn else None
+                mal['result'] = await MAL.getAnimeDetails(malsyn[0],malsyn[1]) if malsyn else None
+                ani['result'] = await Anilist.getAnimeDetailsById(anisyn) if anisyn else None
                 ap['result'] = AniP.getAnimeURLById(apsyn) if apsyn else None
                 adb['result'] = AniDB.getAnimeURLById(adbsyn) if adbsyn else None
                 
         else:
-            data_sources = [ani, hb, mal]
+            data_sources = [ani, mal]
             #aux_sources = [ap, adb]
             aux_sources = [ap]
 
@@ -282,7 +283,7 @@ def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
                             if synonym in source['checked_synonyms']:
                                 continue
 
-                            source['result'] = source['search_function'](synonym)
+                            source['result'] = await source['search_function'](synonym)
                             source['checked_synonyms'].append(synonym)
 
                             if source['result']:
@@ -293,18 +294,16 @@ def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
 
             for source in aux_sources:
                 for synonym in synonyms:     
-                    source['result'] = source['search_function'](synonym)
+                    source['result'] = await source['search_function'](synonym)
 
                     if source['result']:
                         break
 
-        if ani['result'] or hb['result'] or mal['result']:
+        if ani['result'] or mal['result']:
             try:
                 titleToAdd = ''
                 if mal['result']:
                     titleToAdd = mal['result']['title']
-                if hb['result']:
-                    titleToAdd = hb['result']['title']
                 if ani['result']:
                     titleToAdd = ani['result']['title_romaji']
 
@@ -314,16 +313,16 @@ def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=Fal
                 traceback.print_exc()
                 pass
         if not canEmbed:
-            return CommentBuilder.buildAnimeComment(isExpanded, mal['result'], hb['result'], ani['result'], ap['result'], adb['result'])
+            return CommentBuilder.buildAnimeComment(isExpanded, mal['result'], ani['result'], ap['result'], adb['result'])
         else:
-            return CommentBuilder.buildAnimeEmbed(isExpanded, mal['result'], hb['result'], ani['result'], ap['result'], adb['result'])
+            return CommentBuilder.buildAnimeEmbed(isExpanded, mal['result'], ani['result'], ap['result'], adb['result'])
 
     except Exception as e:
         traceback.print_exc()
         return None
 
 #Builds an LN reply from multiple sources
-def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockTracking=False):
+async def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockTracking=False):
     try:
         mal = {'search_function': MAL.getLightNovelDetails,
                 'synonym_function': MAL.getSynonyms,
@@ -365,10 +364,10 @@ def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockTrackin
                 if 'lndb' in synonym and synonym['lndb']:
                     lndbsyn = synonym['lndb']
 
-                mal['result'] = MAL.getLightNovelDetails(malsyn[0],malsyn[1]) if malsyn else None
-                ani['result'] = Anilist.getMangaDetailsById(anisyn) if anisyn else None
+                mal['result'] = await MAL.getLightNovelDetails(malsyn[0],malsyn[1]) if malsyn else None
+                ani['result'] = await Anilist.getMangaDetailsById(anisyn) if anisyn else None
                 nu['result'] = NU.getLightNovelById(nusyn) if nusyn else None
-                lndb['result'] = LNDB.getLightNovelById(lndbsyn) if lndbsyn else None
+                lndb['result'] =LNDB.getLightNovelById(lndbsyn) if lndbsyn else None
                 
         else:
             data_sources = [ani, mal]
@@ -385,7 +384,7 @@ def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockTrackin
                             if synonym in source['checked_synonyms']:
                                 continue
 
-                            source['result'] = source['search_function'](synonym)
+                            source['result'] = await source['search_function'](synonym)
                             source['checked_synonyms'].append(synonym)
 
                             if source['result']:
@@ -396,7 +395,7 @@ def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockTrackin
 
             for source in aux_sources:
                 for synonym in synonyms:     
-                    source['result'] = source['search_function'](synonym)
+                    source['result'] =await source['search_function'](synonym)
 
                     if source['result']:
                         break

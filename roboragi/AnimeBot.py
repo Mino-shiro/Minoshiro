@@ -18,6 +18,7 @@ import Reference
 
 #the servers where expanded requests are disabled
 disableexpanded = ['']
+async_queue = asyncio.Queue(maxsize = 32)
 
 @Discord.client.event
 async def on_ready():
@@ -42,7 +43,7 @@ async def process_message(message, is_edit=False):
     
 
     #ignores all "code" markup (i.e. anything between backticks)
-    cleanMessage = re.sub(r"\`(?s)(.*?)\`", "", message.clean_content)
+    cleanMessage = re.sub(r"\`[{<\[]+(.*?)[}>\]]+\`", "", message.clean_content)
     messageReply = ''
 
     sender = re.search('[@]([A-Za-z0-9_-]+?)(>|}|$)', cleanMessage, re.S)
@@ -90,19 +91,21 @@ async def process_message(message, is_edit=False):
         for match in re.finditer("\{{2}([^}]*)\}{2}", cleanMessage, re.S):
             reply = ''
             if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-                reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
+                reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
             else:
-                reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, True, canEmbed)
+                reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, True, canEmbed)
 
             if (reply is not None):
                 animeArray.append(reply)
 
         #Normal Anime
         for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))", cleanMessage, re.S):
-            reply = DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
+            reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
 
             if (reply is not None):
                 animeArray.append(reply)
+            else:
+                print('Could not find anime')
 
         #Expanded Manga
         #NORMAL EXPANDED
@@ -110,9 +113,9 @@ async def process_message(message, is_edit=False):
             reply = ''
 
             if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-                reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
+                reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
             else:
-                reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, True, canEmbed)
+                reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, True, canEmbed)
 
             if (reply is not None):
                 mangaArray.append(reply)
@@ -122,9 +125,9 @@ async def process_message(message, is_edit=False):
             reply = ''
 
             if (forceNormal) or (str(message.server).lower() in disableexpanded):
-                reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False, canEmbed)
+                reply = await DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False, canEmbed)
             else:
-                reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, True, canEmbed)
+                reply = await DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, True, canEmbed)
 
             if (reply is not None):
                 mangaArray.append(reply)
@@ -132,14 +135,14 @@ async def process_message(message, is_edit=False):
         #Normal Manga
         #NORMAL
         for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]+)\>(?!(:|\>))", cleanMessage, re.S):
-            reply = DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
+            reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
 
             if (reply is not None):
                 mangaArray.append(reply)
 
         #AUTHOR SEARCH
         for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]*)\>:\(([^)]+)\)", cleanMessage, re.S):
-            reply = DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False, canEmbed)
+            reply = await DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False, canEmbed)
 
             if (reply is not None):
                 mangaArray.append(reply)
@@ -149,16 +152,16 @@ async def process_message(message, is_edit=False):
             reply = ''
 
             if (forceNormal) or (str(message.server).lower() in disableexpanded):
-                reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
+                reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
             else:
-                reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), True, message, canEmbed)                    
+                reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), True, message, canEmbed)                    
 
             if (reply is not None):
                 lnArray.append(reply)
 
         #Normal LN  
         for match in re.finditer("(?<=(?<!\])\])([^\]\[]*)(?=\[(?!\[))", cleanMessage, re.S):
-            reply = DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
+            reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
             
             if (reply is not None):
                 lnArray.append(reply)

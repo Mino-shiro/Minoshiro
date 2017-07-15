@@ -2,13 +2,13 @@
 Hummingbird.py
 Handles all of the connections to Hummingbird.
 '''
-
+import aiohttp
 import difflib
 import requests
 import traceback
 import pprint
 
-req = requests.Session()
+session = aiohttp.ClientSession()
 
 def getSynonyms(request):
     synonyms = []
@@ -19,11 +19,9 @@ def getSynonyms(request):
     return synonyms
 
 #Returns the closest anime (as a Json-like object) it can find using the given searchtext
-def getAnimeDetails(searchText):
+async def getAnimeDetails(searchText):
     try:
-        request = req.get('https://hummingbird.me/api/v1/search/anime?query=' + searchText.lower(), timeout=10)
-        req.close()
-        
+        request = await session.get('https://hummingbird.me/api/v1/search/anime?query=' + searchText.lower(), timeout=10)
         closestAnime = getClosestAnime(searchText, request.json())
 
         if not (closestAnime is None):
@@ -32,17 +30,16 @@ def getAnimeDetails(searchText):
             return None
             
     except Exception as e:
-        req.close()
+        print(e)
         return None
 
 #Returns the closest anime by id
-def getAnimeDetailsById(animeId):
+async def getAnimeDetailsById(animeId):
     try:
-        response = req.get('http://hummingbird.me/api/v1/anime/' + str(animeId), timeout=10)
-        req.close()
+        response = await session.get('http://hummingbird.me/api/v1/anime/' + str(animeId), timeout=10)
+
         return response.json()
     except Exception as e:
-        req.close()
         return None
 
 #Sometimes the "right" anime isn't at the top of the list, so we get the titles

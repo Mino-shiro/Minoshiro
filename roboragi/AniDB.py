@@ -4,20 +4,20 @@ Handles all AniDB information
 '''
 
 from pyquery import PyQuery as pq
-import requests
+#import requests
+import aiohttp
 import difflib
 import traceback
 import pprint
 
-req = requests.Session()
-
-def getAnimeURL(searchText):
+async def getAnimeURL(searchText):
     try:
-        html = req.get('http://anisearch.outrance.pl/?task=search&query=' + searchText, timeout=10)
-        req.close()
-        anidb = pq(html.content)    
+
+        async with session.get('http://anisearch.outrance.pl/?task=search&query=' + searchText, timeout=10) as resp:
+            html = await resp.content
+            anidb = pq(html)    
     except:
-        req.close()
+        traceback.print_exc()
         return None
         
     animeList = []

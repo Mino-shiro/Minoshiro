@@ -31,8 +31,8 @@ def cleanupDescription(desc):
         reply += '>' + line + '\n'
     return reply
 
-#Builds an anime comment from MAL/HB/Anilist data
-def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
+#Builds an anime comment from MAL/Anilist data
+def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
     try:
         comment = ''
 
@@ -42,7 +42,6 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
         cType = None
 
         malURL = None
-        hbURL = None
         aniURL = None
         apURL = ap
         anidbURL = anidb
@@ -100,33 +99,9 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
             except:
                 print('No full details for Anilist')
 
-        if hb is not None:
-            title = hb['title']
-            desc = hb['synopsis']
-            status = hb['status']
-
-            if hb['show_type']:
-                cType = hb['show_type']
-            
-            hbURL = hb['url']
-
-            if hb['mal_id'] and not malURL:
-                malURL = 'http://myanimelist.net/anime/' + str(hb['mal_id'])
-
-            if (hb['genres'] is not None) and (not genres):
-                for genre in hb['genres']:
-                    genres.append(genre['name'])
-
-            if (hb['episode_count'] is not None):
-                episodes = hb['episode_count']
-            else:
-                episodes = 'Unknown'
-
         stats = DatabaseHandler.getRequestStats(title, 'Anime')
 
-        if ani is None:
-            stats = DatabaseHandler.getRequestStats(hb['title'],'Anime')
-        else:
+        if ani is not None:
             stats = DatabaseHandler.getRequestStats(ani['title_romaji'],'Anime')
 
         #---------- BUILDING THE COMMENT ----------#
@@ -141,8 +116,6 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
             urlComments.append(malURL)
         if apURL is not None:
             urlComments.append(apURL)
-        if hb is not None:
-            urlComments.append(hbURL)
         if ani is not None:
             urlComments.append(aniURL)
         if anidbURL is not None:
@@ -222,8 +195,6 @@ def buildAnimeComment(isExpanded, mal, hb, ani, ap, anidb):
             receipt += 'MAL '
         if apURL is not None:
             receipt += 'AP '
-        if hb is not None:
-            receipt += 'HB '
         if ani is not None:
             receipt += 'ANI '
         if anidbURL is not None:
@@ -707,7 +678,7 @@ def buildStatsComment(server=None, username=None, serverID="171004769069039616")
         return None
 
 # Builds an embed using the same data
-def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
+def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
     try:
         comment = ''
 
@@ -718,7 +689,6 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
 
         malimage = ''
         malURL = None
-        hbURL = None
         aniURL = None
         apURL = ap
         anidbURL = anidb
@@ -745,6 +715,8 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
             if mal['image']:
                 malimage = mal['image']
 
+            if mal['status']:
+                status = mal['status']
         if ani is not None:
             title = ani['title_romaji']
             aniURL = 'http://anilist.co/anime/' + str(ani['id'])
@@ -754,8 +726,9 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
                 desc = ani['description']
             except:
                 pass
-
-            status = ani['airing_status'].title()
+            
+            if status is None:
+                status = ani['airing_status'].title()
 
             try:
                 if ani['title_japanese'] is not None:
@@ -779,33 +752,9 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
             except:
                 print('No full details for Anilist')
 
-        if hb is not None:
-            title = hb['title']
-            desc = hb['synopsis']
-            status = hb['status']
-
-            if hb['show_type']:
-                cType = hb['show_type']
-            
-            hbURL = hb['url']
-
-            if hb['mal_id'] and not malURL:
-                malURL = 'http://myanimelist.net/anime/' + str(hb['mal_id'])
-
-            if (hb['genres'] is not None) and (not genres):
-                for genre in hb['genres']:
-                    genres.append(genre['name'])
-
-            if (hb['episode_count'] is not None):
-                episodes = hb['episode_count']
-            else:
-                episodes = 'Unknown'
-
         stats = DatabaseHandler.getRequestStats(title, 'Anime')
 
-        if ani is None:
-            stats = DatabaseHandler.getRequestStats(hb['title'],'Anime')
-        else:
+        if ani is not None:
             stats = DatabaseHandler.getRequestStats(ani['title_romaji'],'Anime')
 
         #---------- BUILDING THE COMMENT ----------#
@@ -815,20 +764,25 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
         #----- LINKS -----#
         urlComments = []
         allLinks = ''
+
+        try:
+        	mal_english = mal['english']
+        except:
+        	pass
+
+
         if malURL is not None:
             urlComments.append("[MAL]({})".format(malURL))
         if apURL is not None:
             urlComments.append("[AP]({})".format(apURL))
-        if hb is not None:
-            urlComments.append("[HB]({})".format(hbURL))
         if ani is not None:
-            urlComments.append("[ANI]({})".format(aniURL))
+            urlComments.append("[AL]({})".format(aniURL))
         if anidbURL is not None:
             urlComments.append("[AniDB]({})".format(anidbURL))
             
         for i, link in enumerate(urlComments):
             if i is not 0:
-                allLinks += ','
+                allLinks += ', '
             allLinks += link
         #----- JAPANESE TITLE -----#
         if (isExpanded):
@@ -899,10 +853,8 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
             receipt += 'MAL '
         if apURL is not None:
             receipt += 'AP '
-        if hb is not None:
-            receipt += 'HB '
         if ani is not None:
-            receipt += 'ANI '
+            receipt += 'AL '
         if anidbURL is not None:
             receipt += 'ADB '
         print(receipt)
@@ -916,7 +868,7 @@ def buildAnimeEmbed(isExpanded, mal, hb, ani, ap, anidb):
 
         return dictToReturn
     except:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #sets up the embed for Mangas
@@ -960,7 +912,10 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
                 chapters = 'Unknown'
 
             try:
-                volumes = mal['volumes']
+                if (int(mal['volumes']) == 0):
+                    volumes = 'Unknown'
+                else:
+                    volumes = mal['volumes']
             except:
                 volumes = 'Unknown'
 
