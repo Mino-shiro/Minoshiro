@@ -84,7 +84,6 @@ Discordoragi uses discord.py (a Python library) to interface with Discord. It wa
 
 ## Current databases
 - MAL (Anime + Manga)
-- Hummingbird (Anime)
 - Anilist (Anime + Manga)
 - MangaUpdates (Manga)
 - Anime-Planet (Anime + Manga)
