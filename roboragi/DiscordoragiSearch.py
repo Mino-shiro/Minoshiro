@@ -304,7 +304,6 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
                 titleToAdd = ''
                 if mal['result']:
                     if 'title' in mal['result']:
-                        print(mal['result']['title'])
                         titleToAdd = mal['result']['title']
                 '''if hb['result']:
                     if 'title' in hb['result']:

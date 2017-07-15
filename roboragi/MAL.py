@@ -48,7 +48,6 @@ async def getAnimeDetails(searchText, animeId=None):
                     print("Searching for {} failed with error code {}".format(searchText.rstrip(), resp.status))
                 request = await resp.text()
         except Exception as e:
-            print('1')
             print(e)
             setup()
             try:
@@ -58,7 +57,6 @@ async def getAnimeDetails(searchText, animeId=None):
                 print(e) 
         
         convertedRequest = convertShittyXML(request)
-        #print(convertedRequest)
         rawList = ET.fromstring(convertedRequest)
 
         animeList = []

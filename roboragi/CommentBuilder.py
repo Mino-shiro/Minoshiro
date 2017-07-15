@@ -711,7 +711,6 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
                 cType = mal['type']
             
             malURL = 'http://myanimelist.net/anime/' + str(mal['id'])
-            print(mal['title'])
             if mal['title']:
                 title = mal['title']
 
@@ -721,7 +720,6 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
             if mal['status']:
                 status = mal['status']
         if ani is not None:
-            print(ani)
             #title = ani['title_romaji']
             aniURL = 'http://anilist.co/anime/' + str(ani['id'])
 
@@ -872,7 +870,6 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['embed'] = embed
-        print(dictToReturn['embed'])
         return dictToReturn
     except Exception as e:
         print(e)
@@ -1358,7 +1355,6 @@ def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail, isExp
         embed.set_thumbnail(url = embedThumbnail)
         
         embed.add_field(name='__Info__', value=embedContent)
-        print(embedContent)
 
         if isExpanded:
             if len(descComment.rstrip()) > 1023:
