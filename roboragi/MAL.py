@@ -45,7 +45,7 @@ async def getAnimeDetails(searchText, animeId=None):
         try:
             async with mal.get('https://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10) as resp:
                 if resp.status != 200:
-                    print(resp.status)
+                    print("Searching for {} failed with error code {}".format(searchText.rstrip(), resp.status))
                 request = await resp.text()
         except Exception as e:
             print('1')
@@ -58,6 +58,7 @@ async def getAnimeDetails(searchText, animeId=None):
                 print(e) 
         
         convertedRequest = convertShittyXML(request)
+        #print(convertedRequest)
         rawList = ET.fromstring(convertedRequest)
 
         animeList = []
@@ -101,7 +102,7 @@ async def getAnimeDetails(searchText, animeId=None):
         return closestAnime
         
     except Exception:
-        #traceback.print_exc()
+        traceback.print_exc()
         
         return None
 
@@ -109,7 +110,6 @@ async def getAnimeDetails(searchText, animeId=None):
 def getClosestAnime(searchText, animeList):
     try:
         nameList = []
-        
         for anime in animeList:
             nameList.append(anime['title'].lower())
 
@@ -123,8 +123,12 @@ def getClosestAnime(searchText, animeList):
         closestNameFromList = difflib.get_close_matches(searchText.lower(), nameList, 1, 0.90)[0]
 
         for anime in animeList:
-            if (anime['title'].lower() == closestNameFromList.lower()) or (anime['english'].lower() == closestNameFromList.lower()):
-                return anime
+            if anime['title']:
+                if anime['title'].lower() == closestNameFromList.lower():
+                    return anime
+            elif anime['english']:
+                if anime['english'].lower() == closestNameFromList.lower():
+                    return anime
             else:
                 for synonym in anime['synonyms']:
                     if synonym.lower() == closestNameFromList.lower():
@@ -132,15 +136,12 @@ def getClosestAnime(searchText, animeList):
 
         return None
     except Exception:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #MAL's XML is a piece of crap. It needs to be escaped twice because they do shit like this: &amp;sup2;
 def convertShittyXML(text):
     import html.parser
-
-   
-
     #It pains me to write shitty code, but MAL needs to improve their API and I'm sick of not being able to parse shit
     text = text.replace('&Eacute;', 'É').replace('&times;', 'x').replace('&rsquo;', "'").replace('&lsquo;', "'").replace('&hellip', '...').replace('&le', '<').replace('<;', '; ').replace('&hearts;', '♥').replace('&mdash;', '-')
     text = text.replace('&eacute;', 'é').replace('&ndash;', '-').replace('&Aacute;', 'Á').replace('&acute;', 'à').replace('&ldquo;', '"').replace('&rdquo;', '"').replace('&Oslash;', 'Ø').replace('&frac12;', '½').replace('&infin;', '∞')
@@ -301,7 +302,7 @@ async def getMangaDetails(searchText, mangaId=None, isLN=False):
 
     except:
         
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #Returns a list of manga with titles very close to the search text. Current unused because MAL's API is shit and doesn't return author names.
@@ -325,7 +326,7 @@ def getListOfCloseManga(searchText, mangaList):
         return returnList
         
     except Exception:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #Used to determine the closest manga to a given search term in a list
@@ -360,7 +361,7 @@ def getClosestManga(searchText, mangaList):
 
         return None
     except Exception:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 

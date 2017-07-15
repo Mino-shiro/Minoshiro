@@ -303,9 +303,15 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
             try:
                 titleToAdd = ''
                 if mal['result']:
-                    titleToAdd = mal['result']['title']
+                    if 'title' in mal['result']:
+                        print(mal['result']['title'])
+                        titleToAdd = mal['result']['title']
+                '''if hb['result']:
+                    if 'title' in hb['result']:
+                        titleToAdd = hb['result']['title']'''
                 if ani['result']:
-                    titleToAdd = ani['result']['title_romaji']
+                    if 'title_romaji' in ani['result']:
+                        titleToAdd = ani['result']['title_romaji']
 
                 if not blockTracking:
                     DatabaseHandler.addRequest(titleToAdd, 'Anime', message.author.id, message.server.id)

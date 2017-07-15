@@ -9,6 +9,7 @@ import traceback
 import requests
 import time
 
+import discord
 import Discord
 import DiscordoragiSearch
 import CommentBuilder
@@ -44,6 +45,7 @@ async def process_message(message, is_edit=False):
 
     #ignores all "code" markup (i.e. anything between backticks)
     cleanMessage = re.sub(r"\`[{<\[]+(.*?)[}>\]]+\`", "", message.clean_content)
+    print(cleanMessage)
     messageReply = ''
 
     sender = re.search('[@]([A-Za-z0-9_-]+?)(>|}|$)', cleanMessage, re.S)
@@ -236,6 +238,7 @@ async def process_message(message, is_edit=False):
                     await Discord.client.send_message(message.channel, messageReply)
                 else:
                     for i, animeReply in enumerate(animeArray):
+                        print(animeReply['embed'])
                         await Discord.client.send_message(message.channel, embed=animeReply['embed'])
                     for i, mangaReply in enumerate(mangaArray):
                         await Discord.client.send_message(message.channel, embed=mangaReply['embed'])
@@ -243,7 +246,8 @@ async def process_message(message, is_edit=False):
                         await Discord.client.send_message(message.channel, embed=lnReply['embed'])
             except discord.errors.Forbidden:
                 print('Request from banned channel: ' + str(message.channel) + '\n')
-            except Exception:
+            except Exception as e:
+                print(e)
                 traceback.print_exc()
             
             try:

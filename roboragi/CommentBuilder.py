@@ -28,7 +28,7 @@ def cleanupDescription(desc):
     for i, line in enumerate(linesep.join([s for s in desc.splitlines() if s]).splitlines()):
         if i is not 0:
             reply += '\n'
-        reply += '>' + line + '\n'
+        reply += line + '\n'
     return reply
 
 #Builds an anime comment from MAL/Anilist data
@@ -208,7 +208,7 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
 
         return dictToReturn
     except:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #Builds a manga comment from MAL/Anilist/MangaUpdates data
@@ -395,7 +395,7 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
         
         return dictToReturn
     except:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #Builds a manga comment from MAL/Anilist/MangaUpdates data
@@ -582,7 +582,7 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
         
         return dictToReturn
     except:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #Builds a stats comment. If it is basic stats the default server id is the Discordoragi help server
@@ -681,7 +681,7 @@ def buildStatsComment(server=None, username=None, serverID="171004769069039616")
 def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
     try:
         comment = ''
-
+        descComment = ''
         title = None
         jTitle = None
 
@@ -711,6 +711,9 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
                 cType = mal['type']
             
             malURL = 'http://myanimelist.net/anime/' + str(mal['id'])
+            print(mal['title'])
+            if mal['title']:
+                title = mal['title']
 
             if mal['image']:
                 malimage = mal['image']
@@ -718,7 +721,8 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
             if mal['status']:
                 status = mal['status']
         if ani is not None:
-            title = ani['title_romaji']
+            print(ani)
+            #title = ani['title_romaji']
             aniURL = 'http://anilist.co/anime/' + str(ani['id'])
 
             try:
@@ -728,8 +732,10 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
                 pass
             
             if status is None:
-                status = ani['airing_status'].title()
-
+                try:
+                    status = ani['airing_status'].title()
+                except Exception as e:
+                    print(e)
             try:
                 if ani['title_japanese'] is not None:
                     jTitle = ani['title_japanese']
@@ -845,7 +851,7 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
 
         #----- DESCRIPTION -----#
         if (isExpanded):
-            comment += '\n\n' + cleanupDescription(desc)
+            descComment += cleanupDescription(desc)
 
         #----- END -----#
         receipt = '(A) Request successful: ' + title + ' - '
@@ -858,16 +864,18 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
         if anidbURL is not None:
             receipt += 'ADB '
         print(receipt)
-
-        embed = buildEmbedObject(title, allLinks, comment, malimage)
-        
+        try:
+            embed = buildEmbedObject(title, allLinks, comment, malimage, isExpanded, descComment)
+        except Exception as e:
+            print(e)
         #We return the title/comment separately so we can track if multiples of the same comment have been requests (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['embed'] = embed
-
+        print(dictToReturn['embed'])
         return dictToReturn
-    except:
+    except Exception as e:
+        print(e)
         traceback.print_exc()
         return None
 
@@ -875,6 +883,7 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
 def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
     try:
         comment = ''
+        descComment = ''
 
         title = None
         jTitle = None
@@ -1041,7 +1050,7 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
 
         #----- DESCRIPTION -----#
         if (isExpanded):
-            comment += '\n\n' + cleanupDescription(desc)
+            descComment += cleanupDescription(desc)
 
         #----- END -----#
         receipt = '(M) Request successful: ' + title + ' - '
@@ -1056,21 +1065,24 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
         print(receipt)
 
         #----- Build embed object -----#
-        embed = buildEmbedObject(title, allLinks, comment, malimage)
-
+        try:
+            embed = buildEmbedObject(title, allLinks, comment, malimage, isExpanded, descComment)
+        except Exception as e:
+            print(e)
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['embed'] = embed
         
         return dictToReturn
     except:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #sets up the embed for Light Novels
 def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
     try:
         comment = ''
+        descComment= ''
 
         title = None
         jTitle = None
@@ -1230,7 +1242,7 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
 
         #----- DESCRIPTION -----#
         if (isExpanded):
-            comment += '\n\n' + cleanupDescription(desc)
+            descComment += cleanupDescription(desc)
 
         #----- END -----#
         receipt = '(LN) Request successful: ' + title + ' - '
@@ -1244,7 +1256,7 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
             receipt += 'LNDB '
         print(receipt)
 
-        embed = buildEmbedObject(title, allLinks, comment, malimage)
+        embed = buildEmbedObject(title, allLinks, comment, malimage, isExpanded, descComment)
 
         dictToReturn = {}
         dictToReturn['title'] = title
@@ -1252,7 +1264,7 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
         
         return dictToReturn
     except:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
@@ -1300,12 +1312,6 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
 
                 for i, request in enumerate(serverStats['topRequests']):
                     statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)\n'
-
-                statComment += '\n'
-
-                statComment += 'The most frequent requesters on this server are:\n\n'
-                for i, requester in enumerate(serverStats['topRequesters']):
-                    statComment += str(i + 1) + '. /u/' + str(requester[0]) + ' (' + str(requester[1]) + ' requests)\n'
                 
             else:
                 statComment += 'There have been no requests on ' + str(server) + ' yet.'
@@ -1331,30 +1337,36 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
             for i, request in enumerate(basicStats['topRequests']):
                 statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)\n'
 
-            statComment += '\n'
-
-            statComment += 'The most frequent requesters overall are:  \n'
-            for i, requester in enumerate(basicStats['topRequesters']):
-                statComment += str(i + 1) + '. ' + str(Discord.getUsernameFromID(requester[0], )) + ' (' + str(requester[1]) + ' requests)  \n'
                 
             statComment += '\n'
             receipt += ' - Basic'
             
         print(receipt)
-        localEmbed = buildEmbedObject('Stats', '', statComment, '')
+        localEmbed = buildEmbedObject('Stats', '', statComment, '', False, '')
         return localEmbed
     except:
         traceback.print_exc()
         return None
 
-def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail):
+def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail, isExpanded, descComment):
     
     localFooterTitle='\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'
     localFooter = "{anime}, <manga>, \]LN\[ | [FAQ](https://github.com/dashwav/Discordoragi/wiki) | [/r/](http://www.reddit.com/r/Roboragi/) | [Source](https://github.com/dashwav/Discordoragi) | [Synonyms](https://www.reddit.com/r/Roboragi/wiki/synonyms)"
     try:
         embed = Embed(title=embedTitle, description=embedLinks, type='rich')
+
         embed.set_thumbnail(url = embedThumbnail)
-        embed.add_field(name='Info', value=embedContent)
+        
+        embed.add_field(name='__Info__', value=embedContent)
+        print(embedContent)
+
+        if isExpanded:
+            if len(descComment.rstrip()) > 1023:
+                descCommentCut = descComment.rstrip()[:1020] + '...'
+                embed.add_field(name ='__Description__', value = descCommentCut)
+            else:
+                embed.add_field(name = '__Description__', value = descComment)
+        
         embed.add_field(name=localFooterTitle, value=localFooter)
         return embed
     except Exception as e:

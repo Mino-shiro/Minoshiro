@@ -28,8 +28,8 @@ escape_table = {
      "\'": "\\'",
      '\"': '\\"',
      '/': ' ',
-     '-': ' ',
-     '!': '\!'
+     '-': ' '
+     #'!': '\!'
      }
 
 #Anilist's database doesn't like weird symbols when searching it, so you have to escape or replace a bunch of stuff.
@@ -64,7 +64,7 @@ async def getAnimeDetails(searchText):
         htmlSearchText = escape(searchText)
 
         async with session.get("https://anilist.co/api/anime/search/" + htmlSearchText, params={'access_token':access_token}, timeout=10) as resp:          
-            if resp.status == 401:
+            if resp.status != 200:
                 await setup()
                 request = await session.get("https://anilist.co/api/anime/search/" + htmlSearchText, params={'access_token':access_token}, timeout=10)
             
@@ -94,7 +94,7 @@ def getAnimeDetailsById(animeID):
 async def getFullAnimeDetails(animeID):
     try:
         async with session.get("https://anilist.co/api/anime/" + str(animeID), params={'access_token':access_token}, timeout=10) as resp:
-            if resp.status == 401:
+            if resp.status != 200:
                 await setup()
                 resp = await session.get("https://anilist.co/api/anime/" + str(animeID), params={'access_token':access_token}, timeout=10)
                 
@@ -104,7 +104,7 @@ async def getFullAnimeDetails(animeID):
             else:
                 return None
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #Given a list, it finds the closest anime series it can.
@@ -116,14 +116,17 @@ def getClosestAnime(searchText, animeList):
         #For each anime series, add all the titles/synonyms to an array and do a fuzzy string search to find the one closest to our search text.
         #We also fill out an array that doesn't contain the synonyms. This is to protect against shows with multiple adaptations and similar synonyms (e.g. Haiyore Nyaruko-San)
         for anime in animeList:
-            animeNameList.append(anime['title_english'].lower())
-            animeNameList.append(anime['title_romaji'].lower())
+            if 'title_english' in anime:
+                animeNameList.append(anime['title_english'].lower())
+                animeNameListNoSyn.append(anime['title_english'].lower())
 
-            animeNameListNoSyn.append(anime['title_english'].lower())
-            animeNameListNoSyn.append(anime['title_romaji'].lower())
+            if 'title_romaji' in anime:
+                animeNameList.append(anime['title_romaji'].lower())
+                animeNameListNoSyn.append(anime['title_romaji'].lower())
 
-            for synonym in anime['synonyms']:
-                 animeNameList.append(synonym.lower())
+            if 'synonyms' in anime:
+                for synonym in anime['synonyms']:
+                     animeNameList.append(synonym.lower())
         
         closestNameFromList = difflib.get_close_matches(searchText.lower(), animeNameList, 1, 0.95)[0]
         
@@ -137,18 +140,17 @@ def getClosestAnime(searchText, animeList):
 
         return None
     except:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 #Makes a search for a manga series using a specific author
 async def getMangaWithAuthor(searchText, authorName):
     try:
-        htmlSearchText = escape(searchText)
         
-        async with session.get("https://anilist.co/api/manga/search/" + htmlSearchText, params={'access_token':access_token}, timeout=10) as resp:
-            if resp.status == 401:
+        async with session.get("https://anilist.co/api/manga/search/" + searchText, params={'access_token':access_token}, timeout=10) as resp:
+            if resp.status !=200:
                 await setup()
-                resp = await session.get("https://anilist.co/api/manga/search/" + htmlSearchText, params={'access_token':access_token}, timeout=10)
+                resp = await session.get("https://anilist.co/api/manga/search/" + searchText, params={'access_token':access_token}, timeout=10)
 
             
             request = await resp.json()
@@ -158,7 +160,7 @@ async def getMangaWithAuthor(searchText, authorName):
             for manga in closestManga:
                 try:
                     async with session.get("https://anilist.co/api/manga/" + str(manga['id']) + "/staff", params={'access_token':access_token}, timeout=10) as fullManga:
-                        if fullManga.status == 401:
+                        if fullManga.status !=200:
                             await setup()
                             fullManga = await session.get("https://anilist.co/api/manga/" + str(manga['id']) + "/staff", params={'access_token':access_token}, timeout=10)    
 
@@ -196,11 +198,10 @@ def getLightNovelDetails(searchText):
 #Returns the closest manga series given a specific search term
 async def getMangaDetails(searchText, isLN=False):
     try:
-        htmlSearchText = escape(searchText)
-        async with session.get ("https://anilist.co/api/manga/search/" + htmlSearchText, params={'access_token':access_token}, timeout=10) as resp:
-            if resp.status == 401:
+        async with session.get ("https://anilist.co/api/manga/search/" + searchText, params={'access_token':access_token}, timeout=10) as resp:
+            if resp.status != 200:
                 await setup()
-                resp = await session.get("https://anilist.co/api/manga/search/" + htmlSearchText, params={'access_token':access_token}, timeout=10)
+                resp = await session.get("https://anilist.co/api/manga/search/" + searchText, params={'access_token':access_token}, timeout=10)
             
             request = await resp.json()
             closestManga = getClosestManga(searchText, request, isLN)
@@ -293,7 +294,7 @@ def getClosestManga(searchText, mangaList, isLN=False):
 
         return None
     except Exception as e:
-        #traceback.print_exc()
+        traceback.print_exc()
         return None
 
 loop = asyncio.get_event_loop()
