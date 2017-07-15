@@ -939,9 +939,10 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
                         chapters = ani['total_chapters']
 
                 if ani['total_volumes'] is not None:
-                    volumes = ani['total_volumes']
-                else:
-                    volumes = 'Unknown'
+                    if ani['total_volumes'] == 0:
+                        volumes = 'Unknown'
+                    else:
+                        volumes = ani['total_volumes']
 
                 if ani['genres'] is not None:
                     genres = ani['genres']
@@ -995,6 +996,9 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             comment += '**Status:** ' + status
 
             if (cType != 'Light Novel'):
+                print(volumes)
+                if str(volumes) is not 'Unknown':
+                    comment += ' | **Volumes:** ' + str(volumes)
                 if str(chapters) is not 'Unknown':
                     comment += ' | **Chapters:** ' + str(chapters)
             else:
@@ -1014,6 +1018,8 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             comment += 'Status: ' + status
 
             if (cType != 'Light Novel'):
+                if str(volumes) is not 'Unknown':
+                    comment += ' | Volumes: ' + str(volumes)
                 if str(chapters) is not 'Unknown':
                     comment += ' | Chapters: ' + str(chapters)
             else:
@@ -1102,7 +1108,8 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
                 chapters = 'Unknown'
 
             try:
-                volumes = mal['volumes']
+                if (int(mal['volumes']) == 0):
+                    volumes = 'Unknown'
             except:
                 volumes = 'Unknown'
 
@@ -1126,7 +1133,8 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
                         chapters = ani['total_chapters']
 
                 if ani['total_volumes'] is not None:
-                    volumes = ani['total_volumes']
+                    if ani['total_volumes'] == 0:
+                        volumes = 'Unknown'
                 else:
                     volumes = 'Unknown'
 
