@@ -1,7 +1,8 @@
-'''
+
+"""
 Anilist.py
 Handles all of the connections to Anilist.
-'''
+"""
 
 import requests
 import aiohttp

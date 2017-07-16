@@ -720,7 +720,7 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
             if mal['status']:
                 status = mal['status']
         if ani is not None:
-            #title = ani['title_romaji']
+            title = ani['title_romaji']
             aniURL = 'http://anilist.co/anime/' + str(ani['id'])
 
             try:

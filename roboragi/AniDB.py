@@ -10,11 +10,13 @@ import difflib
 import traceback
 import pprint
 
+session = aiohttp.ClientSession()
+
 async def getAnimeURL(searchText):
     try:
 
         async with session.get('http://anisearch.outrance.pl/?task=search&query=' + searchText, timeout=10) as resp:
-            html = await resp.content
+            html = resp.content
             anidb = pq(html)    
     except:
         traceback.print_exc()
