@@ -4,7 +4,6 @@ Handles all MangaUpdates information
 '''
 
 from pyquery import PyQuery as pq
-import requests
 import aiohttp
 import difflib
 import traceback

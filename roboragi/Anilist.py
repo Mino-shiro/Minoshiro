@@ -6,6 +6,7 @@ Handles all of the connections to Anilist.
 
 import requests
 import aiohttp
+import urllib
 import difflib
 import traceback
 import pprint
@@ -62,8 +63,8 @@ async def setup():
 async def getAnimeDetails(searchText):
     
     try:
-        htmlSearchText = escape(searchText)
-
+        #htmlSearchText = escape(searchText)
+        htmlSearchText = urllib.parse.quote(searchText)
         async with session.get("https://anilist.co/api/anime/search/" + htmlSearchText, params={'access_token':access_token}, timeout=10) as resp:          
             if resp.status != 200:
                 await setup()

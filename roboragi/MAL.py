@@ -10,6 +10,7 @@ import aiohttp
 import traceback
 import pprint
 import difflib
+import urllib
 
 try:
     import Config
@@ -28,7 +29,6 @@ except Exception as e:
 #Sets up the connection to MAL.
 def setup():
     mal = aiohttp.ClientSession(headers = {'Authorization': MALAUTH, 'User-Agent': MALUSERAGENT})
-    
 
 def getSynonyms(request):
     synonyms = []
@@ -41,9 +41,10 @@ def getSynonyms(request):
 
 #Returns the closest anime (as a Json-like object) it can find using the given searchtext. MAL returns XML (bleh) so we have to convert it ourselves.
 async def getAnimeDetails(searchText, animeId=None):
+    cleanSearchText = urllib.parse.quote(searchText)
     try:
         try:
-            async with mal.get('https://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10) as resp:
+            async with mal.get('https://myanimelist.net/api/anime/search.xml?q=' + cleanSearchText.rstrip(), timeout=10) as resp:
                 if resp.status != 200:
                     print("Searching for {} failed with error code {}".format(searchText.rstrip(), resp.status))
                 request = await resp.text()
@@ -55,9 +56,10 @@ async def getAnimeDetails(searchText, animeId=None):
                     request = await resp.text()
             except requests.exceptions.RequestException as e:  # This is the correct syntax
                 print(e) 
+
+        #convertedRequest = convertShittyXML(request)
+        rawList = ET.fromstring(request)
         
-        convertedRequest = convertShittyXML(request)
-        rawList = ET.fromstring(convertedRequest)
 
         animeList = []
         
@@ -95,7 +97,7 @@ async def getAnimeDetails(searchText, animeId=None):
         if animeId:
             closestAnime = getThingById(animeId, animeList)
         else:
-            closestAnime = getClosestAnime(searchText, animeList)
+            closestAnime = getClosestAnime(searchText.strip(), animeList)
 
         return closestAnime
         
@@ -109,17 +111,17 @@ def getClosestAnime(searchText, animeList):
     try:
         nameList = []
         for anime in animeList:
-            nameList.append(anime['title'].lower())
+            nameList.append(anime['title'].lower().strip())
 
             if anime['english'] is not None:
-                nameList.append(anime['english'].lower())
+                nameList.append(anime['english'].lower().strip())
 
             if anime['synonyms']:
                 for synonym in anime['synonyms']:
-                    nameList.append(synonym.lower())
+                    nameList.append(synonym.lower().strip())
 
-        closestNameFromList = difflib.get_close_matches(searchText.lower(), nameList, 1, 0.90)[0]
-
+        closestNameFromList = difflib.get_close_matches(searchText.lower(), nameList, cutoff=0.90)[0]
+        
         for anime in animeList:
             if anime['title']:
                 if anime['title'].lower() == closestNameFromList.lower():
@@ -171,18 +173,20 @@ def getClosestFromDescription(mangaList, descriptionToCheck):
 
 #Since MAL doesn't give me an author, I make a search using similar descriptions instead. Super janky.
 async def getMangaCloseToDescription(searchText, descriptionToCheck):
+    cleanSearchText = urllib.parse.quote(searchText)
     try:
         try:
-            async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10) as resp:
+            async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + cleanSearchText.rstrip(), timeout=10) as resp:
                 request = await resp.text()
             
         except:
             setup()
-            async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10) as resp:
+            async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + cleanSearchText.rstrip(), timeout=10) as resp:
                  request = await resp.text()
             
 
         convertedRequest = convertShittyXML(request)
+        print(convertedRequest)
         rawList = ET.fromstring(convertedRequest)
 
         mangaList = []
@@ -233,19 +237,26 @@ async def getLightNovelDetails(searchText, lnId=None):
 
 #Returns the closest manga series given a specific search term. Again, MAL returns XML, so we conver it ourselves
 async def getMangaDetails(searchText, mangaId=None, isLN=False):
+    cleanSearchText = urllib.parse.quote(searchText)
     try:
         try:
-            async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10) as resp:
+            async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + cleanSearchText.rstrip(), timeout=10) as resp:
+                print(resp.url)
                 request = await resp.text()
-            
-        except:
+                            
+        except Exception as e:
+            print(e)
             setup()
-            async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + searchText.rstrip(), timeout=10) as resp:
+            async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + cleanSearchText.rstrip(), timeout=10) as resp:
                 request = await resp.text()
             
 
-        convertedRequest = convertShittyXML(request)
-        rawList = ET.fromstring(convertedRequest)
+        #convertedRequest = convertShittyXML(request)
+        try:
+            print(request)
+        except Exception as e:
+            print(e)
+        rawList = ET.fromstring(request)
 
         mangaList = []
         
