@@ -35,7 +35,10 @@ async def process_message(message, is_edit=False):
     lnArray = []
 
     #Checks if bot has permissions to embed
-    canEmbed = message.channel.server.default_role.permissions.embed_links
+    if message.channel.type != discord.ChannelType.private:
+        canEmbed = message.channel.server.default_role.permissions.embed_links
+    else:
+        canEmbed = True
     if not canEmbed:
         botMember = Discord.getMemberFromID(Config.clientid, message.server)
         defaultroleperm = botMember.top_role.permissions
@@ -46,28 +49,31 @@ async def process_message(message, is_edit=False):
     #ignores all "code" markup (i.e. anything between backticks)
     cleanMessage = re.sub(r"\`[{<\[]+(.*?)[}>\]]+\`", "", message.clean_content)
     messageReply = ''
-
-    sender = re.search('[@]([A-Za-z0-9_-]+?)(>|}|$)', cleanMessage, re.S)
     
+    sender = re.search('[@]([A-Za-z0-9 _-]+?)(>|}|$)', cleanMessage, re.S)
+    mentionArray = message.raw_mentions
     if re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', cleanMessage, re.S) is not None and sender is not None:
+        for mention in mentionArray:
+            if not canEmbed:
+                messageReply = CommentBuilder.buildStatsComment(server=message.server, username=mention)
+            else:
+                localEm = CommentBuilder.buildStatsEmbed(server=message.server, username=mention)
+                await Discord.client.send_message(message.channel, embed=localEm)
+                return None
+    if re.search('({!sstats}|{{!sstats}}|<!sstats>|<<!sstats>>)', cleanMessage, re.S) is not None:
         if not canEmbed:
-            messageReply = CommentBuilder.buildStatsComment(username=sender.group(1))
+            messageReply = CommentBuilder.buildStatsComment(server = message.server)
         else:
-            localEm = CommentBuilder.buildStatsEmbed(username=sender.group(1))
+            localEm = CommentBuilder.buildStatsEmbed(server = message.server)
             await Discord.client.send_message(message.channel, embed=localEm)
-    if re.search('({!sstats.*?}|{{!sstats.*?}}|<!sstats.*?>|<<!sstats.*?>>)', cleanMessage, re.S) is not None:
-        server = re.search('([A-Za-z0-9_]+?)(>|}|$)', cleanMessage, re.S)
-        if not canEmbed:
-            messageReply = CommentBuilder.buildStatsComment(server=server.group(1))
-        else:
-            localEm = ommentBuilder.buildStatsEmbed(server=server.group(1))
-            await Discord.client.send_message(message.channel, embed=localEm)
+            return None
     elif re.search('({!stats.*?}|{{!stats.*?}}|<!stats.*?>|<<!stats.*?>>)', cleanMessage, re.S) is not None:
         if not canEmbed:
             messageReply = CommentBuilder.buildStatsComment()
         else:
             localEm = CommentBuilder.buildStatsEmbed()
             await Discord.client.send_message(message.channel, embed=localEm)
+            return None
     else:
         
         #The basic algorithm here is:

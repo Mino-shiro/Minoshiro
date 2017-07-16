@@ -6,6 +6,7 @@ Handles all connections to the database. The database runs on PostgreSQL and is 
 import psycopg2
 from math import sqrt
 import traceback
+import discord
 
 DBNAME = ''
 DBUSER = ''
@@ -101,19 +102,19 @@ def getBasicStats(serverID, top_media_number=5, top_username_number=5):
     try:
         basicStatDict = {}
 
-        cur.execute("SELECT COUNT(*) FROM messages")
+        cur.execute("SELECT COUNT(1) FROM messages")
         totalComments = int(cur.fetchone()[0])
         basicStatDict['totalComments'] = totalComments
         
-        cur.execute("SELECT COUNT(*) FROM requests;")
+        cur.execute("SELECT COUNT(1) FROM requests;")
         total = int(cur.fetchone()[0])
         basicStatDict['total'] = total
         
-        cur.execute("SELECT COUNT(DISTINCT name) FROM requests;")
+        cur.execute("SELECT COUNT(1) FROM (SELECT DISTINCT name FROM requests) as temp;")
         dNames = int(cur.fetchone()[0])
         basicStatDict['uniqueNames'] = dNames
 
-        cur.execute("SELECT COUNT(DISTINCT server) FROM requests;")
+        cur.execute("SELECT COUNT(1) FROM (SELECT DISTINCT server FROM requests) as temp;")
         dSubreddits = int(cur.fetchone()[0])
         basicStatDict['uniqueSubreddits'] = dSubreddits
 
@@ -188,15 +189,18 @@ def getUserStats(username, top_media_number=5):
         basicUserStatDict = {}
         username = str(username).lower()
         
+        """
         cur.execute("SELECT COUNT(1) FROM messages where LOWER(requester) = %s", (username,))
         totalUserComments = int(cur.fetchone()[0])
         basicUserStatDict['totalUserComments'] = totalUserComments
+
         
         cur.execute("SELECT COUNT(1) FROM messages")
         totalNumComments = int(cur.fetchone()[0])
         totalCommentsAsPercentage = (float(totalUserComments)/totalNumComments) * 100
         basicUserStatDict['totalUserCommentsAsPercentage'] = totalCommentsAsPercentage
-        
+         """
+
         cur.execute("SELECT COUNT(*) FROM requests where LOWER(requester) = %s", (username,))
         totalUserRequests = int(cur.fetchone()[0])
         basicUserStatDict['totalUserRequests'] = totalUserRequests
@@ -251,19 +255,18 @@ def getUserStats(username, top_media_number=5):
         return None
         
 #Similar to getBasicStats - returns an object which contains data about a specific server.
-def getSubredditStats(serverName, top_media_number=5, top_username_number=5):
-    from AnimeBot import getServerFromName
+def getSubredditStats(server, top_media_number=5, top_username_number=5):
     try:
         basicSubredditDict = {}
-        server = getServerFromName(serverName.lower())
-        print(serverName+"\n")
         print(server.name+"\n")
         print(server.id+"\n")
         serverID = server.id
 
+        """
         cur.execute("SELECT COUNT(*) FROM messages WHERE server = %s", (serverID,))
         totalComments = int(cur.fetchone()[0])
         basicSubredditDict['totalComments'] = totalComments
+        """
 
         cur.execute("SELECT COUNT(*) FROM requests;")
         total = int(cur.fetchone()[0])

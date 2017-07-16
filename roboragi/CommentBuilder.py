@@ -776,13 +776,13 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
 
 
         if malURL is not None:
-            urlComments.append("[MAL]({})".format(malURL))
+            urlComments.append("[MAL]({})".format(sanitise_url_for_markdown(malURL)))
         if apURL is not None:
-            urlComments.append("[AP]({})".format(apURL))
+            urlComments.append("[AP]({})".format(sanitise_url_for_markdown(apURL)))
         if ani is not None:
-            urlComments.append("[AL]({})".format(aniURL))
+            urlComments.append("[AL]({})".format(sanitise_url_for_markdown(aniURL)))
         if anidbURL is not None:
-            urlComments.append("[AniDB]({})".format(anidbURL))
+            urlComments.append("[AniDB]({})".format(sanitise_url_for_markdown(anidbURL)))
             
         for i, link in enumerate(urlComments):
             if i is not 0:
@@ -929,8 +929,13 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             if title is None:
                 title = ani['title_english']
             aniURL = 'http://anilist.co/manga/' + str(ani['id'])
-            desc = ani['description']
-            status = ani['publishing_status'].title()
+            if ani['description']:
+                desc = ani['description']
+            
+            try:
+                status = ani['publishing_status'].title()
+            except:
+                pass
 
             cType = ani['type']
 
@@ -964,13 +969,13 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
         urlComments = []
         allLinks = ''
         if malURL is not None:
-            urlComments.append("[MAL]({})".format(malURL))
+            urlComments.append("[MAL]({})".format(sanitise_url_for_markdown(malURL)))
         if aniURL is not None:
-            urlComments.append("[ANI]({})".format(aniURL))
+            urlComments.append("[ANI]({})".format(sanitise_url_for_markdown(aniURL)))
         if apURL is not None:
-            urlComments.append("[AP]({})".format(apURL))
+            urlComments.append("[AP]({})".format(sanitise_url_for_markdown(apURL)))
         if muURL is not None:
-            urlComments.append("[MU]({})".format(muURL))
+            urlComments.append("[MU]({})".format(sanitise_url_for_markdown(muURL)))
 
         for i, link in enumerate(urlComments):
             if i is not 0:
@@ -1008,7 +1013,8 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
                 if str(chapters) is not 'Unknown':
                     comment += ' | **Chapters:** ' + str(chapters)
             else:
-                comment += ' | **Volumes:** ' + str(volumes)
+                if str(volumes) is not 'Unknown':
+                    comment += ' | **Volumes:** ' + str(volumes)
 
             if genres:
                 comment += ' | **Genres:** '
@@ -1029,7 +1035,8 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
                 if str(chapters) is not 'Unknown':
                     comment += ' | Chapters: ' + str(chapters)
             else:
-                comment += ' | Volumes: ' + str(volumes)
+                 if str(volumes) is not 'Unknown':
+                    comment += ' | Volumes: ' + str(volumes)
 
             if genres:
                 comment += ' | Genres: '
@@ -1056,7 +1063,7 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
         if ap is not None:
             receipt += 'AP '
         if ani is not None:
-            receipt += 'ANI '
+            receipt += 'AL '
         if muURL is not None:
             receipt += 'MU '
         print(receipt)
@@ -1119,6 +1126,8 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
             try:
                 if (int(mal['volumes']) == 0):
                     volumes = 'Unknown'
+                else:
+                    volumes = mal['volumes']
             except:
                 volumes = 'Unknown'
 
@@ -1126,8 +1135,12 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
             if title is None:
                 title = ani['title_english']
             aniURL = 'http://anilist.co/manga/' + str(ani['id'])
-            desc = ani['description']
-            status = ani['publishing_status'].title()
+            if ani['description']:
+                desc = ani['description']
+            try:
+                status = ani['publishing_status'].title()
+            except:
+                pass
 
             cType = ani['type']
 
@@ -1140,10 +1153,14 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
                         chapters = 'Unknown'
                     else:
                         chapters = ani['total_chapters']
+                else:
+                    volumes = 'Unknown'
 
                 if ani['total_volumes'] is not None:
                     if ani['total_volumes'] == 0:
                         volumes = 'Unknown'
+                    else:
+                        volumes = ani['total_volumes']
                 else:
                     volumes = 'Unknown'
 
@@ -1161,13 +1178,13 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
         urlComments = []
         allLinks = ''
         if malURL is not None:
-            urlComments.append("[MAL]({})".format(malURL))
+            urlComments.append("[MAL]({})".format(sanitise_url_for_markdown(malURL)))
         if aniURL is not None:
-            urlComments.append("[ANI]({})".format(aniURL))
+            urlComments.append("[ANI]({})".format(sanitise_url_for_markdown(aniURL)))
         if nuURL is not None:
-            urlComments.append("[NU]({})".format(nuURL))
+            urlComments.append("[NU]({})".format(sanitise_url_for_markdown(nuURL)))
         if lndbURL is not None:
-            urlComments.append("[LNDB]({})".format(lndbURL))
+            urlComments.append("[LNDB]({})".format(sanitise_url_for_markdown(lndbURL)))
 
         for i, link in enumerate(urlComments):
             if i is not 0:
@@ -1199,10 +1216,13 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
             comment += '**Status:** ' + status
 
             if (cType != 'Light Novel'):
+                if str(volumes) is not 'Unknown':
+                    comment += ' | **Volumes:** ' + str(volumes)
                 if str(chapters) is not 'Unknown':
                     comment += ' | **Chapters:** ' + str(chapters)
             else:
-                comment += ' | **Volumes:** ' + str(volumes)
+                if str(volumes) is not 'Unknown':
+                    comment += ' | **Volumes:** ' + str(volumes)
 
             if genres:
                 comment += ' | **Genres:** '
@@ -1246,7 +1266,7 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
         if malURL is not None:
             receipt += 'MAL '
         if ani is not None:
-            receipt += 'ANI '
+            receipt += 'AL '
         if nuURL is not None:
             receipt += 'MU '
         if lndbURL is not None:
@@ -1266,38 +1286,38 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
 
 def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
     try:
+        userNick = ''
         statComment = ''
         receipt = '(S) Request successful: Stats'
         
-        if username:
+        if username is not None:
+            reqMember = server.get_member(username)
+            if reqMember.nick:
+                userNick = reqMember.nick
+            else:
+                userNick = reqMember.name
             userStats = DatabaseHandler.getUserStats(username)
             
             if userStats:
-                statComment += 'Some stats on ' + username + ':\n\n'
-                statComment += '- **' + str(userStats['totalUserComments']) + '** total comments searched (' + str(round(userStats['totalUserCommentsAsPercentage'], 3)) + '% of all comments)\n'
+                statComment += 'Some stats on ' + userNick + ':\n\n'
                 statComment += '- **' + str(userStats['totalUserRequests']) + '** requests made (' + str(round(userStats['totalUserRequestsAsPercentage'], 3)) + '% of all requests and #' + str(userStats['overallRequestRank']) + ' overall)\n'
                 statComment += '- **' + str(userStats['uniqueRequests']) + '** unique anime/manga requested\n'
-                statComment += '- **/r/' + str(userStats['favouriteSubreddit']) + '** is their favourite server with ' + str(userStats['favouriteSubredditCount']) + ' requests (' + str(round(userStats['favouriteSubredditCountAsPercentage'], 3)) + '% of the server\'s requests)\n'
                 statComment += '\n'
                 statComment += 'Their most frequently requested anime/manga overall are:\n\n'
                 
                 for i, request in enumerate(userStats['topRequests']):
                     statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)  \n'
             else:
-                statComment += '/u/' + str(username) + ' hasn\'t used Roboragi yet.'
+                statComment += str(userNick) + ' hasn\'t used Roboragi yet.'
                 
-            receipt += ' - /u/' + username
+            receipt += ' - ' + userNick
         elif server:
-            serverID = server.id
-            server = str(server)
-            serverStats = DatabaseHandler.getSubredditStats(server.lower())
+            serverStats = DatabaseHandler.getSubredditStats(server)
             
             if serverStats:
-                statComment += '**' + server +' Stats**\n\n'
-                
-                statComment += 'I\'ve searched through ' + str(serverStats['totalComments'])
-                statComment += ' unique comments on ' + server
-                statComment += ' and fulfilled a total of ' + str(serverStats['total']) + ' requests, '
+                statComment += '**' + server.name +' Stats**\n\n'
+                statComment += 'On ' + server.name
+                statComment += ' I have fulfilled a total of ' + str(serverStats['total']) + ' requests, '
                 statComment += 'representing ' + str(round(serverStats['totalAsPercentage'], 2)) + '% of all requests. '
                 statComment += 'A total of ' + str(serverStats['uniqueNames']) + ' unique anime/manga have been requested here, '
                 statComment += 'with a mean value of ' + str(round(serverStats['meanValuePerRequest'], 3)) + ' requests/show'
@@ -1313,7 +1333,7 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
             else:
                 statComment += 'There have been no requests on ' + str(server) + ' yet.'
                
-            receipt += ' - ' + server
+            receipt += ' - ' + server.name
         else:
             basicStats = DatabaseHandler.getBasicStats(serverID)
             
@@ -1367,3 +1387,6 @@ def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail, isExp
         return embed
     except Exception as e:
         print(e)
+
+def sanitise_url_for_markdown(url):
+    return url.replace('(', '\(').replace(')', '\)')

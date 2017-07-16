@@ -269,8 +269,8 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
                 
         else:
             data_sources = [ani, mal]
-            #aux_sources = [ap, adb]
-            aux_sources = [ap]
+            aux_sources = [ap, adb]
+            #aux_sources = [ap]
 
             synonyms = set([searchText])
 

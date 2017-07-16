@@ -23,17 +23,25 @@ async def getLightNovelURL(searchText):
 
         lnList = []
 
-        for thing in lndb.find('#bodylightnovelscontentid table tr'):
-            title = pq(thing).find('a').text()
-            url = pq(thing).find('a').attr('href')
+        if 'light_novel' in html.url:
+            #we've immediately hit a result
+            return html.url
+        else:
+            #scan the search page for stuff
 
-            if title:
-                data = { 'title': title,
-                        'url': url }
-                lnList.append(data)
+            lnList = []
 
-        closest = findClosestLightNovel(searchText, lnList)
-        return closest['url']
+            for thing in lndb.find('#bodylightnovelscontentid table tr'):
+                title = pq(thing).find('a').text()
+                url = pq(thing).find('a').attr('href')
+
+                if title:
+                    data = { 'title': title,
+                            'url': url }
+                    lnList.append(data)
+
+            closest = findClosestLightNovel(searchText, lnList)
+            return closest['url']
     
     except Exception as e:
         return None

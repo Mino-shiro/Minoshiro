@@ -225,7 +225,7 @@ async def getMangaCloseToDescription(searchText, descriptionToCheck):
         return getClosestFromDescription(closeManga, descriptionToCheck)
     except:
         
-        traceback.print_exc()
+        #traceback.print_exc()
         return None
     
 async def getLightNovelDetails(searchText, lnId=None):
