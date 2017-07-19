@@ -82,7 +82,8 @@ async def process_message(message, is_edit=False):
                 print(e)
                 return
 
-
+        else:
+            return
     
     
     sender = re.search('[@]([A-Za-z0-9 _-]+?)(>|}|$)', cleanMessage, re.S)
