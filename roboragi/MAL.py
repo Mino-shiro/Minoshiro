@@ -6,6 +6,7 @@ Handles all of the connections to MyAnimeList.
 """
 
 import xml.etree.cElementTree as ET
+import DatabaseHandler
 import aiohttp
 import traceback
 import pprint
@@ -41,6 +42,15 @@ def getSynonyms(request):
 
 #Returns the closest anime (as a Json-like object) it can find using the given searchtext. MAL returns XML (bleh) so we have to convert it ourselves.
 async def getAnimeDetails(searchText, animeId=None):
+    cachedAnime = DatabaseHandler.checkForMalEntry('malanime', searchText, animeId)
+    if cachedAnime is not None:
+        if cachedAnime['update']:
+            print("found cached anime, needs update in mal")
+            pass
+        else:
+            print("found cached anime, doesn't need update in mal")
+            return cachedAnime['content']
+
     cleanSearchText = urllib.parse.quote(searchText)
     try:
         try:
@@ -54,7 +64,7 @@ async def getAnimeDetails(searchText, animeId=None):
             try:
                 async with mal.get('https://myanimelist.net/api/anime/search.xml?q=' + searchText.rstrip(), timeout=10) as resp:
                     request = await resp.text()
-            except requests.exceptions.RequestException as e:  # This is the correct syntax
+            except aiohttp.exceptions.RequestException as e:  # This is the correct syntax
                 print(e) 
 
         #convertedRequest = convertShittyXML(request)
@@ -96,13 +106,15 @@ async def getAnimeDetails(searchText, animeId=None):
 
         if animeId:
             closestAnime = getThingById(animeId, animeList)
+        elif cachedAnime and cachedAnime['update']:
+            closestAnime = getThingById(cachedAnime['id'], animeList)
         else:
             closestAnime = getClosestAnime(searchText.strip(), animeList)
 
         return closestAnime
         
     except Exception:
-        traceback.print_exc()
+        #traceback.print_exc()
         
         return None
 
@@ -136,7 +148,7 @@ def getClosestAnime(searchText, animeList):
 
         return None
     except Exception:
-        traceback.print_exc()
+        #traceback.print_exc()
         return None
 
 #MAL's XML is a piece of crap. It needs to be escaped twice because they do shit like this: &amp;sup2;
@@ -186,13 +198,13 @@ async def getMangaCloseToDescription(searchText, descriptionToCheck):
             
 
         convertedRequest = convertShittyXML(request)
-        print(convertedRequest)
+        #print(convertedRequest)
         rawList = ET.fromstring(convertedRequest)
 
         mangaList = []
         
         for manga in rawList.findall('./entry'):
-            mangaID = manga.find('id').text
+            mangaId = manga.find('id').text
             title = manga.find('title').text
             title_english = manga.find('english').text
 
@@ -209,7 +221,7 @@ async def getMangaCloseToDescription(searchText, descriptionToCheck):
             synopsis = manga.find('synopsis').text
             image = manga.find('image').text
 
-            data = {'id': mangaID,
+            data = {'id': mangaId,
                     'title': title,
                     'english': title_english,
                     'synonyms': synonyms,
@@ -228,7 +240,6 @@ async def getMangaCloseToDescription(searchText, descriptionToCheck):
 
         return getClosestFromDescription(closeManga, descriptionToCheck)
     except:
-        
         #traceback.print_exc()
         return None
     
@@ -237,11 +248,18 @@ async def getLightNovelDetails(searchText, lnId=None):
 
 #Returns the closest manga series given a specific search term. Again, MAL returns XML, so we conver it ourselves
 async def getMangaDetails(searchText, mangaId=None, isLN=False):
+    cachedManga = DatabaseHandler.checkForMalEntry('malmanga', searchText, mangaId, isLN)
+    if cachedManga is not None:
+        if cachedManga['update']:
+            print("found cached anime, needs update in mal")
+            pass
+        else:
+            print("found cached anime, doesn't need update in mal")
+            return cachedManga['content']
     cleanSearchText = urllib.parse.quote(searchText)
     try:
         try:
             async with mal.get('https://myanimelist.net/api/manga/search.xml?q=' + cleanSearchText.rstrip(), timeout=10) as resp:
-                print(resp.url)
                 request = await resp.text()
                             
         except Exception as e:
@@ -251,17 +269,14 @@ async def getMangaDetails(searchText, mangaId=None, isLN=False):
                 request = await resp.text()
             
 
-        #convertedRequest = convertShittyXML(request)
-        try:
-            print(request)
-        except Exception as e:
-            print(e)
-        rawList = ET.fromstring(request)
-
+        convertedRequest = convertShittyXML(request)
+        rawList = ET.fromstring(convertedRequest)
+        #print(convertedRequest)
+        
         mangaList = []
         
         for manga in rawList.findall('./entry'):
-            mangaID = manga.find('id').text
+            newMangaId= manga.find('id').text
             title = manga.find('title').text
             title_english = manga.find('english').text
 
@@ -278,7 +293,7 @@ async def getMangaDetails(searchText, mangaId=None, isLN=False):
             synopsis = manga.find('synopsis').text
             image = manga.find('image').text
 
-            data = {'id': mangaID,
+            data = {'id': newMangaId,
                      'title': title,
                      'english': title_english,
                      'synonyms': synonyms,
@@ -291,6 +306,7 @@ async def getMangaDetails(searchText, mangaId=None, isLN=False):
                      'synopsis': synopsis,
                      'image': image }
 
+            #print(data['title'])
             #ignore or allow LNs
             if 'novel' in mangaType.lower():
                 if isLN:
@@ -298,11 +314,13 @@ async def getMangaDetails(searchText, mangaId=None, isLN=False):
             else:
                 if not isLN:
                     mangaList.append(data)
-
+        #print(mangaId)
         if mangaId:
             closestManga = getThingById(mangaId, mangaList)
+        elif cachedManga and cachedManga['update']:
+            closestManga = getThingById(cachedManga['id'], mangaList)
         else:
-            closestManga = getClosestManga(searchText, mangaList)
+            closestManga = getClosestManga(searchText.strip(), mangaList)
 
         if closestManga:
             return closestManga
@@ -344,17 +362,17 @@ def getClosestManga(searchText, mangaList):
         nameList = []
         
         for manga in mangaList:
-            nameList.append(manga['title'].lower())
+            nameList.append(manga['title'].lower().strip())
             
             if manga['english'] is not None:
-                nameList.append(manga['english'].lower())
+                nameList.append(manga['english'].lower().strip())
                 
             if manga['synonyms'] is not None:
                 for synonym in manga['synonyms']:
                     nameList.append(synonym.lower().strip())
-        
-        closestNameFromList = difflib.get_close_matches(searchText.lower(), nameList, 1, 0.90)[0]
-
+        #print(searchText)
+        closestNameFromList = difflib.get_close_matches(searchText.lower().strip(), nameList,1, 0.90)[0]
+        #print(closestNameFromList)
         for manga in mangaList:
             if manga['title'].lower() == closestNameFromList.lower():
                 return manga
@@ -385,5 +403,6 @@ def getThingById(thingId, thingList):
     except Exception:
         traceback.print_exc()
         return None
+
 
 setup()

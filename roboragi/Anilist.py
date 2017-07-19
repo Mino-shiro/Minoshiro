@@ -3,8 +3,7 @@
 Anilist.py
 Handles all of the connections to Anilist.
 """
-
-import requests
+import DatabaseHandler
 import aiohttp
 import urllib
 import difflib
@@ -61,7 +60,14 @@ async def setup():
 
 #Returns the closest anime (as a Json-like object) it can find using the given searchtext
 async def getAnimeDetails(searchText):
-    
+    cachedAnime = DatabaseHandler.checkForMalEntry('anilistanime', searchText)
+    if cachedAnime is not None:
+        if cachedAnime['update']:
+            print("found cached anime, needs update in anilist")
+            return await getAnimeDetailsById(cachedAnime['id'])
+        else:
+            print("found cached anime, doesn't need update in anilist")
+            return cachedAnime['content']
     try:
         #htmlSearchText = escape(searchText)
         htmlSearchText = urllib.parse.quote(searchText)
@@ -86,9 +92,9 @@ async def getAnimeDetails(searchText):
         return None
 
 #Returns the anime details based on an id
-def getAnimeDetailsById(animeID):
+async def getAnimeDetailsById(animeID):
     try:
-        return getFullAnimeDetails(animeID)
+        return await getFullAnimeDetails(animeID)
     except Exception as e:
         return None
 
@@ -194,13 +200,21 @@ async def getMangaWithAuthor(searchText, authorName):
         traceback.print_exc()
         return None
 
-def getLightNovelDetails(searchText):
-    return getMangaDetails(searchText, True)
+async def getLightNovelDetails(searchText):
+    return await getMangaDetails(searchText, True)
 
 #Returns the closest manga series given a specific search term
 async def getMangaDetails(searchText, isLN=False):
+    cachedAnime = DatabaseHandler.checkForMalEntry('anilistmanga', searchText, isLN)
+    if cachedAnime is not None:
+        if cachedAnime['update']:
+            print("found cached anime, needs update in anilist")
+            return await getMangaDetailsById(cachedAnime['id'])
+        else:
+            print("found cached anime, doesn't need update in anilist")
+            return cachedAnime['content']
     try:
-        async with session.get ("https://anilist.co/api/manga/search/" + searchText, params={'access_token':access_token}, timeout=10) as resp:
+        async with session.get("https://anilist.co/api/manga/search/" + searchText, params={'access_token':access_token}, timeout=10) as resp:
             if resp.status != 200:
                 await setup()
                 resp = await session.get("https://anilist.co/api/manga/search/" + searchText, params={'access_token':access_token}, timeout=10)
@@ -298,6 +312,48 @@ def getClosestManga(searchText, mangaList, isLN=False):
     except Exception as e:
         traceback.print_exc()
         return None
+
+async def getGenres(medium):
+    try:
+        async with session.get("https://anilist.co/api/genre_list/".format(medium), params={'access_token':access_token}, timeout=10)as resp:
+            return await resp.json()
+    
+    except Exception as e:
+        print(e)
+        return None
+
+async def GetTop40ByGenre(medium, genre):
+    try:
+        async with session.get("https://anilist.co/api/browse/{}".format(medium), params={'access_token':access_token, 'genres':genre, 'sort':'popularity'}, timeout=10) as resp:
+            if resp.status != 200:
+                await setup()
+                resp = await session.get("https://anilist.co/api/manga/search/" + searchText, params={'access_token':access_token}, timeout=10)
+                if resp.status != 200:
+                    print("Failed to get api info error code {}".format(resp.status))
+            
+            request = await resp.json()
+            return request
+    except Exception as e:
+        print(e)
+        return None
+
+# Returns a json with the 40 anime from the 'page' of populartiy
+async def get_page_by_popularity(medium, page):
+    try:
+        async with session.get("https://anilist.co/api/browse/{}".format(medium), params={'access_token':access_token, 'sort':'popularity-desc', 'page':  page}, timeout=10) as resp:
+            if resp.status != 200:
+                await setup()
+                resp = await session.get("https://anilist.co/api/browse/{}".format(medium), params={'access_token':access_token, 'sort':'popularity', 'page':  page}, timeout=10)
+                if resp.status != 200:
+                    print("Failed to get ani-api info error code {}".format(resp.status))
+            
+            request = await resp.json()
+            return request
+        pass
+    except Exception as e:
+        print(e)
+        return None
+
 
 loop = asyncio.get_event_loop()
 loop.run_until_complete(setup())

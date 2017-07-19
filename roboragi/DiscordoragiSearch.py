@@ -169,7 +169,18 @@ async def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracki
             except:
                 traceback.print_exc()
                 pass
-        
+        if mal:
+            try:
+                DatabaseHandler.addMalEntry('malmanga', mal)
+            except:
+                traceback.print_exc()
+                pass
+        if ani:
+            try:
+                DatabaseHandler.addAniEntry('anilistmanga', ani)
+            except:
+                traceback.print_exc()
+                pass
         if not canEmbed:
             return CommentBuilder.buildMangaComment(isExpanded, mal, ani, mu, ap)
         else:
@@ -266,6 +277,7 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
                 ani['result'] = await Anilist.getAnimeDetailsById(anisyn) if anisyn else None
                 ap['result'] = AniP.getAnimeURLById(apsyn) if apsyn else None
                 adb['result'] = AniDB.getAnimeURLById(adbsyn) if adbsyn else None
+                print(ani['result'])
                 
         else:
             data_sources = [ani, mal]
@@ -314,6 +326,19 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
 
                 if not blockTracking:
                     DatabaseHandler.addRequest(titleToAdd, 'Anime', message.author.id, message.server.id)
+            except:
+                traceback.print_exc()
+                pass
+        if mal['result']:
+            print('trying to add an anime to cache')
+            try:
+                DatabaseHandler.addMalEntry('malanime', mal['result'])
+            except:
+                traceback.print_exc()
+                pass
+        if ani:
+            try:
+                DatabaseHandler.addAniEntry('anilistanime', ani['result'])
             except:
                 traceback.print_exc()
                 pass
@@ -418,6 +443,18 @@ async def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockT
 
                 if (str(message.server).lower is not 'nihilate') and (str(message.server).lower is not 'roboragi') and not blockTracking:
                     DatabaseHandler.addRequest(titleToAdd, 'LN', message.author.id, message.server.id)
+            except:
+                traceback.print_exc()
+                pass
+        if mal['result']:
+            try:
+                DatabaseHandler.addMalEntry('malmanga', mal['result'])
+            except:
+                traceback.print_exc()
+                pass
+        if ani['result']:
+            try:
+                DatabaseHandler.addAniEntry('anilistmanga', ani['result'])
             except:
                 traceback.print_exc()
                 pass

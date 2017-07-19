@@ -253,9 +253,6 @@ async def process_message(message, is_edit=False):
             except Exception as e:
                 print(e)
                 traceback.print_exc()
-            
-            try:
-                DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, True)
             except:
                 traceback.print_exc()
     else:

@@ -4,6 +4,10 @@ Handles all connections to the database. The database runs on PostgreSQL and is 
 '''
 
 import psycopg2
+from psycopg2 import sql
+from psycopg2.extras import Json, DictCursor
+
+import datetime
 from math import sqrt
 import traceback
 import discord
@@ -52,7 +56,233 @@ def setup():
         cur.execute('ROLLBACK')
         conn.commit()
 
+    #Create malAnime table
+    try:
+        cur.execute('CREATE TABLE malanime ( id varchar(16) PRIMARY KEY, name varchar(320) ,  synonyms varchar(320)[], accesstimestamp timestamp DEFAULT current_timestamp, dict JSONB)')
+        conn.commit()
+    except Exception as e:
+        #traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
+    #Create malmanga table
+    try:
+        cur.execute('CREATE TABLE malmanga ( id varchar(16) PRIMARY KEY, name varchar(320) ,medium varchar(16),  synonyms varchar(320)[], accesstimestamp timestamp DEFAULT current_timestamp, dict JSONB)')
+        conn.commit()
+    except Exception as e:
+        #traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+    
+    #Create anilistanime table
+    try:
+        cur.execute('CREATE TABLE anilistanime ( id varchar(16) PRIMARY KEY,  name varchar(320) ,  synonyms varchar(320)[], accesstimestamp timestamp DEFAULT current_timestamp, dict JSONB)')
+        conn.commit()
+    except Exception as e:
+        #traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
+    #Create anilistmanga table
+    try:
+        cur.execute('CREATE TABLE anilistmanga ( id varchar(16) PRIMARY KEY, name varchar(320) ,medium varchar(16),  synonyms varchar(320)[], accesstimestamp timestamp DEFAULT current_timestamp, dict JSONB)')
+        conn.commit()
+    except Exception as e:
+        #traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
 setup()
+
+#--------------------------------------#
+# Caching
+def addMalEntry(table, anime):
+    try:
+        cur = conn.cursor(cursor_factory=DictCursor)
+        animeName = anime['title']
+        animeID = anime['id']
+        synonyms = anime['synonyms']
+        animeSyn = []
+        animeSyn.append(animeName.lower())
+        if anime['synonyms']:
+            for synonym in anime['synonyms']:
+                animeSyn.append(synonym.lower().strip())
+        if anime['english']:
+            animeSyn.append(anime['english'].lower())
+
+        cur.execute(sql.SQL("SELECT * FROM {} WHERE id = (%s)").format(sql.Identifier(table)), [str(animeID)])
+        row = cur.fetchone()
+        
+        if row is not None:
+            timeDiff = datetime.datetime.now() - row['accesstimestamp']
+            if timeDiff.days >= 1:
+                cur.execute(sql.SQL("UPDATE {} SET synonyms = %s, dict = %s, accesstimestamp = current_timestamp WHERE id = %s").format(sql.Identifier(table)), [animeSyn, Json(anime), str(animeID)])
+                conn.commit()
+                print("updated info")
+                return
+            else:
+                return
+        
+        if 'novel' in anime['type'].lower() or 'manga' in anime['type'].lower():
+            if 'novel' in anime['type'].lower():
+                print("adding ln to mal")
+                novelOrManga = 'light novel'
+            else:
+                novelOrManga = 'manga'
+            
+            cur.execute(sql.SQL("INSERT into {} (id, name, medium, synonyms, dict) values (%s, %s, %s, %s, %s)").format(sql.Identifier(table)), [ str(animeID), animeName.lower(), novelOrManga, animeSyn, Json(anime)])
+            conn.commit()
+            return
+        
+        cur.execute(sql.SQL("INSERT into {} (id, name, synonyms, dict) values (%s, %s, %s, %s)").format(sql.Identifier(table)), [ str(animeID), animeName.lower(), animeSyn, Json(anime)])
+        conn.commit()
+    except Exception as e:
+        traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
+def addAniEntry(table, anime):
+    try:
+        cur = conn.cursor(cursor_factory=DictCursor)
+        if anime['title_english']:
+            animeName = anime['title_english']
+        elif anime['title_romaji']:
+            animeName = anime['title_romaji']
+        animeID = anime['id']
+        synonyms = anime['synonyms']
+        novelOrManga = 'manga'
+        animeSyn = []
+        animeSyn.append(animeName.lower())
+        if anime['synonyms']:
+            for synonym in anime['synonyms']:
+                animeSyn.append(synonym.lower().strip())
+        if anime['title_english']:
+            animeSyn.append(anime['title_english'].lower())
+        elif anime['title_romaji']:
+            animeSyn.append(anime['title_romaji'].lower())
+
+        cur.execute(sql.SQL("SELECT * FROM {} WHERE id = (%s)").format(sql.Identifier(table)), [str(animeID)])
+        row = cur.fetchone()
+        
+        if row is not None:
+            timeDiff = datetime.datetime.now() - row['accesstimestamp']
+            if timeDiff.days >= 1:
+                cur.execute(sql.SQL("UPDATE {} SET synonyms = %s, dict = %s, accesstimestamp = current_timestamp WHERE id = %s").format(sql.Identifier(table)), [animeSyn, Json(anime), str(animeID)])
+                conn.commit()
+                print("updated info")
+                return
+            else:
+                return
+        if anime['series_type'] == 'manga':
+            if anime['type'] == 'Novel':
+                print("light novel being added")
+                novelOrManga = 'light novel'
+            cur.execute(sql.SQL("INSERT into {} (id, name, medium, synonyms, dict) values (%s, %s, %s, %s, %s)").format(sql.Identifier(table)), [ str(animeID), animeName.lower(), novelOrManga, animeSyn, Json(anime)])
+            conn.commit()
+            return
+        
+        cur.execute(sql.SQL("INSERT into {} (id, name, synonyms, dict) values (%s, %s, %s, %s)").format(sql.Identifier(table)), [ str(animeID), animeName.lower(), animeSyn, Json(anime)])
+        conn.commit()
+    except Exception as e:
+        traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
+def checkForMalEntry(table, name, animeId = None, isLN = None):
+    try:
+        cur = conn.cursor(cursor_factory=DictCursor)
+        nameInList = '{'+name.lower().strip()+'}'
+        if animeId is not None:
+            cur.execute(sql.SQL("SELECT * FROM {} WHERE id = (%s)").format(sql.Identifier(table)), [str(animeId)])
+        else:
+            if table == 'malmanga' or table == 'anilistmanga':
+                if isLN:
+                    cur.execute(sql.SQL("SELECT * FROM {} WHERE medium = %s AND synonyms @> %s").format(sql.Identifier(table)), ['light novel', nameInList])
+                else:
+                    cur.execute(sql.SQL("SELECT * FROM {} WHERE medium = %s AND synonyms @> %s").format(sql.Identifier(table)), ['manga', nameInList])
+            else:
+                cur.execute(sql.SQL("SELECT * FROM {} WHERE synonyms @> %s").format(sql.Identifier(table)), [nameInList])
+        row = cur.fetchone() 
+        cachedReply = {}
+
+        if row is not None:
+            print("found cached entry")
+            timeDiff = datetime.datetime.now() - row['accesstimestamp']
+            if timeDiff.days >= 1:
+                cachedReply['update'] = True
+                cachedReply['id'] = row['id']
+            else:
+                cachedReply['update'] = False
+                cachedReply['content'] = row['dict']
+            
+            return cachedReply
+        print("didn't find cached entry in mal")
+        return None
+
+    except Exception as e:
+        traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
+def PopulateCache(table, content):
+    setup()
+    novelOrManga = 'manga'
+    try:
+        cur = conn.cursor(cursor_factory=DictCursor)
+        if table == 'malanime' or table == 'malmanga':
+            animeName = content['title']
+            animeID = content['id']
+            synonyms = content['synonyms']
+            if 'novel' in content['type']:
+                print("adding ln to mal")
+                novelOrManga = 'light novel'
+            animeSyn = []
+            animeSyn.append(animeName.lower())
+            if content['synonyms']:
+                for synonym in content['synonyms']:
+                    animeSyn.append(synonym.lower().strip())
+            if content['english']:
+                animeSyn.append(content['english'].lower())
+        else:
+            if content['title_english']:
+                animeName = content['title_english']
+            elif content['title_romaji']:
+                animeName = content['title_romaji']
+            if content['type'] == 'Novel':
+                print("light novel being added to ani")
+                novelOrManga = 'light novel'
+            animeID = content['id']
+            synonyms = content['synonyms']
+            animeSyn = []
+            animeSyn.append(animeName.lower())
+            if content['synonyms']:
+                for synonym in content['synonyms']:
+                    animeSyn.append(synonym.lower().strip())
+            
+
+            if content['title_english']:
+                animeSyn.append(content['title_english'].lower())
+            elif content['title_romaji']:
+                animeSyn.append(content['title_romaji'].lower())
+
+        cur.execute(sql.SQL("SELECT * FROM {} WHERE id = (%s)").format(sql.Identifier(table)), [str(animeID)])
+        row = cur.fetchone()
+        
+        if row is not None:
+            return
+        else:
+            expired_date = "1999-01-08 04:05:06"
+            if table =='malmanga' or table == 'anilistmanga':
+                cur.execute(sql.SQL("INSERT into {} (id, name, medium, synonyms, accesstimestamp, dict) values (%s, %s, %s, %s, %s, %s)").format(sql.Identifier(table)), [ str(animeID), animeName.lower(), novelOrManga, animeSyn, expired_date, Json(content)])
+                conn.commit()
+                return
+            cur.execute(sql.SQL("INSERT into {} (id, name, synonyms, accesstimestamp, dict) values (%s, %s, %s, %s, %s)").format(sql.Identifier(table)), [ str(animeID), animeName.lower(), animeSyn, expired_date, Json(content)])        
+        print("Added {} to the {}:\n".format(animeName, table))
+        conn.commit()
+    except Exception as e:
+        traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
 
 #--------------------------------------#
 
