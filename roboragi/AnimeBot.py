@@ -52,8 +52,6 @@ async def process_message(message, is_edit=False):
     
     isAdmin = message.author.top_role.permissions.administrator
     isServerMod = message.author.top_role.permissions.manage_server
-    print(message.author.id)
-    print(ownerID)
     isOwner = message.author.id == ownerID
     
     
@@ -75,7 +73,7 @@ async def process_message(message, is_edit=False):
             except Exception as e:
                 print(e)
                 return
-        print(isOwner)
+
         if 'addserver' in cleanMessage.lower() and (isOwner == True):
             try:
                 DatabaseHandler.addServerToDatabase(message.server.id)
