@@ -1367,8 +1367,8 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
 
 def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail, isExpanded, descComment):
     
-    localFooterTitle='\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'
-    localFooter = "{anime}, <manga>, \]LN\[ | [FAQ](https://github.com/dashwav/Discordoragi/wiki) | [/r/](http://www.reddit.com/r/Roboragi/) | [Source](https://github.com/dashwav/Discordoragi) | [Synonyms](https://www.reddit.com/r/Roboragi/wiki/synonyms)"
+    localFooterTitle='\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'
+    localFooter = "{anime}, <manga>, \]LN\[ | [FAQ](https://github.com/dashwav/Discordoragi/wiki) | [/r/](http://www.reddit.com/r/Roboragi/) | [Discord](https://discord.gg/SNv9yKs) | [Source](https://github.com/dashwav/Discordoragi) | [Synonyms](https://www.reddit.com/r/Roboragi/wiki/synonyms)"
     try:
         embed = Embed(title=embedTitle, description=embedLinks, type='rich')
 
