@@ -269,8 +269,8 @@ async def getMangaDetails(searchText, mangaId=None, isLN=False):
                 request = await resp.text()
             
 
-        convertedRequest = convertShittyXML(request)
-        rawList = ET.fromstring(convertedRequest)
+        #convertedRequest = convertShittyXML(request)
+        rawList = ET.fromstring(request)
         #print(convertedRequest)
         
         mangaList = []
