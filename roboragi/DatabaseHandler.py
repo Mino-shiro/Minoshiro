@@ -92,7 +92,63 @@ def setup():
         cur.execute('ROLLBACK')
         conn.commit()
 
+    try:
+        cur.execute('CREATE TABLE serverconfig (serverid varchar(50) PRIMARY KEY, allowexpanded varchar(16), allowstats varchar(16))')
+        conn.commit()
+    except Exception as e:
+        #traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
 setup()
+
+#--------------------------------------#
+# Server config
+
+def addServerToDatabase(serverId):
+    try:
+        
+        cur = conn.cursor(cursor_factory = DictCursor)
+        cur.execute('SELECT * FROM serverconfig WHERE serverid = (%s)', [str(serverId)])
+        row = cur.fetchone()
+        if row is None:
+            cur.execute('INSERT INTO serverconfig (serverid, allowexpanded, allowstats) VALUES (%s, %s, %s)', [serverId, 'true', 'true'])
+    except:
+        traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
+def toggleAllowExpanded(serverId):
+    try:
+        cur = conn.cursor(cursor_factory = DictCursor)
+        cur.execute('SELECT * FROM serverconfig WHERE serverid = (%s)', [str(serverId)])
+        row = cur.fetchone()
+        if row is not None:
+            if row['allowexpanded'].lower() == 'true':
+                toggledSetting = 'false'
+            else:
+                toggledSetting = 'true'
+            cur.execute('UPDATE serverconfig SET allowexpanded= %s WHERE serverid = %s', [toggledSetting, serverId])
+            return toggledSetting
+    except:
+        traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
+
+def checkServerConfig(setting, serverId):
+    try:
+        cur = conn.cursor(cursor_factory = DictCursor)
+        cur.execute('SELECT * FROM serverconfig WHERE serverid = (%s)', [str(serverId)])
+        row = cur.fetchone()
+        if row is not None:
+            if row[setting] == 'true':
+                return True
+            else:
+                return False
+    except:
+        traceback.print_exc()
+        cur.execute('ROLLBACK')
+        conn.commit()
 
 #--------------------------------------#
 # Caching

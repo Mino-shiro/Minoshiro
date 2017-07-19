@@ -20,6 +20,7 @@ import Reference
 #the servers where expanded requests are disabled
 disableexpanded = ['']
 async_queue = asyncio.Queue(maxsize = 32)
+ownerID = '164546159140929538'
 
 @Discord.client.event
 async def on_ready():
@@ -27,6 +28,11 @@ async def on_ready():
     print(Discord.client.user.name)
     print(Discord.client.user.id)
     print('------')
+
+@Discord.client.event
+async def on_server_join(server):
+    DatabaseHandler.addServerToDatabase(server.id)
+    print("Added server {} to database".format(server.id))
     
 async def process_message(message, is_edit=False):
     #Anime/Manga requests that are found go into separate arrays
@@ -44,11 +50,40 @@ async def process_message(message, is_edit=False):
         defaultroleperm = botMember.top_role.permissions
         canEmbed = defaultroleperm.embed_links
     
+    isAdmin = message.author.top_role.permissions.administrator
+    isServerMod = message.author.top_role.permissions.manage_server
+    isOwner = message.author.id == ownerID
+    
     
 
     #ignores all "code" markup (i.e. anything between backticks)
     cleanMessage = re.sub(r"\`[{<\[]+(.*?)[}>\]]+\`", "", message.clean_content)
     messageReply = ''
+
+    if re.search('({!command.*?}|{{!command.*?}}|<!command.*?>|<<!command.*?>>)', cleanMessage, re.S) is not None:
+        if 'toggleexpanded' in cleanMessage.lower() and (isAdmin or isServerMod):
+            try:
+                allowedStatus = DatabaseHandler.toggleAllowExpanded(message.server.id)
+                print("Toggled allowExpanded for server {}".format(message.server.id))
+                if allowedStatus.lower() == 'true':
+                    await Discord.client.send_message(message.channel, "Expanded requests are now allowed.")
+                else:
+                    await Discord.client.send_message(message.channel, "Expanded requests are now disallowed.")
+                return
+            except Exception as e:
+                print(e)
+                return
+        
+        if 'addServer' in cleanMessage.lower() and isOwner == True:
+            try:
+                DatabaseHandler.addServerToDatabase(message.server.id)
+                await Discord.client.send_message(message.channel, "Server has been added.")
+            except Exception as e:
+                print(e)
+                return
+
+
+    
     
     sender = re.search('[@]([A-Za-z0-9 _-]+?)(>|}|$)', cleanMessage, re.S)
     mentionArray = message.raw_mentions
@@ -84,6 +119,9 @@ async def process_message(message, is_edit=False):
         numOfRequest = 0
         numOfExpandedRequest = 0
         forceNormal = False
+        expandedAllowed = DatabaseHandler.checkServerConfig('allowexpanded', message.server.id)
+        if expandedAllowed == False:
+            forceNormal = True
         for match in re.finditer("\{{2}([^}]*)\}{2}|\<{2}([^>]*)\>{2}", cleanMessage, re.S):
             numOfRequest += 1
             numOfExpandedRequest += 1
