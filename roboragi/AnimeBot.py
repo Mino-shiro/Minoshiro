@@ -52,6 +52,8 @@ async def process_message(message, is_edit=False):
     
     isAdmin = message.author.top_role.permissions.administrator
     isServerMod = message.author.top_role.permissions.manage_server
+    print(message.author.id)
+    print(ownerID)
     isOwner = message.author.id == ownerID
     
     
@@ -73,16 +75,18 @@ async def process_message(message, is_edit=False):
             except Exception as e:
                 print(e)
                 return
-        
-        if 'addServer' in cleanMessage.lower() and isOwner == True:
+        print(isOwner)
+        if 'addserver' in cleanMessage.lower() and (isOwner == True):
             try:
                 DatabaseHandler.addServerToDatabase(message.server.id)
                 await Discord.client.send_message(message.channel, "Server has been added.")
+                return
             except Exception as e:
                 print(e)
                 return
 
         else:
+            print("command failed, user probably has insufficient rights")
             return
     
     
