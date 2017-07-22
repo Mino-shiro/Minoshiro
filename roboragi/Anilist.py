@@ -106,8 +106,12 @@ async def getFullAnimeDetails(animeID):
                 await setup()
                 resp = await session.get("https://anilist.co/api/anime/" + str(animeID), params={'access_token':access_token}, timeout=10)
                 
-            request = await resp.json()
+            
             if resp.status == 200:
+                request = await resp.json()
+                anime['genres'] = [genre for genre in anime['genres'] if genre]
+                anime['synonyms'] = [synonym for synonym in anime['synonyms'] if synonym]
+
                 return request
             else:
                 return None
@@ -224,7 +228,12 @@ async def getMangaDetails(searchText, isLN=False):
 
             if (closestManga is not None):
                 response = await session.get("https://anilist.co/api/manga/" + str(closestManga['id']), params={'access_token':access_token}, timeout=10)
-                return await response.json()
+                json = await response.json()
+
+                json['genres'] = [genre for genre in json['genres'] if genre]
+                json['synonyms'] = [synonym for synonym in json['synonyms'] if synonym]
+
+                return json
             else:
                 return None
         

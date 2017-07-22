@@ -713,6 +713,9 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
             malURL = 'http://myanimelist.net/anime/' + str(mal['id'])
             if mal['title']:
                 title = mal['title']
+            
+            if mal['english']:
+                title = mal['english']
 
             if mal['image']:
                 malimage = mal['image']
