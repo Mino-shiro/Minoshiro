@@ -135,8 +135,8 @@ async def process_message(message, is_edit=False):
         if (numOfExpandedRequest >= 1) and (numOfRequest > 1):
             forceNormal = True
         
-        if numOfRequest != 0:
-            await Discord.client.send_typing(message.channel)
+        #if numOfRequest != 0:
+            #await Discord.client.send_typing(message.channel)
         #Expanded Anime
         for match in re.finditer("\{{2}([^}]*)\}{2}", cleanMessage, re.S):
             reply = ''
