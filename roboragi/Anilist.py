@@ -109,8 +109,8 @@ async def getFullAnimeDetails(animeID):
             
             if resp.status == 200:
                 request = await resp.json()
-                request['genres'] = [genre for genre in anime['genres'] if genre]
-                request['synonyms'] = [synonym for synonym in anime['synonyms'] if synonym]
+                request['genres'] = [genre for genre in request['genres'] if genre]
+                request['synonyms'] = [synonym for synonym in request['synonyms'] if synonym]
 
                 return request
             else:
