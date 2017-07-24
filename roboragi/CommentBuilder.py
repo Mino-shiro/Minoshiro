@@ -1368,6 +1368,16 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
         traceback.print_exc()
         return None
 
+def buildHelpEmbed():
+    try:
+        embedTitle = "Help"
+        helpComment = "You can call the bot by using specific tags on one of the active servers. Anime can be called using {curly braces}, manga can be called using <arrows> and light novels can be called using reverse square brace ]light novels\[ (e.g. {Nisekoi} or or ]Utsuro no Hako to Zero no Maria\[). {Single} ]will\[ give you a normal set of information while {{double}} <> ]]will\[\[ give you expanded information. Examples of these requests can be found [here](https://github.com/dashwav/Discordoragi/wiki/Example-Output)"
+        localEmbed = buildEmbedObject(embedTitle, '', helpComment, '', False, '')
+        return localEmbed
+    except:
+        traceback.print_exc()
+        return None
+
 def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail, isExpanded, descComment):
     
     localFooterTitle='\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'

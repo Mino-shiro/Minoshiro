@@ -60,6 +60,14 @@ async def process_message(message, is_edit=False):
     cleanMessage = re.sub(r"\`[{<\[]+(.*?)[}>\]]+\`", "", message.clean_content)
     messageReply = ''
 
+    if re.search('({!help.*?}|{{!help.*?}}|<!help.*?>|<<!help.*?>>)', cleanMessage, re.S) is not None:
+        try:
+            localEm = CommentBuilder.buildHelpEmbed()
+            await Discord.client.send_message(message.channel, embed = localEm)
+            return
+        except:
+            return
+
     if re.search('({!command.*?}|{{!command.*?}}|<!command.*?>|<<!command.*?>>)', cleanMessage, re.S) is not None:
         if 'toggleexpanded' in cleanMessage.lower() and (isAdmin or isServerMod):
             try:
