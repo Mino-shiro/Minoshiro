@@ -199,7 +199,7 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
             receipt += 'ANI '
         if anidbURL is not None:
             receipt += 'ADB '
-        print(receipt)
+        print(receipt.encode('utf8'))
 
         #We return the title/comment separately so we can track if multiples of the same comment have been requests (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
         dictToReturn = {}
@@ -387,7 +387,7 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
             receipt += 'ANI '
         if muURL is not None:
             receipt += 'MU '
-        print(receipt)
+        print(receipt.encode('utf8'))
 
         dictToReturn = {}
         dictToReturn['title'] = title
@@ -574,7 +574,7 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
             receipt += 'MU '
         if lndbURL is not None:
             receipt += 'LNDB '
-        print(receipt)
+        print(receipt.encode('utf8'))
 
         dictToReturn = {}
         dictToReturn['title'] = title
@@ -671,7 +671,7 @@ def buildStatsComment(server=None, username=None, serverID="171004769069039616")
             statComment += '\n'
             receipt += ' - Basic'
             
-        print(receipt)
+        print(receipt.encode('utf8'))
         return statComment
     except:
         traceback.print_exc()
@@ -864,7 +864,7 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
             receipt += 'AL '
         if anidbURL is not None:
             receipt += 'ADB '
-        print(receipt)
+        print(receipt.encode('utf8'))
         try:
             embed = buildEmbedObject(title, allLinks, comment, malimage, isExpanded, descComment)
         except Exception as e:
@@ -1010,7 +1010,6 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             comment += '**Status:** ' + status
 
             if (cType != 'Light Novel'):
-                print(volumes)
                 if str(volumes) is not 'Unknown':
                     comment += ' | **Volumes:** ' + str(volumes)
                 if str(chapters) is not 'Unknown':
@@ -1069,7 +1068,7 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             receipt += 'AL '
         if muURL is not None:
             receipt += 'MU '
-        print(receipt)
+        print(receipt.encode('utf8'))
 
         #----- Build embed object -----#
         try:
@@ -1274,7 +1273,7 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
             receipt += 'MU '
         if lndbURL is not None:
             receipt += 'LNDB '
-        print(receipt)
+        print(receipt.encode('utf8'))
 
         embed = buildEmbedObject(title, allLinks, comment, malimage, isExpanded, descComment)
 
@@ -1361,7 +1360,7 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
             statComment += '\n'
             receipt += ' - Basic'
             
-        print(receipt)
+        print(receipt.encode('utf8'))
         localEmbed = buildEmbedObject('Stats', '', statComment, '', False, '')
         return localEmbed
     except:
