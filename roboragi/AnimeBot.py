@@ -50,14 +50,17 @@ async def process_message(message, is_edit=False):
         defaultroleperm = botMember.top_role.permissions
         canEmbed = defaultroleperm.embed_links
     
+
     isAdmin = message.author.top_role.permissions.administrator
     isServerMod = message.author.top_role.permissions.manage_server
     isOwner = message.author.id == ownerID
     
+    if message.author.bot:
+        return
     
 
     #ignores all "code" markup (i.e. anything between backticks)
-    cleanMessage = re.sub(r"\`[{<\[]+(.*?)[}>\]]+\`", "", message.clean_content)
+    cleanMessage = re.sub(r"\`(.*?)\`", "", message.clean_content)
     messageReply = ''
 
     if re.search('({!help.*?}|{{!help.*?}}|<!help.*?>|<<!help.*?>>)', cleanMessage, re.S) is not None:
