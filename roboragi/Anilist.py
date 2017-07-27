@@ -116,7 +116,8 @@ async def getFullAnimeDetails(animeID):
             else:
                 return None
     except Exception as e:
-        traceback.print_exc()
+        print("Error finding anime:{} in anilist.\nError:{}".format(searchText, e))
+        #traceback.print_exc()
         return None
 
 #Given a list, it finds the closest anime series it can.
@@ -151,8 +152,9 @@ def getClosestAnime(searchText, animeList):
                         return anime
 
         return None
-    except:
-        traceback.print_exc()
+    except Exception as e:
+        print("Error finding anime:{} in anilist.\nError:{}".format(searchText, e))
+        #traceback.print_exc()
         return None
 
 #Makes a search for a manga series using a specific author
@@ -238,8 +240,8 @@ async def getMangaDetails(searchText, isLN=False):
                 return None
         
     except Exception as e:
-        traceback.print_exc()
-        
+        print("Error finding manga:{} in anilist.\nError:{}".format(searchText, e))
+        #traceback.print_exc()
         return None
 
 #Returns the closest manga series given an id
@@ -319,9 +321,11 @@ def getClosestManga(searchText, mangaList, isLN=False):
 
         return None
     except Exception as e:
-        traceback.print_exc()
+        print("Error finding manga:{} in anilist.\nError:{}".format(searchText, e))
+        #traceback.print_exc()
         return None
 
+################################THESE ARE FOR POPULATING THE CACHE #####################################
 async def getGenres(medium):
     try:
         async with session.get("https://anilist.co/api/genre_list/".format(medium), params={'access_token':access_token}, timeout=10)as resp:

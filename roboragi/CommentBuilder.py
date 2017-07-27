@@ -207,8 +207,9 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
         dictToReturn['comment'] = comment
 
         return dictToReturn
-    except:
-        traceback.print_exc()
+    except Exception as e:
+        print("Error creating embed: {}\n".format(e))
+        #traceback.print_exc()
         return None
 
 #Builds a manga comment from MAL/Anilist/MangaUpdates data
@@ -876,7 +877,7 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
         return dictToReturn
     except Exception as e:
         print(e)
-        traceback.print_exc()
+        #traceback.print_exc()
         return None
 
 #sets up the embed for Mangas
@@ -1080,8 +1081,9 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
         dictToReturn['embed'] = embed
         
         return dictToReturn
-    except:
-        traceback.print_exc()
+    except Exception as e:
+        print(e)
+        #traceback.print_exc()
         return None
 
 #sets up the embed for Light Novels
@@ -1282,8 +1284,9 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
         dictToReturn['embed'] = embed
         
         return dictToReturn
-    except:
-        traceback.print_exc()
+    except Exception as e:
+        print(e)
+        #traceback.print_exc()
         return None
 
 def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):

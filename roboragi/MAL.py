@@ -113,7 +113,8 @@ async def getAnimeDetails(searchText, animeId=None):
 
         return closestAnime
         
-    except Exception:
+    except Exception as e:
+        print("Error finding anime:{} on MAL\nError:{}".format(searchText, e))
         #traceback.print_exc()
         
         return None
@@ -148,6 +149,7 @@ def getClosestAnime(searchText, animeList):
 
         return None
     except Exception:
+        print("Error finding anime:{} on MAL\nError:{}".format(searchText, e))
         #traceback.print_exc()
         return None
 
@@ -240,6 +242,7 @@ async def getMangaCloseToDescription(searchText, descriptionToCheck):
 
         return getClosestFromDescription(closeManga, descriptionToCheck)
     except:
+        print("Error finding manga:{} on MAL\nError:{}".format(searchText, e))
         #traceback.print_exc()
         return None
     
@@ -327,9 +330,9 @@ async def getMangaDetails(searchText, mangaId=None, isLN=False):
         else:
             return None
 
-    except:
-        
-        traceback.print_exc()
+    except Exception as e:
+        print("Error finding manga:{} on MAL\nError:{}".format(searchText, e))
+        #traceback.print_exc()
         return None
 
 #Returns a list of manga with titles very close to the search text. Current unused because MAL's API is shit and doesn't return author names.
@@ -387,8 +390,9 @@ def getClosestManga(searchText, mangaList):
                         return manga
 
         return None
-    except Exception:
-        traceback.print_exc()
+    except Exception as e:
+        print("Error finding manga:{} on MAL\nError:{}".format(searchText, e))
+        #traceback.print_exc()
         return None
 
 
