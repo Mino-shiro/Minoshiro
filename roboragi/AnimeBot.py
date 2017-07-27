@@ -60,7 +60,8 @@ async def process_message(message, is_edit=False):
     
 
     #ignores all "code" markup (i.e. anything between backticks)
-    cleanMessage = re.sub(r"\`(.*?)\`", "", message.clean_content)
+    preCleanMessage = re.sub(r"\`(.*?)\`", "", message.clean_content)
+    cleanMessage = re.sub(r'<:.+?:([0-9]{15,21})>', "", preCleanMessage)
     messageReply = ''
 
     if re.search('({!help.*?}|{{!help.*?}}|<!help.*?>|<<!help.*?>>)', cleanMessage, re.S) is not None:
