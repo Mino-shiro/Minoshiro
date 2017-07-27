@@ -149,7 +149,7 @@ def getClosestAnime(searchText, animeList):
 
         return None
     except Exception:
-        print("Error finding anime:{} on MAL\nError:{}".format(searchText, e))
+        #print("Error finding anime:{} on MAL\nError:{}".format(searchText, e))
         #traceback.print_exc()
         return None
 
@@ -391,7 +391,7 @@ def getClosestManga(searchText, mangaList):
 
         return None
     except Exception as e:
-        print("Error finding manga:{} on MAL\nError:{}".format(searchText, e))
+        #print("Error finding manga:{} on MAL\nError:{}".format(searchText, e))
         #traceback.print_exc()
         return None
 

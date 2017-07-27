@@ -142,7 +142,7 @@ async def process_message(message, is_edit=False):
 
         for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))|(?<=(?<!\<)\<)([^\<\>]*)(?=\>(?!\>))", cleanMessage, re.S):
             numOfRequest += 1
-            print("Request found: {}".format(match))
+            print("Request found: {}".format(match['match']))
 
         if (numOfExpandedRequest >= 1) and (numOfRequest > 1):
             forceNormal = True
