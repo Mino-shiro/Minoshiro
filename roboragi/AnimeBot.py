@@ -139,11 +139,11 @@ async def process_message(message, is_edit=False):
         for match in re.finditer("\{{2}([^}]*)\}{2}|\<{2}([^>]*)\>{2}", cleanMessage, re.S):
             numOfRequest += 1
             numOfExpandedRequest += 1
-            print("Request found: {}".format(match.group(1)))
+            print("Request found: {}".format(match.group(0)))
 
         for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))|(?<=(?<!\<)\<)([^\<\>]*)(?=\>(?!\>))", cleanMessage, re.S):
             numOfRequest += 1
-            print("Request found: {}".format(match.group(1)))
+            print("Request found: {}".format(match.group(0)))
 
         if (numOfExpandedRequest >= 1) and (numOfRequest > 1):
             forceNormal = True
@@ -153,55 +153,71 @@ async def process_message(message, is_edit=False):
         #Expanded Anime
         for match in re.finditer("\{{2}([^}]*)\}{2}", cleanMessage, re.S):
             reply = ''
-            if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-                reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
-            else:
-                reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, True, canEmbed)
+            if match.group(1) != '':
+                if (forceNormal) or (str(message.channel).lower() in disableexpanded):
+                    reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
+                else:
+                    reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, True, canEmbed)
 
-            if (reply is not None):
-                animeArray.append(reply)
+                if (reply is not None):
+                    animeArray.append(reply)
+            else:
+                print("Empty request, ignoring")
 
         #Normal Anime
         for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))", cleanMessage, re.S):
-            reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
+            if match.group(1) != '':
+                reply = await DiscordoragiSearch.buildAnimeReply(match.group(1), message, False, canEmbed)
 
-            if (reply is not None):
-                animeArray.append(reply)
+                if (reply is not None):
+                    animeArray.append(reply)
+                else:
+                    print('Could not find anime')
             else:
-                print('Could not find anime')
+                print("Empty request, ignoring")
+
 
         #Expanded Manga
         #NORMAL EXPANDED
         for match in re.finditer("\<{2}([^>]*)\>{2}(?!(:|\>))", cleanMessage, re.S):
-            reply = ''
+            if match.group(1) != '':
+                reply = ''
 
-            if (forceNormal) or (str(message.channel).lower() in disableexpanded):
-                reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
+                if (forceNormal) or (str(message.channel).lower() in disableexpanded):
+                    reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
+                else:
+                    reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, True, canEmbed)
+
+                if (reply is not None):
+                    mangaArray.append(reply)
             else:
-                reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, True, canEmbed)
-
-            if (reply is not None):
-                mangaArray.append(reply)
+                print("Empty request, ignoring")
 
         #AUTHOR SEARCH EXPANDED
         for match in re.finditer("\<{2}([^>]*)\>{2}:\(([^)]+)\)", cleanMessage, re.S):
-            reply = ''
+            if match.group(1) != '':
+                reply = ''
 
-            if (forceNormal) or (str(message.server).lower() in disableexpanded):
-                reply = await DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False, canEmbed)
+                if (forceNormal) or (str(message.server).lower() in disableexpanded):
+                    reply = await DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, False, canEmbed)
+                else:
+                    reply = await DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, True, canEmbed)
+
+                if (reply is not None):
+                    mangaArray.append(reply)
             else:
-                reply = await DiscordoragiSearch.buildMangaReplyWithAuthor(match.group(1), match.group(2), message, True, canEmbed)
-
-            if (reply is not None):
-                mangaArray.append(reply)
+                print("Empty request, ignoring")
 
         #Normal Manga
         #NORMAL
         for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]+)\>(?!(:|\>))", cleanMessage, re.S):
-            reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
+            if match.group(1) != '':
+                reply = await DiscordoragiSearch.buildMangaReply(match.group(1), message, False, canEmbed)
 
-            if (reply is not None):
-                mangaArray.append(reply)
+                if (reply is not None):
+                    mangaArray.append(reply)
+            else:
+                print("Empty request, ignoring")
 
         #AUTHOR SEARCH
         for match in re.finditer("(?<=(?<!\<)\<)([^\<\>]*)\>:\(([^)]+)\)", cleanMessage, re.S):
@@ -212,22 +228,28 @@ async def process_message(message, is_edit=False):
 
         #Expanded LN
         for match in re.finditer("\]{2}([^]]*)\[{2}", cleanMessage, re.S):
-            reply = ''
+            if match.group(1) != '':
+                reply = ''
 
-            if (forceNormal) or (str(message.server).lower() in disableexpanded):
-                reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
+                if (forceNormal) or (str(message.server).lower() in disableexpanded):
+                    reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
+                else:
+                    reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), True, message, canEmbed)                    
+
+                if (reply is not None):
+                    lnArray.append(reply)
             else:
-                reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), True, message, canEmbed)                    
-
-            if (reply is not None):
-                lnArray.append(reply)
+                print("Empty request, ignoring")
 
         #Normal LN  
         for match in re.finditer("(?<=(?<!\])\])([^\]\[]*)(?=\[(?!\[))", cleanMessage, re.S):
-            reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
-            
-            if (reply is not None):
-                lnArray.append(reply)
+            if match.group(1) != '':
+                reply = await DiscordoragiSearch.buildLightNovelReply(match.group(1), False, message, canEmbed)
+                
+                if (reply is not None):
+                    lnArray.append(reply)
+            else:
+                print("Empty request, ignoring")
 
         #Here is where we create the final reply to be posted
 
