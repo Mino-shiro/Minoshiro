@@ -139,6 +139,7 @@ async def process_message(message, is_edit=False):
         for match in re.finditer("\{{2}([^}]*)\}{2}|\<{2}([^>]*)\>{2}", cleanMessage, re.S):
             numOfRequest += 1
             numOfExpandedRequest += 1
+            print("Request found: {}".format(match.group(1)))
 
         for match in re.finditer("(?<=(?<!\{)\{)([^\{\}]*)(?=\}(?!\}))|(?<=(?<!\<)\<)([^\<\>]*)(?=\>(?!\>))", cleanMessage, re.S):
             numOfRequest += 1
