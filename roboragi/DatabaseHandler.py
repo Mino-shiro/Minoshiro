@@ -262,7 +262,7 @@ def checkForMalEntry(table, name, animeId = None, isLN = None):
         cachedReply = {}
 
         if row is not None:
-            print("found cached entry")
+            #print("found cached entry")
             timeDiff = datetime.datetime.now() - row['accesstimestamp']
             if timeDiff.days >= 1:
                 cachedReply['update'] = True
@@ -272,7 +272,7 @@ def checkForMalEntry(table, name, animeId = None, isLN = None):
                 cachedReply['content'] = row['dict']
             
             return cachedReply
-        print("didn't find cached entry in mal")
+        #print("didn't find cached entry in mal")
         return None
 
     except Exception as e:
