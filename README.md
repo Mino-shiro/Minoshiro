@@ -19,8 +19,6 @@ git clone https://github.com/yyuu/pyenv-virtualenvwrapper.git ~/.pyenv/plugins/p
 
 echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bashrc
 echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bashrc
-echo 'eval "$(pyenv init -)"' >> ~/.bashrc
-echo 'pyenv virtualenvwrapper' >> ~/.bashrc
 ```
 You will need to close out of the terminal (or start a new SSH session) to finish instalation
 
