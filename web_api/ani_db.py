@@ -68,15 +68,12 @@ def __get_closest(query: str, anime_list: list):
     matcher = SequenceMatcher()
     for anime in anime_list:
         for title in anime['titles']:
-            text = title['title'].lower()
-            lang = title['lang']
-            matcher.set_seqs(query, text)
+            matcher.set_seqs(title['title'].lower(), query)
             ratio = matcher.ratio()
-            if ratio >= 0.85:
-                if lang.lower() in ('x-jat', 'en'):
-                    safe_matches.append((anime, ratio))
-                else:
-                    unsafe_matches.append((anime, ratio))
+            if ratio >= 0.85 and title['lang'].lower() in ('x-jat', 'en'):
+                safe_matches.append((anime, ratio))
+            elif ratio >= 0.85:
+                unsafe_matches.append((anime, ratio))
     if safe_matches:
         safe_matches.sort(key=lambda x: x[1], reverse=True)
         return safe_matches[0][0]
