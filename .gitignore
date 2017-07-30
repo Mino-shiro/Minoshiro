@@ -1,5 +1,11 @@
+# General ignores
 __pycache__/
-
+*.directory
+.cache/
 \.idea/
 
-roboragi_old/Config\.py
+# File ignores
+/*.py
+*.json
+*_db
+/roboragi_old/Config.py
