@@ -136,7 +136,7 @@ def get_anime_url_by_id(anime_id: str) -> str:
 def get_manga_url_by_id(manga_id: str) -> str:
     """
     Returns manga url by id.
-    :param manga_id: an anime id.
+    :param manga_id: a manga id.
     :return: the manga url.
     """
     return 'http://www.anime-planet.com/manga/' + str(manga_id)
