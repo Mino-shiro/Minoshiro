@@ -17,7 +17,7 @@ DBPASSWORD = ''
 DBHOST = ''
 
 try:
-    import Config
+    import roboragi.Config as Config
 
     DBNAME = Config.dbname
     DBUSER = Config.dbuser
@@ -198,7 +198,7 @@ def addMalEntry(table, anime):
                 cur.execute(sql.SQL(
                     "UPDATE {} SET synonyms = %s, dict = %s, accesstimestamp = current_timestamp WHERE id = %s").format(
                     sql.Identifier(table)),
-                            [animeSyn, Json(anime), str(animeID)])
+                    [animeSyn, Json(anime), str(animeID)])
                 conn.commit()
                 print("updated info")
                 return
@@ -216,15 +216,15 @@ def addMalEntry(table, anime):
             cur.execute(sql.SQL(
                 "INSERT into {} (id, name, medium, synonyms, dict) values (%s, %s, %s, %s, %s)").format(
                 sql.Identifier(table)),
-                        [str(animeID), animeName.lower(), novelOrManga,
-                         animeSyn, Json(anime)])
+                [str(animeID), animeName.lower(), novelOrManga,
+                 animeSyn, Json(anime)])
             conn.commit()
             return
 
         cur.execute(sql.SQL(
             "INSERT into {} (id, name, synonyms, dict) values (%s, %s, %s, %s)").format(
             sql.Identifier(table)),
-                    [str(animeID), animeName.lower(), animeSyn, Json(anime)])
+            [str(animeID), animeName.lower(), animeSyn, Json(anime)])
         conn.commit()
     except Exception as e:
         traceback.print_exc()
@@ -262,7 +262,7 @@ def addAniEntry(table, anime):
                 cur.execute(sql.SQL(
                     "UPDATE {} SET synonyms = %s, dict = %s, accesstimestamp = current_timestamp WHERE id = %s").format(
                     sql.Identifier(table)),
-                            [animeSyn, Json(anime), str(animeID)])
+                    [animeSyn, Json(anime), str(animeID)])
                 conn.commit()
                 print("updated info")
                 return
@@ -275,15 +275,15 @@ def addAniEntry(table, anime):
             cur.execute(sql.SQL(
                 "INSERT into {} (id, name, medium, synonyms, dict) values (%s, %s, %s, %s, %s)").format(
                 sql.Identifier(table)),
-                        [str(animeID), animeName.lower(), novelOrManga,
-                         animeSyn, Json(anime)])
+                [str(animeID), animeName.lower(), novelOrManga,
+                 animeSyn, Json(anime)])
             conn.commit()
             return
 
         cur.execute(sql.SQL(
             "INSERT into {} (id, name, synonyms, dict) values (%s, %s, %s, %s)").format(
             sql.Identifier(table)),
-                    [str(animeID), animeName.lower(), animeSyn, Json(anime)])
+            [str(animeID), animeName.lower(), animeSyn, Json(anime)])
         conn.commit()
     except Exception as e:
         traceback.print_exc()
@@ -387,15 +387,15 @@ def PopulateCache(table, content):
                 cur.execute(sql.SQL(
                     "INSERT into {} (id, name, medium, synonyms, accesstimestamp, dict) values (%s, %s, %s, %s, %s, %s)").format(
                     sql.Identifier(table)),
-                            [str(animeID), animeName.lower(), novelOrManga,
-                             animeSyn, expired_date, Json(content)])
+                    [str(animeID), animeName.lower(), novelOrManga,
+                     animeSyn, expired_date, Json(content)])
                 conn.commit()
                 return
             cur.execute(sql.SQL(
                 "INSERT into {} (id, name, synonyms, accesstimestamp, dict) values (%s, %s, %s, %s, %s)").format(
                 sql.Identifier(table)),
-                        [str(animeID), animeName.lower(), animeSyn,
-                         expired_date, Json(content)])
+                [str(animeID), animeName.lower(), animeSyn,
+                 expired_date, Json(content)])
         print("Added {} to the {}:\n".format(animeName, table))
         conn.commit()
     except Exception as e:
