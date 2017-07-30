@@ -1,11 +1,12 @@
 """
 Retrieve anime info from AnimePlanet.
 """
-
+from session_manager import SessionManager
 from difflib import SequenceMatcher
 from typing import List, Optional
 from urllib.parse import quote
 from pyquery import PyQuery
+from collections import deque
 
 
 def sanitize_search_text(text: str) -> str:
@@ -43,8 +44,9 @@ async def get_anime_url(
         anime_list = []
         for entry in ap.find('.card.pure-1-6'):
             anime = {
-                'title': PyQuery(entry).find('h4').text()
-                'url': f'http://www.anime-planet.com{PyQuery(entry).find("a").attr("href")}'
+                'title': PyQuery(entry).find('h4').text(),
+                'url': f'''http://www.anime-planet.com
+                    {PyQuery(entry).find("a").attr("href")}'''
             }
             anime_list.append(anime)
         return __get_closest(query, anime_list).get('url')
@@ -74,10 +76,11 @@ async def get_manga_url(
                     params=params) as resp:
                 html = await resp.text()
             if "No results found" in html:
-                rearranged_author_names = collections.deque(
+                rearranged_author_names = deque(
                     author_name.split(' '))
                 rearranged_author_names.rotate(-1)
                 rearranged_name = ' '.join(rearranged_author_names)
+                params['author'] = quote(rearranged_name)
                 async with await session_manager.get(
                         "http://www.anime-planet.com/manga/all?",
                         params=params) as resp:
@@ -97,23 +100,25 @@ async def get_manga_url(
             return
 
     if ap.find('.cardDeck.pure-g.cd-narrow[data-type="manga"]'):
-        anime_list = []
+        manga_list = []
         for entry in ap.find('.card.pure-1-6'):
             anime = {
-                'title': PyQuery(entry).find('h4').text()
-                'url': f'http://www.anime-planet.com{PyQuery(entry).find("a").attr("href")}'
+                'title': PyQuery(entry).find('h4').text(),
+                'url': f'''http://www.anime-planet.com
+                    {PyQuery(entry).find("a").attr("href")}'''
             }
-            anime_list.append(anime)
+            manga_list.append(anime)
 
             if author_name:
                 author_name = author_name.lower().split(' ')
-                for manga in mangaList:
+                for manga in manga_list:
                     manga['title'] = manga['title'].lower()
-                    for name in authorName:
+                    for name in author_name:
                         manga['title'] = manga['title'].replace(name, '')
-                    manga['title'] = manga['title'].replace('(', '').replace(')', '').strip()
+                    manga['title'] = manga['title'].replace('(', '')
+                    manga['title'] = manga['title'].replace(')', '').strip()
 
-        return __get_closest(query, anime_list).get('url')
+        return __get_closest(query, manga_list).get('url')
     else:
         return ap.find("meta[property='og:url']").attr('content')
     pass
@@ -125,7 +130,7 @@ def get_anime_url_by_id(anime_id: str) -> str:
     :param anime_id: an anime id.
     :return: the anime url.
     """
-    return 'http://www.anime-planet.com/anime/' + str(animeId)
+    return 'http://www.anime-planet.com/anime/' + str(anime_id)
 
 
 def get_manga_url_by_id(manga_id: str) -> str:
@@ -134,7 +139,7 @@ def get_manga_url_by_id(manga_id: str) -> str:
     :param manga_id: an anime id.
     :return: the manga url.
     """
-    return 'http://www.anime-planet.com/manga/' + str(mangaId)
+    return 'http://www.anime-planet.com/manga/' + str(manga_id)
 
 
 def __get_closest(query: str, anime_list: List[dict]) -> dict:
