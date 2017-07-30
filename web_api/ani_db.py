@@ -23,10 +23,8 @@ async def get_anime_url(
         'query': quote(query)
     }
     try:
-        resp = await session_manager.get(
-            'http://anisearch.outrance.pl/', params=params
-        )
-        async with resp:
+        async with await session_manager.get(
+                'http://anisearch.outrance.pl/', params=params) as resp:
             html = await resp.read()
         pq = PyQuery(html)
     except Exception as e:
@@ -39,8 +37,7 @@ async def get_anime_url(
         [(__get_title_info(anime), anime) for anime in pq('animetitles anime')]
         if titles
     ]
-    closest = __get_closest(query, anime_list)
-    return closest['url'] if closest else None
+    return __get_closest(query, anime_list).get('url')
 
 
 def __get_title_info(anime) -> List[dict]:
@@ -55,28 +52,39 @@ def __get_title_info(anime) -> List[dict]:
     ]
 
 
-def __get_closest(query: str, anime_list: list):
+def __get_closest(query: str, anime_list: List[dict]) -> dict:
     """
-    Get the closest matching `anime` object by search term.
+    Get the closest matching anime by search query.
     :param query: the search term.
-    :param anime_list: a list of `anime` objects from `PyQuery`
-    :return: the closest matching `anime` object by title.
+    :param anime_list: a list of animes.
+
+    :return:
+        Closest matching anime by search query if found else an empty dict.
     """
-    safe_matches = []
-    unsafe_matches = []
-    query = query.lower()
-    matcher = SequenceMatcher()
+    max_ratio, match = 0, None
+    matcher = SequenceMatcher(b=query.lower())
     for anime in anime_list:
-        for title in anime['titles']:
-            matcher.set_seqs(title['title'].lower(), query)
-            ratio = matcher.ratio()
-            if ratio >= 0.85 and title['lang'].lower() in ('x-jat', 'en'):
-                safe_matches.append((anime, ratio))
-            elif ratio >= 0.85:
-                unsafe_matches.append((anime, ratio))
-    if safe_matches:
-        safe_matches.sort(key=lambda x: x[1], reverse=True)
-        return safe_matches[0][0]
-    if unsafe_matches:
-        unsafe_matches.sort(key=lambda x: x[1], reverse=True)
-        return unsafe_matches[0][0]
+        ratio = __match_max(anime, matcher)
+        if ratio > max_ratio and ratio >= 0.85:
+            max_ratio = ratio
+            match = anime
+    return match or {}
+
+
+def __match_max(anime: dict, matcher: SequenceMatcher) -> float:
+    """
+    Get the max matched ratio for a given anime.
+
+    :param anime: the anime.
+
+    :param matcher: the `SequenceMatcher` with the search query as seq2.
+
+    :return: the max matched ratio.
+    """
+    max_ratio = 0
+    for title in anime['titles']:
+        matcher.set_seq1(title['title'].lower())
+        ratio = matcher.ratio()
+        if ratio > max_ratio:
+            max_ratio = ratio
+    return max_ratio
