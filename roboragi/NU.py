@@ -3,21 +3,20 @@ NovelUpdates.py
 Handles all NovelUpdates information
 '''
 
-from pyquery import PyQuery as pq
-import aiohttp
 import difflib
-import traceback
-import pprint
-import collections
+
+import aiohttp
+from pyquery import PyQuery as pq
 
 req = aiohttp.ClientSession()
+
 
 async def getLightNovelURL(searchText):
     try:
         searchText = searchText.replace(' ', '+')
-        async with req.get('http://www.novelupdates.com/?s=' + searchText, timeout=10) as resp:
+        async with req.get('http://www.novelupdates.com/?s=' + searchText,
+                           timeout=10) as resp:
             html = await resp.text()
-        
 
         nu = pq(html)
 
@@ -28,16 +27,17 @@ async def getLightNovelURL(searchText):
             url = pq(thing).find('.w-blog-entry-link').attr('href')
 
             if title:
-                data = { 'title': title,
-                        'url': url }
+                data = {'title': title,
+                        'url': url}
                 lnList.append(data)
 
         closest = findClosestLightNovel(searchText, lnList)
         return closest['url']
-    
+
     except:
-        
+
         return None
+
 
 def findClosestLightNovel(searchText, lnList):
     try:
@@ -50,9 +50,10 @@ def findClosestLightNovel(searchText, lnList):
             if '(wn)' not in ln['title'].lower():
                 nameListWithoutWN.append(ln['title'].lower())
 
-
-        closestNameFromListWithoutWN = difflib.get_close_matches(searchText.lower(), nameListWithoutWN, 1, 0.80)
-        closestNameFromListWithWN = difflib.get_close_matches(searchText.lower(), nameList, 1, 0.80)
+        closestNameFromListWithoutWN = difflib.get_close_matches(
+            searchText.lower(), nameListWithoutWN, 1, 0.80)
+        closestNameFromListWithWN = difflib.get_close_matches(
+            searchText.lower(), nameList, 1, 0.80)
 
         if closestNameFromListWithoutWN:
             nameToUse = closestNameFromListWithoutWN[0].lower()
@@ -66,6 +67,7 @@ def findClosestLightNovel(searchText, lnList):
         return None
     except:
         return None
+
 
 def getLightNovelById(lnId):
     return 'http://www.novelupdates.com/series/' + str(lnId)

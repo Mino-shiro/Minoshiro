@@ -4,16 +4,17 @@ Takes the data given to it by search and formats it into a comment
 '''
 
 import re
-from os import linesep
-from discord import Embed
 import traceback
+from os import linesep
 
-import DatabaseHandler
-import pprint
-import Discord
+from discord import Embed
 
-#Removes the (Source: MAL) or (Written by X) bits from the decriptions in the databases
-def cleanupDescription(desc):    
+import roboragi.DatabaseHandler as DatabaseHandler
+import roboragi.Discord as Discord
+
+
+# Removes the (Source: MAL) or (Written by X) bits from the decriptions in the databases
+def cleanupDescription(desc):
     for match in re.finditer("([\[\<\(](.*?)[\]\>\)])", desc, re.S):
         if 'ource' in match.group(1).lower():
             desc = desc.replace(match.group(1), '')
@@ -23,15 +24,17 @@ def cleanupDescription(desc):
     for match in re.finditer("([\<](.*?)[\>])", desc, re.S):
         if 'br' in match.group(1).lower():
             desc = desc.replace(match.group(1), '')
-        
+
     reply = ''
-    for i, line in enumerate(linesep.join([s for s in desc.splitlines() if s]).splitlines()):
+    for i, line in enumerate(
+            linesep.join([s for s in desc.splitlines() if s]).splitlines()):
         if i is not 0:
             reply += '\n'
         reply += line + '\n'
     return reply
 
-#Builds an anime comment from MAL/Anilist data
+
+# Builds an anime comment from MAL/Anilist data
 def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
     try:
         comment = ''
@@ -45,7 +48,7 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
         aniURL = None
         apURL = ap
         anidbURL = anidb
-        
+
         youtubeTrailer = None
 
         status = None
@@ -54,7 +57,7 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
 
         countdown = None
         nextEpisode = None
-        
+
         desc = None
 
         if mal:
@@ -62,7 +65,7 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
 
             if mal['type']:
                 cType = mal['type']
-            
+
             malURL = 'http://myanimelist.net/anime/' + str(mal['id'])
 
         if ani is not None:
@@ -102,16 +105,17 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
         stats = DatabaseHandler.getRequestStats(title, 'Anime')
 
         if ani is not None:
-            stats = DatabaseHandler.getRequestStats(ani['title_romaji'],'Anime')
+            stats = DatabaseHandler.getRequestStats(ani['title_romaji'],
+                                                    'Anime')
 
-        #---------- BUILDING THE COMMENT ----------#
-                
-        #----- TITLE -----#
+        # ---------- BUILDING THE COMMENT ----------#
+
+        # ----- TITLE -----#
         comment += '**' + title.strip() + '** - \n\n'
 
-        #----- LINKS -----#
+        # ----- LINKS -----#
         urlComments = []
-        
+
         if malURL is not None:
             urlComments.append(malURL)
         if apURL is not None:
@@ -120,30 +124,30 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
             urlComments.append(aniURL)
         if anidbURL is not None:
             urlComments.append(anidbURL)
-            
+
         for i, link in enumerate(urlComments):
             if i is not 0:
                 comment += '\n\n'
             comment += link
 
-        #----- JAPANESE TITLE -----#
+        # ----- JAPANESE TITLE -----#
         if (isExpanded):
             if jTitle is not None:
                 comment += '\n\n'
-                
+
                 splitJTitle = jTitle.split()
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
                     comment += word
 
-        #----- INFO LINE -----#            
+        # ----- INFO LINE -----#
         if (isExpanded):
             comment += '\n\n('
 
             if cType:
                 comment += '**' + cType + '** | '
-            
+
             comment += '**Status:** ' + status
 
             if cType != 'Movie':
@@ -170,26 +174,31 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
                 comment += genre
         else:
             comment += 'None'
-            
+
         if (isExpanded) and (stats is not None):
-            comment += '  \n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' server(s)) - ' + str(round(stats['totalAsPercentage'],3)) + '% of all requests'
+            comment += '  \n**Stats:** ' + str(
+                stats['total']) + ' requests across ' + str(
+                stats['uniqueSubreddits']) + ' server(s)) - ' + str(
+                round(stats['totalAsPercentage'], 3)) + '% of all requests'
         else:
             comment += ')'
 
-        #----- EPISODE COUNTDOWN -----#
+        # ----- EPISODE COUNTDOWN -----#
         if (countdown is not None) and (nextEpisode is not None):
-            #countdown is given to us in seconds
-            days, countdown = divmod(countdown, 24*60*60)
-            hours, countdown = divmod(countdown, 60*60)
+            # countdown is given to us in seconds
+            days, countdown = divmod(countdown, 24 * 60 * 60)
+            hours, countdown = divmod(countdown, 60 * 60)
             minutes, countdown = divmod(countdown, 60)
-                               
-            comment += '\n\n(Episode ' + str(nextEpisode) + ' airs in ' + str(days) + ' days, ' + str(hours) + ' hours, ' + str(minutes) + ' minutes)'
 
-        #----- DESCRIPTION -----#
+            comment += '\n\n(Episode ' + str(nextEpisode) + ' airs in ' + str(
+                days) + ' days, ' + str(hours) + ' hours, ' + str(
+                minutes) + ' minutes)'
+
+        # ----- DESCRIPTION -----#
         if (isExpanded):
             comment += '\n\n' + cleanupDescription(desc)
 
-        #----- END -----#
+        # ----- END -----#
         receipt = '(A) Request successful: ' + title + ' - '
         if malURL is not None:
             receipt += 'MAL '
@@ -201,7 +210,7 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
             receipt += 'ADB '
         print(receipt.encode('utf8'))
 
-        #We return the title/comment separately so we can track if multiples of the same comment have been requests (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
+        # We return the title/comment separately so we can track if multiples of the same comment have been requests (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['comment'] = comment
@@ -209,10 +218,11 @@ def buildAnimeComment(isExpanded, mal, ani, ap, anidb):
         return dictToReturn
     except Exception as e:
         print("Error creating embed: {}\n".format(e))
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None
 
-#Builds a manga comment from MAL/Anilist/MangaUpdates data
+
+# Builds a manga comment from MAL/Anilist/MangaUpdates data
 def buildMangaComment(isExpanded, mal, ani, mu, ap):
     try:
         comment = ''
@@ -231,7 +241,7 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
         chapters = None
         volumes = None
         genres = []
-        
+
         desc = None
 
         if not (mal is None):
@@ -285,16 +295,16 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
             except Exception as e:
                 print(e)
 
-        stats = DatabaseHandler.getRequestStats(title,'Manga')
-        
-        #---------- BUILDING THE COMMENT ----------#
-                
-        #----- TITLE -----#
+        stats = DatabaseHandler.getRequestStats(title, 'Manga')
+
+        # ---------- BUILDING THE COMMENT ----------#
+
+        # ----- TITLE -----#
         comment += '**' + title.strip() + '** - \n\n'
 
-        #----- LINKS -----#
+        # ----- LINKS -----#
         urlComments = []
-        
+
         if malURL is not None:
             urlComments.append(malURL)
         if apURL is not None:
@@ -311,26 +321,26 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
 
         comment += '\n\n'
 
-        #----- JAPANESE TITLE -----#
+        # ----- JAPANESE TITLE -----#
         if (isExpanded):
             if jTitle is not None:
                 comment += '\n\n'
-                
+
                 splitJTitle = jTitle.split()
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
                     comment += word
 
-        #----- INFO LINE -----#
-        
+        # ----- INFO LINE -----#
+
         if (isExpanded):
             comment += '\n\n('
 
             if cType:
                 if cType == 'Novel':
                     cType = 'Light Novel'
-                    
+
                 comment += '**' + cType + '** | '
 
             comment += '**Status:** ' + status
@@ -349,7 +359,7 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
             if cType:
                 if cType == 'Novel':
                     cType = 'Light Novel'
-                    
+
                 comment += cType + ' | '
 
             comment += 'Status: ' + status
@@ -368,17 +378,20 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
                 if i is not 0:
                     comment += ', '
                 comment += genre
-            
+
         if (isExpanded) and (stats is not None):
-            comment += '  \n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' server(s)) - ' + str(round(stats['totalAsPercentage'],3)) + '% of all requests'
+            comment += '  \n**Stats:** ' + str(
+                stats['total']) + ' requests across ' + str(
+                stats['uniqueSubreddits']) + ' server(s)) - ' + str(
+                round(stats['totalAsPercentage'], 3)) + '% of all requests'
         else:
             comment += ')'
 
-        #----- DESCRIPTION -----#
+        # ----- DESCRIPTION -----#
         if (isExpanded):
             comment += '\n\n' + cleanupDescription(desc)
 
-        #----- END -----#
+        # ----- END -----#
         receipt = '(M) Request successful: ' + title + ' - '
         if malURL is not None:
             receipt += 'MAL '
@@ -393,13 +406,14 @@ def buildMangaComment(isExpanded, mal, ani, mu, ap):
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['comment'] = comment
-        
+
         return dictToReturn
     except:
         traceback.print_exc()
         return None
 
-#Builds a manga comment from MAL/Anilist/MangaUpdates data
+
+# Builds a manga comment from MAL/Anilist/MangaUpdates data
 def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
     try:
         comment = ''
@@ -418,7 +432,7 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
         chapters = None
         volumes = None
         genres = []
-        
+
         desc = None
 
         if not (mal is None):
@@ -472,16 +486,16 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
             except Exception as e:
                 print(e)
 
-        stats = DatabaseHandler.getRequestStats(title,'LN')
-        
-        #---------- BUILDING THE COMMENT ----------#
-                
-        #----- TITLE -----#
+        stats = DatabaseHandler.getRequestStats(title, 'LN')
+
+        # ---------- BUILDING THE COMMENT ----------#
+
+        # ----- TITLE -----#
         comment += '**' + title.strip() + '** -\n\n'
 
-        #----- LINKS -----#
+        # ----- LINKS -----#
         urlComments = []
-        
+
         if malURL is not None:
             urlComments.append(malURL)
         if aniURL is not None:
@@ -498,26 +512,26 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
 
         comment += '\n\n'
 
-        #----- JAPANESE TITLE -----#
+        # ----- JAPANESE TITLE -----#
         if (isExpanded):
             if jTitle is not None:
                 comment += '\n\n'
-                
+
                 splitJTitle = jTitle.split()
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
-                    comment +=  word
+                    comment += word
 
-        #----- INFO LINE -----#
-        
+        # ----- INFO LINE -----#
+
         if (isExpanded):
             comment += '\n\n('
 
             if cType:
                 if cType == 'Novel':
                     cType = 'Light Novel'
-                    
+
                 comment += '**' + cType + '** | '
 
             comment += '**Status:** ' + status
@@ -536,7 +550,7 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
             if cType:
                 if cType == 'Novel':
                     cType = 'Light Novel'
-                    
+
                 comment += cType + ' | '
 
             comment += 'Status: ' + status
@@ -555,17 +569,20 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
                 if i is not 0:
                     comment += ', '
                 comment += genre
-            
+
         if (isExpanded) and (stats is not None):
-            comment += '  \n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' subreddit(s)^) ^- ^' + str(round(stats['totalAsPercentage'],3)) + '% ^of ^all ^requests'
+            comment += '  \n**Stats:** ' + str(
+                stats['total']) + ' requests across ' + str(
+                stats['uniqueSubreddits']) + ' subreddit(s)^) ^- ^' + str(
+                round(stats['totalAsPercentage'], 3)) + '% ^of ^all ^requests'
         else:
             comment += ')'
 
-        #----- DESCRIPTION -----#
+        # ----- DESCRIPTION -----#
         if (isExpanded):
             comment += '\n\n' + cleanupDescription(desc)
 
-        #----- END -----#
+        # ----- END -----#
         receipt = '(LN) Request successful: ' + title + ' - '
         if malURL is not None:
             receipt += 'MAL '
@@ -580,103 +597,144 @@ def buildLightNovelComment(isExpanded, mal, ani, nu, lndb):
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['comment'] = comment
-        
+
         return dictToReturn
     except:
         traceback.print_exc()
         return None
 
-#Builds a stats comment. If it is basic stats the default server id is the Discordoragi help server
-def buildStatsComment(server=None, username=None, serverID="171004769069039616"):
+
+# Builds a stats comment. If it is basic stats the default server id is the Discordoragi help server
+def buildStatsComment(server=None, username=None,
+                      serverID="171004769069039616"):
     try:
         statComment = ''
         receipt = '(S) Request successful: Stats'
-        
+
         if username:
             userStats = DatabaseHandler.getUserStats(username)
-            
+
             if userStats:
                 statComment += 'Some stats on ' + username + ':\n\n'
-                statComment += '- **' + str(userStats['totalUserComments']) + '** total comments searched (' + str(round(userStats['totalUserCommentsAsPercentage'], 3)) + '% of all comments)\n'
-                statComment += '- **' + str(userStats['totalUserRequests']) + '** requests made (' + str(round(userStats['totalUserRequestsAsPercentage'], 3)) + '% of all requests and #' + str(userStats['overallRequestRank']) + ' overall)\n'
-                statComment += '- **' + str(userStats['uniqueRequests']) + '** unique anime/manga requested\n'
-                statComment += '- **/r/' + str(userStats['favouriteSubreddit']) + '** is their favourite server with ' + str(userStats['favouriteSubredditCount']) + ' requests (' + str(round(userStats['favouriteSubredditCountAsPercentage'], 3)) + '% of the server\'s requests)\n'
+                statComment += '- **' + str(userStats[
+                                                'totalUserComments']) + '** total comments searched (' + str(
+                    round(userStats['totalUserCommentsAsPercentage'],
+                          3)) + '% of all comments)\n'
+                statComment += '- **' + str(userStats[
+                                                'totalUserRequests']) + '** requests made (' + str(
+                    round(userStats['totalUserRequestsAsPercentage'],
+                          3)) + '% of all requests and #' + str(
+                    userStats['overallRequestRank']) + ' overall)\n'
+                statComment += '- **' + str(userStats[
+                                                'uniqueRequests']) + '** unique anime/manga requested\n'
+                statComment += '- **/r/' + str(userStats[
+                                                   'favouriteSubreddit']) + '** is their favourite server with ' + str(
+                    userStats[
+                        'favouriteSubredditCount']) + ' requests (' + str(
+                    round(userStats['favouriteSubredditCountAsPercentage'],
+                          3)) + '% of the server\'s requests)\n'
                 statComment += '\n'
                 statComment += 'Their most frequently requested anime/manga overall are:\n\n'
-                
+
                 for i, request in enumerate(userStats['topRequests']):
-                    statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)  \n'
+                    statComment += str(i + 1) + '. **' + str(
+                        request[0]) + '** (' + str(request[1]) + ' - ' + str(
+                        request[2]) + ' requests)  \n'
             else:
-                statComment += '/u/' + str(username) + ' hasn\'t used Roboragi yet.'
-                
+                statComment += '/u/' + str(
+                    username) + ' hasn\'t used Roboragi yet.'
+
             receipt += ' - /u/' + username
         elif server:
             serverID = server.id
             server = str(server)
             serverStats = DatabaseHandler.getSubredditStats(server.lower())
-            
+
             if serverStats:
-                statComment += '**' + server +' Stats**\n\n'
-                
-                statComment += 'I\'ve searched through ' + str(serverStats['totalComments'])
+                statComment += '**' + server + ' Stats**\n\n'
+
+                statComment += 'I\'ve searched through ' + str(
+                    serverStats['totalComments'])
                 statComment += ' unique comments on ' + server
-                statComment += ' and fulfilled a total of ' + str(serverStats['total']) + ' requests, '
-                statComment += 'representing ' + str(round(serverStats['totalAsPercentage'], 2)) + '% of all requests. '
-                statComment += 'A total of ' + str(serverStats['uniqueNames']) + ' unique anime/manga have been requested here, '
-                statComment += 'with a mean value of ' + str(round(serverStats['meanValuePerRequest'], 3)) + ' requests/show'
-                statComment += ' and a standard deviation of ' + str(round(serverStats['standardDeviation'], 3)) + '.'
+                statComment += ' and fulfilled a total of ' + str(
+                    serverStats['total']) + ' requests, '
+                statComment += 'representing ' + str(
+                    round(serverStats['totalAsPercentage'],
+                          2)) + '% of all requests. '
+                statComment += 'A total of ' + str(serverStats[
+                                                       'uniqueNames']) + ' unique anime/manga have been requested here, '
+                statComment += 'with a mean value of ' + str(
+                    round(serverStats['meanValuePerRequest'],
+                          3)) + ' requests/show'
+                statComment += ' and a standard deviation of ' + str(
+                    round(serverStats['standardDeviation'], 3)) + '.'
 
                 statComment += '\n\n'
 
                 statComment += 'The most frequently requested anime/manga on this server are:\n\n'
 
                 for i, request in enumerate(serverStats['topRequests']):
-                    statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)\n'
+                    statComment += str(i + 1) + '. **' + str(
+                        request[0]) + '** (' + str(request[1]) + ' - ' + str(
+                        request[2]) + ' requests)\n'
 
                 statComment += '\n'
 
                 statComment += 'The most frequent requesters on this server are:\n\n'
                 for i, requester in enumerate(serverStats['topRequesters']):
-                    statComment += str(i + 1) + '. /u/' + str(requester[0]) + ' (' + str(requester[1]) + ' requests)\n'
-                
+                    statComment += str(i + 1) + '. /u/' + str(
+                        requester[0]) + ' (' + str(
+                        requester[1]) + ' requests)\n'
+
             else:
-                statComment += 'There have been no requests on ' + str(server) + ' yet.'
-               
+                statComment += 'There have been no requests on ' + str(
+                    server) + ' yet.'
+
             receipt += ' - ' + server
         else:
             basicStats = DatabaseHandler.getBasicStats(serverID)
-            
-            #The overall stats section
+
+            # The overall stats section
             statComment += '**Overall Stats**\n\n'
 
-            statComment += 'I\'ve searched through ' + str(basicStats['totalComments'])
-            statComment += ' unique comments and fulfilled a total of ' + str(basicStats['total'])
-            statComment += ' requests across ' + str(basicStats['uniqueSubreddits']) + ' unique server(s). '
+            statComment += 'I\'ve searched through ' + str(
+                basicStats['totalComments'])
+            statComment += ' unique comments and fulfilled a total of ' + str(
+                basicStats['total'])
+            statComment += ' requests across ' + str(
+                basicStats['uniqueSubreddits']) + ' unique server(s). '
             statComment += 'A total of ' + str(basicStats['uniqueNames'])
-            statComment += ' unique anime/manga have been requested, with a mean value of ' + str(round(basicStats['meanValuePerRequest'],3))
-            statComment += ' requests/show and a standard deviation of ' + str(round(basicStats['standardDeviation'], 3)) + '.'
+            statComment += ' unique anime/manga have been requested, with a mean value of ' + str(
+                round(basicStats['meanValuePerRequest'], 3))
+            statComment += ' requests/show and a standard deviation of ' + str(
+                round(basicStats['standardDeviation'], 3)) + '.'
 
             statComment += '\n\n'
 
             statComment += 'The most frequently requested anime/manga overall are:\n\n'
 
             for i, request in enumerate(basicStats['topRequests']):
-                statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)\n'
+                statComment += str(i + 1) + '. **' + str(
+                    request[0]) + '** (' + str(request[1]) + ' - ' + str(
+                    request[2]) + ' requests)\n'
 
             statComment += '\n'
 
             statComment += 'The most frequent requesters overall are:  \n'
             for i, requester in enumerate(basicStats['topRequesters']):
-                statComment += str(i + 1) + '. ' + str(Discord.getUsernameFromID(requester[0], )) + ' (' + str(requester[1]) + ' requests)  \n'
-                
+                statComment += str(i + 1) + '. ' + str(
+                    Discord.getUsernameFromID(requester[0], )) + ' (' + str(
+                    requester[1]) + ' requests)  \n'
+
             statComment += '\n'
             receipt += ' - Basic'
-            
+
         print(receipt.encode('utf8'))
         return statComment
     except:
         traceback.print_exc()
         return None
+
 
 # Builds an embed using the same data
 def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
@@ -693,7 +751,7 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
         aniURL = None
         apURL = ap
         anidbURL = anidb
-        
+
         youtubeTrailer = None
 
         status = None
@@ -702,7 +760,7 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
 
         countdown = None
         nextEpisode = None
-        
+
         desc = None
 
         if mal:
@@ -710,11 +768,11 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
 
             if mal['type']:
                 cType = mal['type']
-            
+
             malURL = 'http://myanimelist.net/anime/' + str(mal['id'])
             if mal['title']:
                 title = mal['title']
-            
+
             if mal['english']:
                 title = mal['english']
 
@@ -732,7 +790,7 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
                 desc = ani['description']
             except:
                 pass
-            
+
             if status is None:
                 try:
                     status = ani['airing_status'].title()
@@ -763,53 +821,57 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
         stats = DatabaseHandler.getRequestStats(title, 'Anime')
 
         if ani is not None:
-            stats = DatabaseHandler.getRequestStats(ani['title_romaji'],'Anime')
+            stats = DatabaseHandler.getRequestStats(ani['title_romaji'],
+                                                    'Anime')
 
-        #---------- BUILDING THE COMMENT ----------#
+        # ---------- BUILDING THE COMMENT ----------#
 
         comment = ''
-        
-        #----- LINKS -----#
+
+        # ----- LINKS -----#
         urlComments = []
         allLinks = ''
 
         try:
-        	mal_english = mal['english']
+            mal_english = mal['english']
         except:
-        	pass
-
+            pass
 
         if malURL is not None:
-            urlComments.append("[MAL]({})".format(sanitise_url_for_markdown(malURL)))
+            urlComments.append(
+                "[MAL]({})".format(sanitise_url_for_markdown(malURL)))
         if apURL is not None:
-            urlComments.append("[AP]({})".format(sanitise_url_for_markdown(apURL)))
+            urlComments.append(
+                "[AP]({})".format(sanitise_url_for_markdown(apURL)))
         if ani is not None:
-            urlComments.append("[AL]({})".format(sanitise_url_for_markdown(aniURL)))
+            urlComments.append(
+                "[AL]({})".format(sanitise_url_for_markdown(aniURL)))
         if anidbURL is not None:
-            urlComments.append("[AniDB]({})".format(sanitise_url_for_markdown(anidbURL)))
-            
+            urlComments.append(
+                "[AniDB]({})".format(sanitise_url_for_markdown(anidbURL)))
+
         for i, link in enumerate(urlComments):
             if i is not 0:
                 allLinks += ', '
             allLinks += link
-        #----- JAPANESE TITLE -----#
+        # ----- JAPANESE TITLE -----#
         if (isExpanded):
             if jTitle is not None:
                 comment += '\n\n'
-                
+
                 splitJTitle = jTitle.split()
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
                     comment += word
 
-        #----- INFO LINE -----#            
+        # ----- INFO LINE -----#
         if (isExpanded):
             comment += '\n\n('
 
             if cType:
                 comment += '**' + cType + '** | '
-            
+
             comment += '**Status:** ' + status
 
             if cType != 'Movie':
@@ -836,26 +898,31 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
                 comment += genre
         else:
             comment += 'None'
-            
+
         if (isExpanded) and (stats is not None):
-            comment += ')  \n\n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' server(s)) - ' + str(round(stats['totalAsPercentage'],3)) + '% of all requests'
+            comment += ')  \n\n**Stats:** ' + str(
+                stats['total']) + ' requests across ' + str(
+                stats['uniqueSubreddits']) + ' server(s)) - ' + str(
+                round(stats['totalAsPercentage'], 3)) + '% of all requests'
         else:
             comment += ')'
 
-        #----- EPISODE COUNTDOWN -----#
+        # ----- EPISODE COUNTDOWN -----#
         if (countdown is not None) and (nextEpisode is not None):
-            #countdown is given to us in seconds
-            days, countdown = divmod(countdown, 24*60*60)
-            hours, countdown = divmod(countdown, 60*60)
+            # countdown is given to us in seconds
+            days, countdown = divmod(countdown, 24 * 60 * 60)
+            hours, countdown = divmod(countdown, 60 * 60)
             minutes, countdown = divmod(countdown, 60)
-                               
-            comment += '\n\n(Episode ' + str(nextEpisode) + ' airs in ' + str(days) + ' days, ' + str(hours) + ' hours, ' + str(minutes) + ' minutes)'
 
-        #----- DESCRIPTION -----#
+            comment += '\n\n(Episode ' + str(nextEpisode) + ' airs in ' + str(
+                days) + ' days, ' + str(hours) + ' hours, ' + str(
+                minutes) + ' minutes)'
+
+        # ----- DESCRIPTION -----#
         if (isExpanded):
             descComment += cleanupDescription(desc)
 
-        #----- END -----#
+        # ----- END -----#
         receipt = '(A) Request successful: ' + title + ' - '
         if malURL is not None:
             receipt += 'MAL '
@@ -867,20 +934,22 @@ def buildAnimeEmbed(isExpanded, mal, ani, ap, anidb):
             receipt += 'ADB '
         print(receipt.encode('utf8'))
         try:
-            embed = buildEmbedObject(title, allLinks, comment, malimage, isExpanded, descComment)
+            embed = buildEmbedObject(title, allLinks, comment, malimage,
+                                     isExpanded, descComment)
         except Exception as e:
             print(e)
-        #We return the title/comment separately so we can track if multiples of the same comment have been requests (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
+        # We return the title/comment separately so we can track if multiples of the same comment have been requests (e.g. {Nisekoi}{Nisekoi}{Nisekoi})
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['embed'] = embed
         return dictToReturn
     except Exception as e:
         print(e)
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None
 
-#sets up the embed for Mangas
+
+# sets up the embed for Mangas
 def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
     try:
         comment = ''
@@ -901,7 +970,7 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
         chapters = None
         volumes = None
         genres = []
-        
+
         desc = None
 
         if not (mal is None):
@@ -935,7 +1004,7 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             aniURL = 'http://anilist.co/manga/' + str(ani['id'])
             if ani['description']:
                 desc = ani['description']
-            
+
             try:
                 status = ani['publishing_status'].title()
             except:
@@ -965,47 +1034,51 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             except Exception as e:
                 print(e)
 
-        stats = DatabaseHandler.getRequestStats(title,'Manga')
-        
-        #---------- BUILDING THE COMMENT ----------#
+        stats = DatabaseHandler.getRequestStats(title, 'Manga')
 
-        #----- LINKS -----#
+        # ---------- BUILDING THE COMMENT ----------#
+
+        # ----- LINKS -----#
         urlComments = []
         allLinks = ''
         if malURL is not None:
-            urlComments.append("[MAL]({})".format(sanitise_url_for_markdown(malURL)))
+            urlComments.append(
+                "[MAL]({})".format(sanitise_url_for_markdown(malURL)))
         if aniURL is not None:
-            urlComments.append("[ANI]({})".format(sanitise_url_for_markdown(aniURL)))
+            urlComments.append(
+                "[ANI]({})".format(sanitise_url_for_markdown(aniURL)))
         if apURL is not None:
-            urlComments.append("[AP]({})".format(sanitise_url_for_markdown(apURL)))
+            urlComments.append(
+                "[AP]({})".format(sanitise_url_for_markdown(apURL)))
         if muURL is not None:
-            urlComments.append("[MU]({})".format(sanitise_url_for_markdown(muURL)))
+            urlComments.append(
+                "[MU]({})".format(sanitise_url_for_markdown(muURL)))
 
         for i, link in enumerate(urlComments):
             if i is not 0:
                 allLinks += ', '
             allLinks += link
 
-        #----- JAPANESE TITLE -----#
+        # ----- JAPANESE TITLE -----#
         if (isExpanded):
             if jTitle is not None:
                 comment += '\n\n'
-                
+
                 splitJTitle = jTitle.split()
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
                     comment += word
 
-        #----- INFO LINE -----#
-        
+        # ----- INFO LINE -----#
+
         if (isExpanded):
             comment += '\n\n('
 
             if cType:
                 if cType == 'Novel':
                     cType = 'Light Novel'
-                    
+
                 comment += '**' + cType + '** | '
 
             comment += '**Status:** ' + status
@@ -1027,7 +1100,7 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             if cType:
                 if cType == 'Novel':
                     cType = 'Light Novel'
-                    
+
                 comment += cType + ' | '
 
             comment += 'Status: ' + status
@@ -1038,7 +1111,7 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
                 if str(chapters) is not 'Unknown':
                     comment += ' | Chapters: ' + str(chapters)
             else:
-                 if str(volumes) is not 'Unknown':
+                if str(volumes) is not 'Unknown':
                     comment += ' | Volumes: ' + str(volumes)
 
             if genres:
@@ -1049,17 +1122,20 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
                 if i is not 0:
                     comment += ', '
                 comment += genre
-            
+
         if (isExpanded) and (stats is not None):
-            comment += ') \n\n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' server(s)) - ' + str(round(stats['totalAsPercentage'],3)) + '% of all requests'
+            comment += ') \n\n**Stats:** ' + str(
+                stats['total']) + ' requests across ' + str(
+                stats['uniqueSubreddits']) + ' server(s)) - ' + str(
+                round(stats['totalAsPercentage'], 3)) + '% of all requests'
         else:
             comment += ')'
 
-        #----- DESCRIPTION -----#
+        # ----- DESCRIPTION -----#
         if (isExpanded):
             descComment += cleanupDescription(desc)
 
-        #----- END -----#
+        # ----- END -----#
         receipt = '(M) Request successful: ' + title + ' - '
         if malURL is not None:
             receipt += 'MAL '
@@ -1071,26 +1147,28 @@ def buildMangaEmbed(isExpanded, mal, ani, mu, ap):
             receipt += 'MU '
         print(receipt.encode('utf8'))
 
-        #----- Build embed object -----#
+        # ----- Build embed object -----#
         try:
-            embed = buildEmbedObject(title, allLinks, comment, malimage, isExpanded, descComment)
+            embed = buildEmbedObject(title, allLinks, comment, malimage,
+                                     isExpanded, descComment)
         except Exception as e:
             print(e)
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['embed'] = embed
-        
+
         return dictToReturn
     except Exception as e:
         print(e)
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None
 
-#sets up the embed for Light Novels
+
+# sets up the embed for Light Novels
 def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
     try:
         comment = ''
-        descComment= ''
+        descComment = ''
 
         title = None
         jTitle = None
@@ -1107,7 +1185,7 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
         chapters = None
         volumes = None
         genres = []
-        
+
         desc = None
 
         if not (mal is None):
@@ -1174,47 +1252,51 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
             except Exception as e:
                 print(e)
 
-        stats = DatabaseHandler.getRequestStats(title,'LN')
-        
-        #---------- BUILDING THE COMMENT ----------#
+        stats = DatabaseHandler.getRequestStats(title, 'LN')
 
-        #----- LINKS -----#
+        # ---------- BUILDING THE COMMENT ----------#
+
+        # ----- LINKS -----#
         urlComments = []
         allLinks = ''
         if malURL is not None:
-            urlComments.append("[MAL]({})".format(sanitise_url_for_markdown(malURL)))
+            urlComments.append(
+                "[MAL]({})".format(sanitise_url_for_markdown(malURL)))
         if aniURL is not None:
-            urlComments.append("[ANI]({})".format(sanitise_url_for_markdown(aniURL)))
+            urlComments.append(
+                "[ANI]({})".format(sanitise_url_for_markdown(aniURL)))
         if nuURL is not None:
-            urlComments.append("[NU]({})".format(sanitise_url_for_markdown(nuURL)))
+            urlComments.append(
+                "[NU]({})".format(sanitise_url_for_markdown(nuURL)))
         if lndbURL is not None:
-            urlComments.append("[LNDB]({})".format(sanitise_url_for_markdown(lndbURL)))
+            urlComments.append(
+                "[LNDB]({})".format(sanitise_url_for_markdown(lndbURL)))
 
         for i, link in enumerate(urlComments):
             if i is not 0:
                 allLinks += ', '
             allLinks += link
 
-        #----- JAPANESE TITLE -----#
+        # ----- JAPANESE TITLE -----#
         if (isExpanded):
             if jTitle is not None:
                 comment += '\n\n'
-                
+
                 splitJTitle = jTitle.split()
                 for i, word in enumerate(splitJTitle):
                     if not (i == 0):
                         comment += ' '
-                    comment +=  word
+                    comment += word
 
-        #----- INFO LINE -----#
-        
+        # ----- INFO LINE -----#
+
         if (isExpanded):
             comment += '\n\n('
 
             if cType:
                 if cType == 'Novel':
                     cType = 'Light Novel'
-                    
+
                 comment += '**' + cType + '** | '
 
             comment += '**Status:** ' + status
@@ -1236,7 +1318,7 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
             if cType:
                 if cType == 'Novel':
                     cType = 'Light Novel'
-                    
+
                 comment += cType + ' | '
 
             comment += 'Status: ' + status
@@ -1255,17 +1337,20 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
                 if i is not 0:
                     comment += ', '
                 comment += genre
-            
+
         if (isExpanded) and (stats is not None):
-            comment += ')\n\n**Stats:** ' + str(stats['total']) + ' requests across ' + str(stats['uniqueSubreddits']) + ' server(s)) - ' + str(round(stats['totalAsPercentage'],3)) + '% of all requests'
+            comment += ')\n\n**Stats:** ' + str(
+                stats['total']) + ' requests across ' + str(
+                stats['uniqueSubreddits']) + ' server(s)) - ' + str(
+                round(stats['totalAsPercentage'], 3)) + '% of all requests'
         else:
             comment += ')'
 
-        #----- DESCRIPTION -----#
+        # ----- DESCRIPTION -----#
         if (isExpanded):
             descComment += cleanupDescription(desc)
 
-        #----- END -----#
+        # ----- END -----#
         receipt = '(LN) Request successful: ' + title + ' - '
         if malURL is not None:
             receipt += 'MAL '
@@ -1277,24 +1362,26 @@ def buildLightNovelEmbed(isExpanded, mal, ani, nu, lndb):
             receipt += 'LNDB '
         print(receipt.encode('utf8'))
 
-        embed = buildEmbedObject(title, allLinks, comment, malimage, isExpanded, descComment)
+        embed = buildEmbedObject(title, allLinks, comment, malimage,
+                                 isExpanded, descComment)
 
         dictToReturn = {}
         dictToReturn['title'] = title
         dictToReturn['embed'] = embed
-        
+
         return dictToReturn
     except Exception as e:
         print(e)
-        #traceback.print_exc()
+        # traceback.print_exc()
         return None
+
 
 def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
     try:
         userNick = ''
         statComment = ''
         receipt = '(S) Request successful: Stats'
-        
+
         if username is not None:
             reqMember = server.get_member(username)
             if reqMember.nick:
@@ -1302,67 +1389,90 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
             else:
                 userNick = reqMember.name
             userStats = DatabaseHandler.getUserStats(username)
-            
+
             if userStats:
                 statComment += 'Some stats on ' + userNick + ':\n\n'
-                statComment += '- **' + str(userStats['totalUserRequests']) + '** requests made (' + str(round(userStats['totalUserRequestsAsPercentage'], 3)) + '% of all requests and #' + str(userStats['overallRequestRank']) + ' overall)\n'
-                statComment += '- **' + str(userStats['uniqueRequests']) + '** unique anime/manga requested\n'
+                statComment += '- **' + str(userStats[
+                                                'totalUserRequests']) + '** requests made (' + str(
+                    round(userStats['totalUserRequestsAsPercentage'],
+                          3)) + '% of all requests and #' + str(
+                    userStats['overallRequestRank']) + ' overall)\n'
+                statComment += '- **' + str(userStats[
+                                                'uniqueRequests']) + '** unique anime/manga requested\n'
                 statComment += '\n'
                 statComment += 'Their most frequently requested anime/manga overall are:\n\n'
-                
+
                 for i, request in enumerate(userStats['topRequests']):
-                    statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)  \n'
+                    statComment += str(i + 1) + '. **' + str(
+                        request[0]) + '** (' + str(request[1]) + ' - ' + str(
+                        request[2]) + ' requests)  \n'
             else:
                 statComment += str(userNick) + ' hasn\'t used Roboragi yet.'
-                
+
             receipt += ' - ' + userNick
         elif server:
             serverStats = DatabaseHandler.getSubredditStats(server)
-            
+
             if serverStats:
-                statComment += '**' + server.name +' Stats**\n\n'
+                statComment += '**' + server.name + ' Stats**\n\n'
                 statComment += 'On ' + server.name
-                statComment += ' I have fulfilled a total of ' + str(serverStats['total']) + ' requests, '
-                statComment += 'representing ' + str(round(serverStats['totalAsPercentage'], 2)) + '% of all requests. '
-                statComment += 'A total of ' + str(serverStats['uniqueNames']) + ' unique anime/manga have been requested here, '
-                statComment += 'with a mean value of ' + str(round(serverStats['meanValuePerRequest'], 3)) + ' requests/show'
-                statComment += ' and a standard deviation of ' + str(round(serverStats['standardDeviation'], 3)) + '.'
+                statComment += ' I have fulfilled a total of ' + str(
+                    serverStats['total']) + ' requests, '
+                statComment += 'representing ' + str(
+                    round(serverStats['totalAsPercentage'],
+                          2)) + '% of all requests. '
+                statComment += 'A total of ' + str(serverStats[
+                                                       'uniqueNames']) + ' unique anime/manga have been requested here, '
+                statComment += 'with a mean value of ' + str(
+                    round(serverStats['meanValuePerRequest'],
+                          3)) + ' requests/show'
+                statComment += ' and a standard deviation of ' + str(
+                    round(serverStats['standardDeviation'], 3)) + '.'
 
                 statComment += '\n\n'
 
                 statComment += 'The most frequently requested anime/manga on this server are:\n\n'
 
                 for i, request in enumerate(serverStats['topRequests']):
-                    statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)\n'
-                
+                    statComment += str(i + 1) + '. **' + str(
+                        request[0]) + '** (' + str(request[1]) + ' - ' + str(
+                        request[2]) + ' requests)\n'
+
             else:
-                statComment += 'There have been no requests on ' + str(server) + ' yet.'
-               
+                statComment += 'There have been no requests on ' + str(
+                    server) + ' yet.'
+
             receipt += ' - ' + server.name
         else:
             basicStats = DatabaseHandler.getBasicStats(serverID)
-            
-            #The overall stats section
+
+            # The overall stats section
             statComment += '**Overall Stats**\n\n'
 
-            statComment += 'I\'ve searched through ' + str(basicStats['totalComments'])
-            statComment += ' unique comments and fulfilled a total of ' + str(basicStats['total'])
-            statComment += ' requests across ' + str(basicStats['uniqueSubreddits']) + ' unique server(s). '
+            statComment += 'I\'ve searched through ' + str(
+                basicStats['totalComments'])
+            statComment += ' unique comments and fulfilled a total of ' + str(
+                basicStats['total'])
+            statComment += ' requests across ' + str(
+                basicStats['uniqueSubreddits']) + ' unique server(s). '
             statComment += 'A total of ' + str(basicStats['uniqueNames'])
-            statComment += ' unique anime/manga have been requested, with a mean value of ' + str(round(basicStats['meanValuePerRequest'],3))
-            statComment += ' requests/show and a standard deviation of ' + str(round(basicStats['standardDeviation'], 3)) + '.'
+            statComment += ' unique anime/manga have been requested, with a mean value of ' + str(
+                round(basicStats['meanValuePerRequest'], 3))
+            statComment += ' requests/show and a standard deviation of ' + str(
+                round(basicStats['standardDeviation'], 3)) + '.'
 
             statComment += '\n\n'
 
             statComment += 'The most frequently requested anime/manga overall are:\n\n'
 
             for i, request in enumerate(basicStats['topRequests']):
-                statComment += str(i + 1) + '. **' + str(request[0]) + '** (' + str(request[1]) + ' - ' + str(request[2]) + ' requests)\n'
+                statComment += str(i + 1) + '. **' + str(
+                    request[0]) + '** (' + str(request[1]) + ' - ' + str(
+                    request[2]) + ' requests)\n'
 
-                
             statComment += '\n'
             receipt += ' - Basic'
-            
+
         print(receipt.encode('utf8'))
         localEmbed = buildEmbedObject('Stats', '', statComment, '', False, '')
         return localEmbed
@@ -1370,38 +1480,42 @@ def buildStatsEmbed(server=None, username=None, serverID="171004769069039616"):
         traceback.print_exc()
         return None
 
+
 def buildHelpEmbed():
     try:
         embedTitle = "Help"
         helpComment = "You can call the bot by using specific tags on one of the active servers. Anime can be called using {curly braces}, manga can be called using <arrows> and light novels can be called using reverse square brace ]light novels\[ (e.g. {Nisekoi} or or ]Utsuro no Hako to Zero no Maria\[). {Single} ]will\[ give you a normal set of information while {{double}} <> ]]will\[\[ give you expanded information. Examples of these requests can be found [here](https://github.com/dashwav/Discordoragi/wiki/Example-Output)"
-        localEmbed = buildEmbedObject(embedTitle, '', helpComment, '', False, '')
+        localEmbed = buildEmbedObject(embedTitle, '', helpComment, '', False,
+                                      '')
         return localEmbed
     except:
         traceback.print_exc()
         return None
 
-def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail, isExpanded, descComment):
-    
-    localFooterTitle='\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'
+
+def buildEmbedObject(embedTitle, embedLinks, embedContent, embedThumbnail,
+                     isExpanded, descComment):
+    localFooterTitle = '\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_'
     localFooter = "{anime}, <manga>, \]LN\[ | [FAQ](https://github.com/dashwav/Discordoragi/wiki) | [/r/](http://www.reddit.com/r/Roboragi/) | [Discord](https://discord.gg/SNv9yKs) | [Source](https://github.com/dashwav/Discordoragi) | [Synonyms](https://www.reddit.com/r/Roboragi/wiki/synonyms)"
     try:
         embed = Embed(title=embedTitle, description=embedLinks, type='rich')
 
-        embed.set_thumbnail(url = embedThumbnail)
-        
+        embed.set_thumbnail(url=embedThumbnail)
+
         embed.add_field(name='__Info__', value=embedContent)
 
         if isExpanded:
             if len(descComment.rstrip()) > 1023:
                 descCommentCut = descComment.rstrip()[:1020] + '...'
-                embed.add_field(name ='__Description__', value = descCommentCut)
+                embed.add_field(name='__Description__', value=descCommentCut)
             else:
-                embed.add_field(name = '__Description__', value = descComment)
-        
+                embed.add_field(name='__Description__', value=descComment)
+
         embed.add_field(name=localFooterTitle, value=localFooter)
         return embed
     except Exception as e:
         print(e)
+
 
 def sanitise_url_for_markdown(url):
     return url.replace('(', '\(').replace(')', '\)')

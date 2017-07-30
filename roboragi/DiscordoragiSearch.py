@@ -3,31 +3,25 @@ DiscordoragiSearch .py
 Returns a built comment created from multiple databases when given a search term.
 '''
 
-import MAL
-import AnimePlanet as AniP
-import AniDB
-import Hummingbird
-import Anilist
-import MU
-import NU
-import LNDB
-
-import CommentBuilder
-import DatabaseHandler
-
-import traceback
-import time
-
-import sqlite3
 import json
+import sqlite3
+import traceback
 
-import asyncio
-import pprint
+import roboragi.AniDB as AniDB
+import roboragi.Anilist as Anilist
+import roboragi.AnimePlanet as AniP
+import roboragi.CommentBuilder as CommentBuilder
+import roboragi.DatabaseHandler as DatabaseHandler
+import roboragi.LNDB as LNDB
+import roboragi.MAL as MAL
+import roboragi.MU as MU
+import roboragi.NU as NU
 
 USERNAME = ''
 
 try:
     import Config
+
     USERNAME = Config.username
 except ImportError:
     pass
@@ -36,11 +30,14 @@ sqlConn = sqlite3.connect('synonyms.db')
 sqlCur = sqlConn.cursor()
 
 try:
-    sqlCur.execute('SELECT dbLinks FROM synonyms WHERE type = "Manga" and lower(name) = ?', ["despair simulator"])
+    sqlCur.execute(
+        'SELECT dbLinks FROM synonyms WHERE type = "Manga" AND lower(name) = ?',
+        ["despair simulator"])
 except sqlite3.Error:
     traceback.print_exc()
 
-#Checks if the message is valid (i.e. not already seen, not a post by Roboragi and the parent commenter isn't Roboragi)
+
+# Checks if the message is valid (i.e. not already seen, not a post by Roboragi and the parent commenter isn't Roboragi)
 def isValidMessage(message):
     try:
         if (DatabaseHandler.messageExists(message.id)):
@@ -48,81 +45,89 @@ def isValidMessage(message):
 
         try:
             if (message.author.name == USERNAME):
-                DatabaseHandler.addMessage(message.id, message.author.id, message.server.id, False)
+                DatabaseHandler.addMessage(message.id, message.author.id,
+                                           message.server.id, False)
                 return False
         except:
             pass
 
         return True
-        
+
     except:
         traceback.print_exc()
         return False
 
-#Builds a manga reply from multiple sources
-async def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracking=False):
+
+# Builds a manga reply from multiple sources
+async def buildMangaReply(searchText, message, isExpanded, canEmbed,
+                          blockTracking=False):
     try:
         ani = None
         mal = None
         mu = None
         ap = None
-        
+
         try:
-            sqlCur.execute('SELECT dbLinks FROM synonyms WHERE type = "Manga" and lower(name) = ?', [searchText.lower()])
+            sqlCur.execute(
+                'SELECT dbLinks FROM synonyms WHERE type = "Manga" AND lower(name) = ?',
+                [searchText.lower()])
         except sqlite3.Error as e:
             print(e)
 
         alternateLinks = sqlCur.fetchone()
 
         if (alternateLinks):
-            synonym = json.loads(alternateLinks[0])       
-            
+            synonym = json.loads(alternateLinks[0])
+
             if 'mal' in synonym:
                 if (synonym['mal']):
-                    mal = await MAL.getMangaDetails(synonym['mal'][0], synonym['mal'][1])
-            
+                    mal = await roboragi.MAL as MAL.getMangaDetails(
+                        synonym['mal'][0], synonym['mal'][1])
+
             if 'ani' in synonym:
-	            if (synonym['ani']):
-	                ani = await Anilist.getMangaDetailsById(synonym['ani'])
+                if (synonym['ani']):
+                    ani = await Anilist.getMangaDetailsById(synonym['ani'])
 
             if 'mu' in synonym:
                 if (synonym['mu']):
                     mu = MU.getMangaURLById(synonym['mu'])
-                
+
             if 'ap' in synonym:
                 if (synonym['ap']):
                     ap = AniP.getMangaURLById(synonym['ap'])
 
         else:
-            #Basic breakdown:
-            #If Anilist finds something, use it to find the MAL version.
-            #If hits either MAL or Ani, use it to find the MU version.
-            #If it hits either, add it to the request-tracking DB.
+            # Basic breakdown:
+            # If Anilist finds something, use it to find the MAL version.
+            # If hits either MAL or Ani, use it to find the MU version.
+            # If it hits either, add it to the request-tracking DB.
             ani = await Anilist.getMangaDetails(searchText)
-            
+
             if ani:
                 try:
-                    mal = await MAL.getMangaDetails(ani['title_romaji'])
+                    mal = await roboragi.MAL as MAL.getMangaDetails(
+                        ani['title_romaji'])
                 except Exception as e:
                     print(e)
                     pass
 
                 if not mal:
                     try:
-                        mal = await MAL.getMangaDetails(ani['title_english'])
+                        mal = await roboragi.MAL as MAL.getMangaDetails(
+                            ani['title_english'])
                     except:
                         pass
 
                 if not mal:
-                    mal = await MAL.getMangaDetails(searchText)
+                    mal = await roboragi.MAL as MAL.getMangaDetails(searchText)
 
             else:
-                mal = await MAL.getMangaDetails(searchText)
+                mal = await roboragi.MAL as MAL.getMangaDetails(searchText)
 
                 if mal:
-                    ani = await Anilist.getMangaDetails(mal['title'])    
+                    ani = await Anilist.getMangaDetails(mal['title'])
 
-        #----- Finally... -----#
+                    # ----- Finally... -----#
         if ani or mal:
             try:
                 titleToAdd = ''
@@ -134,15 +139,14 @@ async def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracki
                     except:
                         titleToAdd = ani['title_romaji']
 
-                
                 if not alternateLinks:
-                    #MU stuff
+                    # MU stuff
                     if mal:
                         mu = await MU.getMangaURL(mal['title'])
                     else:
                         mu = await MU.getMangaURL(ani['title_romaji'])
 
-                    #Do the anime-planet stuff
+                    # Do the anime-planet stuff
                     if mal and not ap:
                         if mal['title'] and not ap:
                             ap = await AniP.getMangaURL(mal['title'])
@@ -165,7 +169,9 @@ async def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracki
                                     break
                                 ap = await AniP.getMangaURL(synonym)
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.id, message.server.id)
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga',
+                                               message.author.id,
+                                               message.server.id)
             except:
                 traceback.print_exc()
                 pass
@@ -182,24 +188,28 @@ async def buildMangaReply(searchText, message, isExpanded, canEmbed, blockTracki
                 traceback.print_exc()
                 pass
         if not canEmbed:
-            return CommentBuilder.buildMangaComment(isExpanded, mal, ani, mu, ap)
+            return CommentBuilder.buildMangaComment(isExpanded, mal, ani, mu,
+                                                    ap)
         else:
             return CommentBuilder.buildMangaEmbed(isExpanded, mal, ani, mu, ap)
     except Exception as e:
         traceback.print_exc()
         return None
 
-#Builds a manga search for a specific series by a specific author
-async def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded, canEmbed, blockTracking=False):
-    try:        
+
+# Builds a manga search for a specific series by a specific author
+async def buildMangaReplyWithAuthor(searchText, authorName, message,
+                                    isExpanded, canEmbed, blockTracking=False):
+    try:
         ani = await Anilist.getMangaWithAuthor(searchText, authorName)
         mal = None
         mu = None
         ap = None
-        
+
         if ani:
             try:
-                mal = await MAL.getMangaCloseToDescription(searchText, ani['description'])
+                mal = await roboragi.MAL as MAL.getMangaCloseToDescription(
+                    searchText, ani['description'])
                 ap = await AniP.getMangaURL(ani['title_english'], authorName)
             except Exception as e:
                 print(e)
@@ -215,40 +225,48 @@ async def buildMangaReplyWithAuthor(searchText, authorName, message, isExpanded,
                     titleToAdd = mal['title']
                 else:
                     titleToAdd = ani['title_english']
-                
+
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Manga', message.author.id, message.server.id)
+                    DatabaseHandler.addRequest(titleToAdd, 'Manga',
+                                               message.author.id,
+                                               message.server.id)
             except:
                 traceback.print_exc()
                 pass
-            
+
             if not canEmbed:
-                return CommentBuilder.buildMangaComment(isExpanded, mal, ani, mu, ap)
+                return CommentBuilder.buildMangaComment(isExpanded, mal, ani,
+                                                        mu, ap)
             else:
-                return CommentBuilder.buildMangaEmbed(isExpanded, mal, ani, mu, ap)
-    
+                return CommentBuilder.buildMangaEmbed(isExpanded, mal, ani, mu,
+                                                      ap)
+
     except Exception as e:
         traceback.print_exc()
         return None
 
-#Builds an anime reply from multiple sources
-async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracking=False):
+
+# Builds an anime reply from multiple sources
+async def buildAnimeReply(searchText, message, isExpanded, canEmbed,
+                          blockTracking=False):
     try:
-        mal = {'search_function': MAL.getAnimeDetails,
-                'synonym_function': MAL.getSynonyms,
-                'checked_synonyms': [],
-                'result': None}
-        ani = {'search_function':  Anilist.getAnimeDetails,
-                'synonym_function': Anilist.getSynonyms,
-                'checked_synonyms': [],
-                'result': None}
+        mal = {'search_function': roboragi.MAL as MAL.getAnimeDetails,
+                                                  'synonym_function': roboragi.MAL as MAL.getSynonyms,
+                                                                                      'checked_synonyms': [],
+        'result': None}
+        ani = {'search_function': Anilist.getAnimeDetails,
+               'synonym_function': Anilist.getSynonyms,
+               'checked_synonyms': [],
+               'result': None}
         ap = {'search_function': AniP.getAnimeURL,
-                'result': None}
+              'result': None}
         adb = {'search_function': AniDB.getAnimeURL,
-                'result': None}
-        
+               'result': None}
+
         try:
-            sqlCur.execute('SELECT dbLinks FROM synonyms WHERE type = "Anime" and lower(name) = ?', [searchText.lower()])
+            sqlCur.execute(
+                'SELECT dbLinks FROM synonyms WHERE type = "Anime" AND lower(name) = ?',
+                [searchText.lower()])
         except sqlite3.Error as e:
             print(e)
 
@@ -273,16 +291,19 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
                 if 'adb' in synonym and synonym['adb']:
                     adbsyn = synonym['adb']
 
-                mal['result'] = await MAL.getAnimeDetails(malsyn[0],malsyn[1]) if malsyn else None
-                ani['result'] = await Anilist.getAnimeDetailsById(anisyn) if anisyn else None
+                mal['result'] = await roboragi.MAL as MAL.getAnimeDetails(
+                    malsyn[0], malsyn[1]) if malsyn else None
+                ani['result'] = await Anilist.getAnimeDetailsById(
+                    anisyn) if anisyn else None
                 ap['result'] = AniP.getAnimeURLById(apsyn) if apsyn else None
-                adb['result'] = AniDB.getAnimeURLById(adbsyn) if adbsyn else None
+                adb['result'] = AniDB.getAnimeURLById(
+                    adbsyn) if adbsyn else None
                 print(ani['result'])
-                
+
         else:
             data_sources = [ani, mal]
             aux_sources = [ap, adb]
-            #aux_sources = [ap]
+            # aux_sources = [ap]
 
             synonyms = set([searchText])
 
@@ -295,17 +316,20 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
                             if synonym in source['checked_synonyms']:
                                 continue
 
-                            source['result'] = await source['search_function'](synonym)
+                            source['result'] = await source['search_function'](
+                                synonym)
                             source['checked_synonyms'].append(synonym)
 
                             if source['result']:
                                 break
 
                     if source['result']:
-                        synonyms.update([synonym.lower() for synonym in source['synonym_function'](source['result'])])
+                        synonyms.update([synonym.lower() for synonym in
+                                         source['synonym_function'](
+                                             source['result'])])
 
             for source in aux_sources:
-                for synonym in synonyms:     
+                for synonym in synonyms:
                     source['result'] = await source['search_function'](synonym)
 
                     if source['result']:
@@ -325,7 +349,9 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
                         titleToAdd = ani['result']['title_romaji']
 
                 if not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'Anime', message.author.id, message.server.id)
+                    DatabaseHandler.addRequest(titleToAdd, 'Anime',
+                                               message.author.id,
+                                               message.server.id)
             except:
                 traceback.print_exc()
                 pass
@@ -343,32 +369,41 @@ async def buildAnimeReply(searchText, message, isExpanded, canEmbed, blockTracki
                 traceback.print_exc()
                 pass
         if not canEmbed:
-            return CommentBuilder.buildAnimeComment(isExpanded, mal['result'], ani['result'], ap['result'], adb['result'])
+            return CommentBuilder.buildAnimeComment(isExpanded, mal['result'],
+                                                    ani['result'],
+                                                    ap['result'],
+                                                    adb['result'])
         else:
-            return CommentBuilder.buildAnimeEmbed(isExpanded, mal['result'], ani['result'], ap['result'], adb['result'])
+            return CommentBuilder.buildAnimeEmbed(isExpanded, mal['result'],
+                                                  ani['result'], ap['result'],
+                                                  adb['result'])
 
     except Exception as e:
         traceback.print_exc()
         return None
 
-#Builds an LN reply from multiple sources
-async def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockTracking=False):
+
+# Builds an LN reply from multiple sources
+async def buildLightNovelReply(searchText, isExpanded, message, canEmbed,
+                               blockTracking=False):
     try:
-        mal = {'search_function': MAL.getLightNovelDetails,
-                'synonym_function': MAL.getSynonyms,
-                'checked_synonyms': [],
-                'result': None}
+        mal = {'search_function': roboragi.MAL as MAL.getLightNovelDetails,
+                                                  'synonym_function': roboragi.MAL as MAL.getSynonyms,
+                                                                                      'checked_synonyms': [],
+        'result': None}
         ani = {'search_function': Anilist.getLightNovelDetails,
-                'synonym_function': Anilist.getSynonyms,
-                'checked_synonyms': [],
-                'result': None}
+               'synonym_function': Anilist.getSynonyms,
+               'checked_synonyms': [],
+               'result': None}
         nu = {'search_function': NU.getLightNovelURL,
-                'result': None}
+              'result': None}
         lndb = {'search_function': LNDB.getLightNovelURL,
                 'result': None}
-        
+
         try:
-            sqlCur.execute('SELECT dbLinks FROM synonyms WHERE type = "LN" and lower(name) = ?', [searchText.lower()])
+            sqlCur.execute(
+                'SELECT dbLinks FROM synonyms WHERE type = "LN" AND lower(name) = ?',
+                [searchText.lower()])
         except sqlite3.Error as e:
             print(e)
 
@@ -394,11 +429,14 @@ async def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockT
                 if 'lndb' in synonym and synonym['lndb']:
                     lndbsyn = synonym['lndb']
 
-                mal['result'] = await MAL.getLightNovelDetails(malsyn[0],malsyn[1]) if malsyn else None
-                ani['result'] = await Anilist.getMangaDetailsById(anisyn) if anisyn else None
+                mal['result'] = await roboragi.MAL as MAL.getLightNovelDetails(
+                    malsyn[0], malsyn[1]) if malsyn else None
+                ani['result'] = await Anilist.getMangaDetailsById(
+                    anisyn) if anisyn else None
                 nu['result'] = NU.getLightNovelById(nusyn) if nusyn else None
-                lndb['result'] =LNDB.getLightNovelById(lndbsyn) if lndbsyn else None
-                
+                lndb['result'] = LNDB.getLightNovelById(
+                    lndbsyn) if lndbsyn else None
+
         else:
             data_sources = [ani, mal]
             aux_sources = [nu, lndb]
@@ -414,18 +452,21 @@ async def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockT
                             if synonym in source['checked_synonyms']:
                                 continue
 
-                            source['result'] = await source['search_function'](synonym)
+                            source['result'] = await source['search_function'](
+                                synonym)
                             source['checked_synonyms'].append(synonym)
 
                             if source['result']:
                                 break
 
                     if source['result']:
-                        synonyms.update([synonym.lower() for synonym in source['synonym_function'](source['result'])])
+                        synonyms.update([synonym.lower() for synonym in
+                                         source['synonym_function'](
+                                             source['result'])])
 
             for source in aux_sources:
-                for synonym in synonyms:     
-                    source['result'] =await source['search_function'](synonym)
+                for synonym in synonyms:
+                    source['result'] = await source['search_function'](synonym)
 
                     if source['result']:
                         break
@@ -441,8 +482,11 @@ async def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockT
                     except:
                         titleToAdd = ani['result']['title_english']
 
-                if (str(message.server).lower is not 'nihilate') and (str(message.server).lower is not 'roboragi') and not blockTracking:
-                    DatabaseHandler.addRequest(titleToAdd, 'LN', message.author.id, message.server.id)
+                if (str(message.server).lower is not 'nihilate') and (str(
+                        message.server).lower is not 'roboragi') and not blockTracking:
+                    DatabaseHandler.addRequest(titleToAdd, 'LN',
+                                               message.author.id,
+                                               message.server.id)
             except:
                 traceback.print_exc()
                 pass
@@ -459,14 +503,23 @@ async def buildLightNovelReply(searchText, isExpanded, message, canEmbed, blockT
                 traceback.print_exc()
                 pass
         if not canEmbed:
-            return CommentBuilder.buildLightNovelComment(isExpanded, mal['result'], ani['result'], nu['result'], lndb['result'])
+            return CommentBuilder.buildLightNovelComment(isExpanded,
+                                                         mal['result'],
+                                                         ani['result'],
+                                                         nu['result'],
+                                                         lndb['result'])
         else:
-            return CommentBuilder.buildLightNovelEmbed(isExpanded, mal['result'], ani['result'], nu['result'], lndb['result'])
+            return CommentBuilder.buildLightNovelEmbed(isExpanded,
+                                                       mal['result'],
+                                                       ani['result'],
+                                                       nu['result'],
+                                                       lndb['result'])
     except Exception as e:
         traceback.print_exc()
         return None
 
-#Checks if the bot is the parent of this comment.
+
+# Checks if the bot is the parent of this comment.
 def isBotAParent(comment, reddit):
     try:
         parentComment = reddit.get_info(thing_id=comment.parent_id)
@@ -475,8 +528,7 @@ def isBotAParent(comment, reddit):
             return True
         else:
             return False
-            
-    except:
-        #traceback.print_exc()
-        return False
 
+    except:
+        # traceback.print_exc()
+        return False

@@ -3,14 +3,15 @@ MU.py
 Handles all MangaUpdates information
 '''
 
-from pyquery import PyQuery as pq
-import aiohttp
+import collections
 import difflib
 import traceback
-import pprint
-import collections
+
+import aiohttp
+from pyquery import PyQuery as pq
 
 req = aiohttp.ClientSession()
+
 
 def findClosestManga(searchText, mangaList):
     try:
@@ -19,7 +20,8 @@ def findClosestManga(searchText, mangaList):
         for manga in mangaList:
             nameList.append(manga['title'].lower())
 
-        closestNameFromList = difflib.get_close_matches(searchText.lower(), nameList, 1, 0.85)
+        closestNameFromList = difflib.get_close_matches(searchText.lower(),
+                                                        nameList, 1, 0.85)
 
         for manga in mangaList:
             if manga['title'].lower() == closestNameFromList[0].lower():
@@ -29,12 +31,14 @@ def findClosestManga(searchText, mangaList):
     except:
         return None
 
+
 async def findAuthorURL(authorName):
     try:
         payload = {'search': authorName}
-        async with req.get('https://mangaupdates.com/authors.html', params=payload, timeout=10) as resp:
+        async with req.get('https://mangaupdates.com/authors.html',
+                           params=payload, timeout=10) as resp:
             html = await resp.text()
-        
+
         mu = pq(html)
         authorURL = None
 
@@ -48,21 +52,22 @@ async def findAuthorURL(authorName):
 
         return authorURL
     except:
-        
+
         traceback.print_exc()
         return None
+
 
 async def findSeriesURLViaAuthor(seriesName, authorName, authorURL):
     try:
         async with req.get(authorURL, timeout=10) as resp:
             html = await resp.text()
-        
+
         mu = pq(html)
         authorURL = None
 
         authorName = authorName.lower()
         authorName = authorName.split(' ')
-        
+
         for thing in mu.find('table tr .text'):
             try:
                 title = pq(thing).find('a')[1].text
@@ -75,23 +80,25 @@ async def findSeriesURLViaAuthor(seriesName, authorName, authorURL):
                         for name in authorName:
                             title = title.replace(name, '')
 
-                        s = difflib.SequenceMatcher(lambda x: x == "", seriesName, title)
+                        s = difflib.SequenceMatcher(lambda x: x == "",
+                                                    seriesName, title)
                         if s.ratio() > 0.5:
                             return url
-                            
+
             except:
                 pass
 
         return authorURL
     except:
-        
+
         traceback.print_exc()
         return None
+
 
 async def getMangaWithAuthor(searchText, authorName):
     try:
         url = await findAuthorURL(authorName)
-        
+
         if not url:
             rearrangedAuthorNames = collections.deque(authorName.split(' '))
             rearrangedAuthorNames.rotate(-1)
@@ -102,17 +109,18 @@ async def getMangaWithAuthor(searchText, authorName):
             return await findSeriesURLViaAuthor(searchText, authorName, url)
         else:
             return None
-        
+
     except:
         traceback.print_exc()
         return None
 
+
 async def getMangaURL(searchText):
     try:
         payload = {'search': searchText}
-        async with req.get('https://mangaupdates.com/series.html', params=payload, timeout=10) as resp:
+        async with req.get('https://mangaupdates.com/series.html',
+                           params=payload, timeout=10) as resp:
             html = await resp.text()
-        
 
         mu = pq(html)
 
@@ -124,22 +132,23 @@ async def getMangaURL(searchText):
             genres = pq(thing).find('.col2').text()
             year = pq(thing).find('.col3').text()
             rating = pq(thing).find('.col4').text()
-            
+
             if title:
-                data = { 'title': title,
+                data = {'title': title,
                         'url': url,
                         'genres': genres,
                         'year': year,
-                        'rating': rating }
+                        'rating': rating}
 
                 mangaList.append(data)
 
         closest = findClosestManga(searchText, mangaList)
         return closest['url']
-    
+
     except:
-        
+
         return None
+
 
 def getMangaURLById(mangaId):
     return 'https://www.mangaupdates.com/series.html?id=' + str(mangaId)
