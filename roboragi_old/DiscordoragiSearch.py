@@ -7,15 +7,15 @@ import json
 import sqlite3
 import traceback
 
-import roboragi.AniDB as AniDB
-import roboragi.Anilist as Anilist
-import roboragi.AnimePlanet as AniP
-import roboragi.CommentBuilder as CommentBuilder
-import roboragi.DatabaseHandler as DatabaseHandler
-import roboragi.LNDB as LNDB
-import roboragi.MAL as MAL
-import roboragi.MU as MU
-import roboragi.NU as NU
+import roboragi_old.AniDB as AniDB
+import roboragi_old.Anilist as Anilist
+import roboragi_old.AnimePlanet as AniP
+import roboragi_old.CommentBuilder as CommentBuilder
+import roboragi_old.DatabaseHandler as DatabaseHandler
+import roboragi_old.LNDB as LNDB
+import roboragi_old.MAL as MAL
+import roboragi_old.MU as MU
+import roboragi_old.NU as NU
 
 USERNAME = ''
 

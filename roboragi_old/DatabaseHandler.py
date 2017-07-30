@@ -17,7 +17,7 @@ DBPASSWORD = ''
 DBHOST = ''
 
 try:
-    import roboragi.Config as Config
+    import roboragi_old.Config as Config
 
     DBNAME = Config.dbname
     DBUSER = Config.dbuser

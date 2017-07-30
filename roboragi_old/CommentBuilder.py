@@ -9,8 +9,8 @@ from os import linesep
 
 from discord import Embed
 
-import roboragi.DatabaseHandler as DatabaseHandler
-import roboragi.Discord as Discord
+import roboragi_old.DatabaseHandler as DatabaseHandler
+import roboragi_old.Discord as Discord
 
 
 # Removes the (Source: MAL) or (Written by X) bits from the decriptions in the databases

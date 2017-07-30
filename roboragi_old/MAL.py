@@ -12,10 +12,10 @@ import xml.etree.cElementTree as ET
 
 import aiohttp
 
-import roboragi.DatabaseHandler as DatabaseHandler
+import roboragi_old.DatabaseHandler as DatabaseHandler
 
 try:
-    import roboragi.Config as Config
+    import roboragi_old.Config as Config
 
     print('Setting up MAL Connection')
     MALUSERAGENT = Config.maluseragent

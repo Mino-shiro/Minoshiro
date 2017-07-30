@@ -9,7 +9,7 @@ import urllib
 
 import aiohttp
 
-import roboragi.DatabaseHandler as DatabaseHandler
+import roboragi_old.DatabaseHandler as DatabaseHandler
 
 ANICLIENT = ''
 ANISECRET = ''
@@ -84,8 +84,8 @@ async def getAnimeDetails(searchText):
         htmlSearchText = urllib.parse.quote(searchText)
         async with session.get(
                         "https://anilist.co/api/anime/search/" + htmlSearchText,
-                        params={'access_token': access_token},
-                        timeout=10) as resp:
+                params={'access_token': access_token},
+                timeout=10) as resp:
             if resp.status != 200:
                 await setup()
                 request = await session.get(
@@ -139,8 +139,7 @@ async def getFullAnimeDetails(animeID):
             else:
                 return None
     except Exception as e:
-        print("Error finding anime:{} in anilist.\nError:{}".format(searchText,
-                                                                    e))
+        print(f"Error finding anime in anilist.\nError:{e}")
         # traceback.print_exc()
         return None
 
@@ -167,18 +166,20 @@ def getClosestAnime(searchText, animeList):
                     animeNameList.append(synonym.lower())
 
         closestNameFromList = \
-        difflib.get_close_matches(searchText.lower(), animeNameList, 1, 0.95)[
-            0]
+            difflib.get_close_matches(searchText.lower(), animeNameList, 1,
+                                      0.95)[
+                0]
 
         for anime in animeList:
             if (anime[
                     'title_english'].lower() == closestNameFromList.lower()) or (
-                anime['title_romaji'].lower() == closestNameFromList.lower()):
+                        anime[
+                            'title_romaji'].lower() == closestNameFromList.lower()):
                 return anime
             else:
                 for synonym in anime['synonyms']:
                     if (synonym.lower() == closestNameFromList.lower()) and (
-                        synonym.lower() not in animeNameListNoSyn):
+                                synonym.lower() not in animeNameListNoSyn):
                         return anime
 
         return None
@@ -195,8 +196,8 @@ async def getMangaWithAuthor(searchText, authorName):
 
         async with session.get(
                         "https://anilist.co/api/manga/search/" + searchText,
-                        params={'access_token': access_token},
-                        timeout=10) as resp:
+                params={'access_token': access_token},
+                timeout=10) as resp:
             if resp.status != 200:
                 await setup()
                 resp = await session.get(
@@ -211,9 +212,9 @@ async def getMangaWithAuthor(searchText, authorName):
                 try:
                     async with session.get(
                                             "https://anilist.co/api/manga/" + str(
-                                            manga['id']) + "/staff", params={
+                                        manga['id']) + "/staff", params={
                                 'access_token': access_token},
-                                            timeout=10) as fullManga:
+                            timeout=10) as fullManga:
                         if fullManga.status != 200:
                             await setup()
                             fullManga = await session.get(
@@ -270,8 +271,8 @@ async def getMangaDetails(searchText, isLN=False):
     try:
         async with session.get(
                         "https://anilist.co/api/manga/search/" + searchText,
-                        params={'access_token': access_token},
-                        timeout=10) as resp:
+                params={'access_token': access_token},
+                timeout=10) as resp:
             if resp.status != 200:
                 await setup()
                 resp = await session.get(
@@ -379,15 +380,16 @@ def getClosestManga(searchText, mangaList, isLN=False):
                 mangaNameList.append(synonym.lower())
 
         closestNameFromList = \
-        difflib.get_close_matches(searchText.lower(), mangaNameList, 1, 0.90)[
-            0]
+            difflib.get_close_matches(searchText.lower(), mangaNameList, 1,
+                                      0.90)[
+                0]
 
         for manga in mangaList:
             if not ('one shot' in manga['type'].lower()):
                 if (manga[
                         'title_english'].lower() == closestNameFromList.lower()) or (
-                    manga[
-                        'title_romaji'].lower() == closestNameFromList.lower()):
+                            manga[
+                                'title_romaji'].lower() == closestNameFromList.lower()):
                     return manga
 
         for manga in mangaList:

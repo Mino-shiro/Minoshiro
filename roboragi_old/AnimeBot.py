@@ -9,11 +9,11 @@ import traceback
 
 import discord
 
-import roboragi.CommentBuilder as CommentBuilder
-import roboragi.Config as Config
-import roboragi.DatabaseHandler as DatabaseHandler
-import roboragi.Discord as Discord
-import roboragi.DiscordoragiSearch as DiscordoragiSearch
+import roboragi_old.CommentBuilder as CommentBuilder
+import roboragi_old.Config as Config
+import roboragi_old.DatabaseHandler as DatabaseHandler
+import roboragi_old.Discord as Discord
+import roboragi_old.DiscordoragiSearch as DiscordoragiSearch
 
 # the servers where expanded requests are disabled
 disableexpanded = ['']

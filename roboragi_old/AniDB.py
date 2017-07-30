@@ -5,7 +5,7 @@ Handles all AniDB information
 
 import difflib
 import traceback
-import urllib
+import urllib.parse
 
 import aiohttp
 from pyquery import PyQuery as pq
@@ -18,7 +18,7 @@ async def getAnimeURL(searchText):
     try:
         async with session.get(
                         'http://anisearch.outrance.pl/?task=search&query=' + cleanSearchText,
-                        timeout=10) as resp:
+                timeout=10) as resp:
             html = await resp.read()
             anidb = pq(html)
     except:
