@@ -119,11 +119,21 @@ async def get_manga_url(
     pass
 
 
-def getAnimeURLById(animeId):
+def get_anime_url_by_id(anime_id: str) -> str:
+    """
+    Returns anime url by id.
+    :param anime_id: an anime id.
+    :return: the anime url.
+    """
     return 'http://www.anime-planet.com/anime/' + str(animeId)
 
 
-def getMangaURLById(mangaId):
+def get_manga_url_by_id(manga_id: str) -> str:
+    """
+    Returns manga url by id.
+    :param manga_id: an anime id.
+    :return: the manga url.
+    """
     return 'http://www.anime-planet.com/manga/' + str(mangaId)
 
 
