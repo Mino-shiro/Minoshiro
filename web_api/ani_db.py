@@ -1,3 +1,6 @@
+"""
+Search AniDB for anime.
+"""
 from difflib import SequenceMatcher
 from typing import List, Optional
 from urllib.parse import quote
@@ -15,10 +18,9 @@ async def get_anime_url(
     :param query: a search query.
     :return: the anime url if it's found.
     """
-    clean_text = quote(query)
     params = {
         'task': 'search',
-        'query': clean_text
+        'query': quote(query)
     }
     try:
         resp = await session_manager.get(
