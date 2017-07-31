@@ -1,11 +1,12 @@
 """
-Search LNDB for anime.
+NovelUpdates.py
+Handles all NovelUpdates information
 """
+from difflib import SequenceMatcher
 from typing import List, Optional
 from urllib.parse import quote
 from pyquery import PyQuery
 from session_manager import SessionManager
-from difflib import SequenceMatcher
 
 
 async def get_light_novel_url(
@@ -16,41 +17,27 @@ async def get_light_novel_url(
     :param query: a search query.
     :return: the ln url if it's found.
     """
-    query = query.replace(' ', '+')
     params = {
-        'text': quote(query)
+        's': quote(query)
     }
     try:
         async with await session_manager.get(
-                'http://lndb.info/search?',
-                params=params) as resp:
+                'http://www.novelupdates.com/?', params=params) as resp:
             html = await resp.text()
-            if 'light_novel' in html.url:
-                return html.url
-
-        lndb = PyQuery(html)
     except Exception as e:
-            session_manager.logger.warn(str(e))
-            return
+        session_manager.logger.warn(str(e))
+        return
+    nu = PyQuery(html)
     ln_list = []
-    for thing in lndb.find('#bodylightnovelscontentid table tr'):
-        if PyQuery(thing).find('a').text():
+
+    for thing in nu.find('.w-blog-entry'):
+        if PyQuery(thing).find('.w-blog-entry-title').text():
             data = {
-                'title': PyQuery(thing).find('a').text(),
-                'url': PyQuery(thing).find('a').attr('href')
+                'title': PyQuery(thing).find('.w-blog-entry-title').text(),
+                'url': PyQuery(thing).find('.w-blog-entry-link').attr('href')
             }
             ln_list.append(data)
-
     return __get_closest(query, ln_list).get('url')
-
-
-def get_light_novel_by_id(ln_id: str) -> str:
-    """
-    Returns ln url by id.
-    :param ln_id: a ln id.
-    :return: the ln url.
-    """
-    return 'http://lndb.info/light_novel/' + str(ln_id)
 
 
 def __get_closest(query: str, ln_list: List[dict]) -> dict:
