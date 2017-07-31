@@ -1,7 +1,7 @@
 from asyncpg import InterfaceError, create_pool
 from asyncpg.pool import Pool
 
-from data_controller.data_utils import make_tables
+from data_controller.data_utils import make_tables, populate_lookup
 
 
 class DataController:
@@ -12,6 +12,12 @@ class DataController:
 
     This will only implement data caching, since keeping track of stats is not
     in the scope of this project.
+
+    The site names used are:
+    `anidb`, `mal`, 'ap', 'anilist'
+
+    The medium names are:
+    `anime`, `manga`, `novel`
     """
 
     def __init__(self, pool: Pool, logger, schema: str = 'roboragi'):
@@ -62,4 +68,5 @@ class DataController:
                 logger.error(str(e))
                 raise e
         await make_tables(pool, schema)
+        await populate_lookup(pool, schema)
         return cls(pool, logger, schema)
