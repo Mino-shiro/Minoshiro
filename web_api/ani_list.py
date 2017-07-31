@@ -147,6 +147,86 @@ class AniList:
         return await self.get_entry_by_id(
                 session_manager, medium, closest_entry['id'])
 
+    async def get_genres(
+            self,
+            session_manager: SessionManager,
+            medium: str) -> dict:
+        """
+        Gets a list of genres for a specified medium.
+        :param session_manager: the session manager.
+        :param medium:medium to get genres for 'manga' or 'anime'.
+        :return: list of genres
+        """
+        if not self.access_token:
+            self.access_token = await self.get_token()
+        url = f'{self.base_url}/genre_list/'
+        params = {
+            'access_token': self.access_token
+        }
+        try:
+            async with await session_manager.get(url, params=params) as resp:
+                js = await resp.json()
+        except Exception as e:
+            session_manager.logger.warn(str(e))
+            return
+        return js
+
+    async def get_top_40_by_genre(
+            self,
+            session_manager: SessionManager,
+            medium: str,
+            genre: str) -> dict:
+        """
+        Gets the top 40 entries in the medium for specified genre.
+        :param session_manager: the session manager.
+        :param medium: medium 'manga' or 'anime'.
+        :param genre: genre we want info from
+        :return: list of genres
+        """
+        if not self.access_token:
+            self.access_token = await self.get_token()
+        url = f'{self.base_url}/browse/{medium}'
+        params = {
+            'access_token': self.access_token,
+            'genres': genre,
+            'sort': 'popularity-desc'
+        }
+        try:
+            async with await session_manager.get(url, params=params) as resp:
+                js = await resp.json()
+        except Exception as e:
+            session_manager.logger.warn(str(e))
+            return
+        return js
+
+    async def get_page_by_popularity(
+            self,
+            session_manager: SessionManager,
+            medium: str,
+            page: str) -> dict:
+        """
+        Gets the 40 entries in the medium from specified page.
+        :param session_manager: the session manager.
+        :param medium: medium 'manga' or 'anime'.
+        :param genre: genre we want info from
+        :return: list of genres
+        """
+        if not self.access_token:
+            self.access_token = await self.get_token()
+        url = f'{self.base_url}/browse/{medium}'
+        params = {
+            'access_token': self.access_token,
+            'page': page,
+            'sort': 'popularity-desc'
+        }
+        try:
+            async with await session_manager.get(url, params=params) as resp:
+                js = await resp.json()
+        except Exception as e:
+            session_manager.logger.warn(str(e))
+            return
+        return js
+
     def __get_closest(self, query: str, thing_list: List[dict]) -> dict:
         """
         Get the closest matching anime by search query.
