@@ -77,6 +77,35 @@ class AniList:
             js = await resp.json()
             return js.get('access_token')
 
+    async def get_entry_by_id(
+            self,
+            session_manager: SessionManager,
+            medium: str,
+            entry_id: str) -> dict:
+        """
+        Get the full details of an thing by id
+        :param session_manager: session manager object
+        :param medium: medium to search for 'anime', 'manga', 'novel'
+        :param thing_id: thing id.
+        :return: dict with thing info.
+        """
+        if not self.access_token:
+            self.access_token = await self.get_token()
+        params = {
+            'access_token': self.access_token
+        }
+        if medium == 'novel' or medium == 'manga':
+            url = f'{self.base_url}/manga/{entry_id}'
+        elif medium == 'anime':
+            url = f'{self.base_url}/anime/{entry_id}'
+        try:
+            async with await session_manager.get(url, params=params) as resp:
+                    js = await resp.json()
+        except Exception as e:
+            session_manager.logger.warn(str(e))
+            return
+        return js
+
     async def get_entry_details(
             self,
             session_manager: SessionManager,
@@ -91,26 +120,20 @@ class AniList:
         :param thing_id: thing id.
         :return: dict with thing info.
         """
-        self.access_token = await self.get_token()
         clean_query = escape(query)
+        if not self.access_token:
+            self.access_token = await self.get_token()
         params = {
             'access_token': self.access_token
         }
         try:
-            if medium == 'novel':
+            if medium == 'novel' or medium == 'manga':
                 url = f'{self.base_url}/manga/search/{quote(clean_query)}'
-            else:
-                url = f'{self.base_url}/{medium}/search/{quote(clean_query)}'
+            elif medium == 'anime':
+                url = f'{self.base_url}/anime/search/{quote(clean_query)}'
 
             print(url)
             async with await session_manager.get(url, params=params) as resp:
-                if resp.status != 200:
-                    token = await self.get_token()
-                    async with await session_manager.get(
-                            url,
-                            params={'access_token': token}) as resp:
-                        thing = await resp.json()
-                else:
                     thing = await resp.json()
         except Exception as e:
             session_manager.logger.warn(str(e))
@@ -120,7 +143,9 @@ class AniList:
                 thing.remove(entry)
             elif medium == 'novel' and 'novel' not in entry['type'].lower():
                 thing.remove(entry)
-        return self.__get_closest(query, thing)
+        closest_entry = self.__get_closest(query, thing)
+        return await self.get_entry_by_id(
+                session_manager, medium, closest_entry['id'])
 
     def __get_closest(self, query: str, thing_list: List[dict]) -> dict:
         """
