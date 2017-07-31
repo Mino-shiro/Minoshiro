@@ -1,3 +1,5 @@
+import re
+
 from asyncpg import InterfaceError, create_pool
 from asyncpg.pool import Pool
 
@@ -32,13 +34,15 @@ class DataController:
         self.logger = logger
 
     @classmethod
-    async def get_instance(cls, logger, connection_data: dict = None,
+    async def get_instance(cls, logger, connect_kwargs: dict = None,
                            pool: Pool = None, schema: str = 'roboragi'):
         """
         Get a new instance of `DataController`
         :param logger: the logger object.
 
-        :param connection_data: data used in making a new connection pool.
+        :param connect_kwargs:
+        Keyword arguments for the :func:`asyncpg.connection.connect` function.
+
         :param pool: an existing connection pool.
 
         One of `connection_data` or `pool` must not be None.
@@ -47,26 +51,25 @@ class DataController:
 
         :return: a new instance of `DataController`
         """
-        assert connection_data or pool, (
+        assert connect_kwargs or pool, (
             'Please either provide a connection pool or '
             'a dict of connection data for creating a new '
             'connection pool.'
         )
+        if not re.fullmatch('[a-zA-Z]+', schema):
+            raise ValueError('Please only use upper and lower case'
+                             'letters in the schema name.')
         if not pool:
-            host = connection_data['host']
-            port = connection_data['port']
-            user = connection_data['user']
-            database = connection_data['database']
-            password = connection_data['password']
             try:
-                pool = await create_pool(
-                    host=host, port=port, user=user,
-                    database=database, password=password
-
-                )
+                pool = await create_pool(**connect_kwargs)
+                logger.info('Connection pool made.')
             except InterfaceError as e:
                 logger.error(str(e))
                 raise e
+        logger.info('Creating tables...')
         await make_tables(pool, schema)
+        logger.info('Tables created.')
+        logger.info('Populating database...')
         await populate_lookup(pool, schema)
+        logger.info('Database populated.')
         return cls(pool, logger, schema)
