@@ -45,8 +45,7 @@ async def get_anime_url(
         for entry in ap.find('.card.pure-1-6'):
             anime = {
                 'title': PyQuery(entry).find('h4').text(),
-                'url': f'''http://www.anime-planet.com
-                    {PyQuery(entry).find("a").attr("href")}'''
+                'url': f'''http://www.anime-planet.com{PyQuery(entry).find("a").attr("href")}'''
             }
             anime_list.append(anime)
         return __get_closest(query, anime_list).get('url')
@@ -104,8 +103,7 @@ async def get_manga_url(
         for entry in ap.find('.card.pure-1-6'):
             anime = {
                 'title': PyQuery(entry).find('h4').text(),
-                'url': f'''http://www.anime-planet.com
-                    {PyQuery(entry).find("a").attr("href")}'''
+                'url': f'''http://www.anime-planet.com{PyQuery(entry).find("a").attr("href")}'''
             }
             manga_list.append(anime)
 
@@ -154,7 +152,8 @@ def __get_closest(query: str, anime_list: List[dict]) -> dict:
     max_ratio, match = 0, None
     matcher = SequenceMatcher(b=query.lower())
     for anime in anime_list:
-        ratio = __match_max(anime, matcher)
+        matcher.set_seq1(anime['title'].lower())
+        ratio = matcher.ratio()
         if ratio > max_ratio and ratio >= 0.85:
             max_ratio = ratio
             match = anime
@@ -172,6 +171,7 @@ def __match_max(anime: dict, matcher: SequenceMatcher) -> float:
     :return: the max matched ratio.
     """
     max_ratio = 0
+    print(anime)
     for title in anime['titles']:
         matcher.set_seq1(title['title'].lower())
         ratio = matcher.ratio()

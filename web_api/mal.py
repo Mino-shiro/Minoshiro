@@ -32,7 +32,6 @@ async def get_entry_details(
     except Exception as e:
         session_manager.logger.warn(str(e))
         return
-
     thing_list = []
     for thing in ET.fromstring(html).findall('./entry'):
         synonyms = None
@@ -41,7 +40,7 @@ async def get_entry_details(
         if medium == 'anime':
             data = {
                 'id': thing.find('id').text,
-                'title': thing.find('title'),
+                'title': thing.find('title').text,
                 'english': thing.find('english').text,
                 'synonyms': synonyms,
                 'episodes': thing.find('episodes').text,
@@ -55,7 +54,7 @@ async def get_entry_details(
         else:
             data = {
                 'id': thing.find('id').text,
-                'title': thing.find('title'),
+                'title': thing.find('title').text,
                 'english': thing.find('english').text,
                 'synonyms': synonyms,
                 'chapters': thing.find('chapters').text,
@@ -84,7 +83,7 @@ def __get_closest(query: str, thing_list: List[dict]) -> dict:
                 else an empty dict.
     """
     max_ratio, match = 0, None
-    matcher = SequenceMatcher(b=query.lower())
+    matcher = SequenceMatcher(b=query.lower().strip())
     for thing in thing_list:
         ratio = __match_max(thing, matcher)
         if ratio > max_ratio and ratio >= 0.90:
@@ -101,20 +100,20 @@ def __match_max(thing: dict, matcher: SequenceMatcher) -> float:
     :return: the max matched ratio.
     """
     max_ratio = 0
-    for title in thing['title']:
-        matcher.set_seq1(title.lower())
-        ratio = matcher.ratio()
-        if ratio > max_ratio:
-            max_ratio = ratio
-    for synonym in thing['synonyms']:
-        matcher.set_seq1(synonym.lower())
-        ratio = matcher.ratio()
-        if ratio > max_ratio:
-            max_ratio = ratio
+    matcher.set_seq1(thing['title'].lower())
+    ratio = matcher.ratio()
+    if ratio > max_ratio:
+        max_ratio = ratio
+    if thing['synonyms']:
+        for synonym in thing['synonyms']:
+            matcher.set_seq1(synonym.lower())
+            ratio = matcher.ratio()
+            if ratio > max_ratio:
+                max_ratio = ratio
     return max_ratio
 
 
-def __get_thing_by_id(thing_id: str, thing_list: list[dict]) -> dict:
+def __get_thing_by_id(thing_id: str, thing_list: List[dict]) -> dict:
     """
     Get the max matched ratio for a given thing.
     :param thing_id: the id that we are looking for.
