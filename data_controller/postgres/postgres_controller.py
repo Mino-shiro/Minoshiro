@@ -191,10 +191,10 @@ class PostgresController(DataController):
         sql = """
         SELECT (dict, cachetime) FROM {} WHERE id=$1 AND site=$2;
         """.format(self.__get_table(medium))
-        res = await self.pool.fetch(sql, id_, site.value)
-        if not res or not res[0]:
+        res = await self.pool.fetchrow(sql, id_, site.value)
+        if not res:
             return
-        data, cachetime = parse_record(res[0])
+        data, cachetime = parse_record(res)
         if (datetime.now() - cachetime).days < 1:
             return loads(data)
         else:
