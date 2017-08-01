@@ -15,12 +15,6 @@ class PostgresController(DataController):
 
     This will only implement data caching, since keeping track of stats is not
     in the scope of this project.
-
-    The site names used are:
-    `anidb`, `mal`, 'ap', 'anilist'
-
-    The medium names are:
-    `anime`, `manga`, `novel`
     """
 
     def __init__(self, pool: Pool, logger, schema: str = 'roboragi'):
