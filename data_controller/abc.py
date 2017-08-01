@@ -1,7 +1,7 @@
+from abc import abstractmethod
 from typing import Dict, Optional
 
 from data_controller.enums import Medium, Site
-from utils.helpers import await_func
 
 
 class DataController:
@@ -16,8 +16,9 @@ class DataController:
         """
         self.logger = logger
 
-    def get_identifier(self, query: str,
-                       medium: Medium) -> Optional[Dict[Site, str]]:
+    @abstractmethod
+    async def get_identifier(self, query: str,
+                             medium: Medium) -> Optional[Dict[Site, str]]:
         """
         Get the identifier of a given search query.
 
@@ -30,8 +31,9 @@ class DataController:
         """
         raise NotImplementedError
 
-    def set_identifier(self, name: str, medium: Medium,
-                       site: Site, identifier: str):
+    @abstractmethod
+    async def set_identifier(self, name: str, medium: Medium,
+                             site: Site, identifier: str):
         """
         Set the identifier for a given name.
 
@@ -45,7 +47,8 @@ class DataController:
         """
         raise NotImplementedError
 
-    def get_mal_title(self, id_: str, medium: Medium) -> Optional[str]:
+    @abstractmethod
+    async def get_mal_title(self, id_: str, medium: Medium) -> Optional[str]:
         """
         Get a MAL title by its id.
         :param id_: th MAL id.
@@ -54,7 +57,8 @@ class DataController:
         """
         raise NotImplementedError
 
-    def set_mal_title(self, id_: str, medium: Medium, title: str):
+    @abstractmethod
+    async def set_mal_title(self, id_: str, medium: Medium, title: str):
         """
         Set the MAL title for a given id.
         :param id_: the MAL id.
@@ -65,8 +69,9 @@ class DataController:
         """
         raise NotImplementedError
 
-    def medium_data_by_id(self, id_: str, medium: Medium,
-                          site: Site) -> Optional[dict]:
+    @abstractmethod
+    async def medium_data_by_id(self, id_: str, medium: Medium,
+                                site: Site) -> Optional[dict]:
         """
         Get data by id.
         :param id_: the id.
@@ -76,7 +81,9 @@ class DataController:
         """
         raise NotImplementedError
 
-    def set_medium_data(self, id_: str, medium: Medium, site: Site, data: dict):
+    @abstractmethod
+    async def set_medium_data(self, id_: str, medium: Medium,
+                              site: Site, data: dict):
         """
         Set the data for a given id.
 
@@ -91,7 +98,7 @@ class DataController:
         raise NotImplementedError
 
     async def get_medium_data(self, query: str,
-                              medium: Medium, loop=None) -> Optional[dict]:
+                              medium: Medium) -> Optional[dict]:
         """
         Get the cached data for the given search query.
 
@@ -99,18 +106,12 @@ class DataController:
 
         :param medium: the medium type.
 
-        :param loop: the asyncio event loop, optional. If None is provided,
-        will use the default event loop.
-
         :return: the cached data, for all sites that has the data.
         """
-        id_dict = await await_func(
-            self.get_identifier, loop, query, medium
-        )
+        id_dict = await self.get_identifier(query, medium)
         if not id_dict:
             return
         return {site: data for site, data in {
-            site: await await_func(
-                self.medium_data_by_id, loop, id_, medium, site
-            )
-            for site, id_ in id_dict.items()}.items() if data}
+            site: await self.medium_data_by_id(id_, medium, site)
+            for site, id_ in id_dict.items()
+        }.items() if data}
