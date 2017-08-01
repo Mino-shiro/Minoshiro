@@ -196,7 +196,7 @@ class PostgresController(DataController):
             return
         data, cachetime = parse_record(res)
         if (datetime.now() - cachetime).days < 1:
-            return loads(data)
+            return loads(data) if data else None
         else:
             await self.delete_medium_data(id_, medium, site)
 
