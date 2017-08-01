@@ -9,3 +9,6 @@ __pycache__/
 *.json
 *_db
 /roboragi_old/Config.py
+
+# Unignore
+!/roboragi.py

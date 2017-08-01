@@ -3,10 +3,24 @@ Database utility functions.
 """
 
 from json import loads
+from typing import Optional
 
+from asyncpg import Record
 from asyncpg.pool import Pool
 
 from data_controller.data_utils import get_all_synonyms
+
+
+def parse_record(record: Record) -> Optional[tuple]:
+    """
+    Parse a asyncpg Record object to a tuple of values
+    :param record: the asyncpg Record object
+    :return: the tuple of values if it's not None, else None
+    """
+    try:
+        return tuple(record.values())
+    except AttributeError:
+        return None
 
 
 async def make_tables(pool: Pool, schema: str):
