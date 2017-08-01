@@ -3,10 +3,11 @@ import re
 from asyncpg import InterfaceError, create_pool
 from asyncpg.pool import Pool
 
-from data_controller.data_utils import make_tables, populate_lookup
+from data_controller import DataController
+from .postgres_utils import make_tables, populate_lookup
 
 
-class DataController:
+class PostgresController(DataController):
     """
     To be able to integrate with an existing database, all tables for roboragi
     will be put under the `roboragi` schema unless a different schema name is
@@ -27,7 +28,7 @@ class DataController:
         Init
         :param pool: the `asyncpg` connection pool.
         :param logger: logger object used for logging.
-        :param schema:
+        :param schema: the schema name, default is `roboragi`
         """
         self.pool = pool
         self.schema = schema
@@ -37,7 +38,7 @@ class DataController:
     async def get_instance(cls, logger, connect_kwargs: dict = None,
                            pool: Pool = None, schema: str = 'roboragi'):
         """
-        Get a new instance of `DataController`
+        Get a new instance of `PostgresController`
         :param logger: the logger object.
 
         :param connect_kwargs:
@@ -45,11 +46,11 @@ class DataController:
 
         :param pool: an existing connection pool.
 
-        One of `connection_data` or `pool` must not be None.
+        One of `pool` or `connect_kwargs` must not be None.
 
         :param schema: the schema name used. Defaults to `roboragi`
 
-        :return: a new instance of `DataController`
+        :return: a new instance of `PostgresController`
         """
         assert connect_kwargs or pool, (
             'Please either provide a connection pool or '
