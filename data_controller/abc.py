@@ -8,7 +8,13 @@ class DataController:
     """
     An ABC for all classes that deals with database read write.
     """
-    __slots__ = ()
+    __slots__ = ('logger',)
+
+    def __init__(self, logger):
+        """
+        :param logger: the logger object to do logging with.
+        """
+        self.logger = logger
 
     def get_identifier(self, query: str,
                        medium: Medium) -> Optional[Dict[Site, str]]:
@@ -104,6 +110,7 @@ class DataController:
         if not id_dict:
             return
         return {site: data for site, data in {
-            site: await await_func(self.medium_data_by_id, loop,
-                                   id_, medium, site)
+            site: await await_func(
+                self.medium_data_by_id, loop, id_, medium, site
+            )
             for site, id_ in id_dict.items()}.items() if data}

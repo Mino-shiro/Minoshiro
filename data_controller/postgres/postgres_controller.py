@@ -27,6 +27,7 @@ class PostgresController(DataController):
     This will only implement data caching, since keeping track of stats is not
     in the scope of this project.
     """
+    __slots__ = ('pool', 'schema')
 
     def __init__(self, pool: Pool, logger, schema: str = 'roboragi'):
         """
@@ -37,7 +38,7 @@ class PostgresController(DataController):
         """
         self.pool = pool
         self.schema = schema
-        self.logger = logger
+        super().__init__(logger)
 
     @classmethod
     async def get_instance(cls, logger, connect_kwargs: dict = None,
