@@ -7,7 +7,7 @@ __pycache__/
 # File ignores
 /*.py
 *.json
-*_db
+*.db
 /roboragi_old/Config.py
 
 # Unignore
