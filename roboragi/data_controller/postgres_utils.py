@@ -101,7 +101,7 @@ async def __populate_one(schema, pool, name, medium, site, id_):
     sql = """
     INSERT INTO {} VALUES ($1, $2, $3, $4)
     ON CONFLICT (syname, medium, site)
-    DO NOTHING 
+    DO NOTHING
     """.format(f'{schema}.lookup')
     if str(id_):
         await pool.execute(sql, name, medium, site, str(id_))

@@ -1,6 +1,10 @@
-import logging
+from asyncpg import create_pool
+from aiohttp import ClientSession
+from typing import Optional
 
-import aiohttp
+from roboragi import get_default_logger
+from roboragi.data_controller import PostgresController
+from roboragi.data_controller.enums import Medium
 from web_api import ani_db, ani_list, anime_planet, lndb, mal, mu
 
 from roboragi.web_api import nu
@@ -12,8 +16,8 @@ class SearchInstance:
         """
         Initialize the class
         """
-        self.session = aiohttp.ClientSession()
-        self.logger = logging.getLogger(__name__)
+        self.session = ClientSession()
+        self.logger = get_default_logger()
         if config['anilist_client_id']:
             self.ani_client_id = config['anilist_client_id']
             self.ani_client_secret = config['anilist_client_secret']
@@ -27,6 +31,31 @@ class SearchInstance:
             self.database_host = config['database_host']
         self.mal_headers = None
         self.anilist_client = None
+        self.db_pool = None
+        self.db_controller = None
+
+    @classmethod
+    async def create(cls, config: dict):
+        """
+        Searches all of the databases and returns the info
+        :param config: dict with initialization info
+        :return: SearchInstance object
+        """
+        self = SearchInstance(config)
+        try:
+            if self.database_name:
+                self.db_pool = await create_pool(
+                    database=self.database_name,
+                    host=self.database_host,
+                    user=self.database_user,
+                    password=self.database_password
+                )
+                self.db_controller = await PostgresController.get_instance(
+                    self.logger,
+                    self.db_pool
+                )
+        except:
+            pass
         try:
             if self.ani_client_id:
                 self.anilist_client = ani_list.AniList(
@@ -41,8 +70,14 @@ class SearchInstance:
                 }
         except:
             pass
+        return self
 
     async def find_anime(self, anime_title) -> dict:
+        """
+        Searches all of the databases and returns the info
+        :param query: the search term.
+        :return: dict with anime info.
+        """
         entry_resp = {}
         entry_resp['anilist'] = await self.anilist_client.get_entry_details(
                 self.session,
@@ -60,6 +95,11 @@ class SearchInstance:
         return entry_resp
 
     async def find_manga(self, manga_title) -> dict:
+        """
+        Searches all of the databases and returns the info
+        :param query: the search term.
+        :return: dict with manga info.
+        """
         entry_resp = {}
         entry_resp['anilist'] = await self.anilist_client.get_entry_details(
                 self.session,
@@ -79,6 +119,11 @@ class SearchInstance:
         return entry_resp
 
     async def find_novel(self, novel_title) -> dict:
+        """
+        Searches all of the databases and returns the info
+        :param query: the search term.
+        :return: dict with novel info.
+        """
         entry_resp = {}
         entry_resp['anilist'] = await self.anilist_client.get_entry_details(
                 self.session,
@@ -96,3 +141,6 @@ class SearchInstance:
                 self.session,
                 novel_title)
         return entry_resp
+
+    async def get_cached(self, title: str, medium: Medium) -> Optional[dict]:
+        return None

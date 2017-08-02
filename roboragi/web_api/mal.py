@@ -22,7 +22,7 @@ async def get_entry_details(
     :param thing_id: thing id.
     :return: dict with thing info.
     """
-    if medium == 'ln' or medium == 'manga':
+    if medium == 'novel' or medium == 'manga':
         url = f'https://myanimelist.net/api/manga/search.xml?q={quote(query)}'
     else:
         url = f'https://myanimelist.net/api/anime/search.xml?q={quote(query)}'

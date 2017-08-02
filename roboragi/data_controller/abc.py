@@ -88,7 +88,7 @@ class DataController:
         Set the data for a given id.
 
         :param id_: the id.
-        
+
         :param medium: the medium type.
 
         :param site: the site.
