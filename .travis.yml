@@ -1,0 +1,17 @@
+sudo: false
+language: python
+python:
+  - 3.6
+install:
+  - pip install -Ur requirements.txt
+  - pip install -Ur ./tests/test_data/test_requirements.txt
+services:
+  - postgresql
+addons:
+  postgresql: "9.6"
+before_script:
+  - "mv ./tests/test_data/.travis_postgres.json ./tests/test_data/postgres.json"
+script:
+  - pytest -v --capture=sys
+notifications:
+  email: false

@@ -13,3 +13,4 @@ __pycache__/
 # Unignore
 !/roboragi/roboragi.py
 !/roboragi/data/synonyms.db
+!/tests/test_data/.travis_postgres.json
