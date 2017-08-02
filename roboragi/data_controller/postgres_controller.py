@@ -105,15 +105,15 @@ class PostgresController(DataController):
         """
 
         sql = """
-        SELECT (site, identifier) FROM {}.lookup
+        SELECT site, identifier FROM {}.lookup
         WHERE syname=$1 AND medium=$2;
         """.format(self.schema)
 
         res = await self.pool.fetch(sql, query, medium.value)
         if not res:
             return
-        return {Site(site): id_ for site, id_ in
-                (parse_record(record) for record in res) if id_}
+        records = (parse_record(record) for record in res)
+        return {Site(site): id_ for site, id_ in records if id_}
 
     async def set_identifier(self, name: str,
                              medium: Medium, site: Site, identifier: str):
@@ -189,7 +189,7 @@ class PostgresController(DataController):
         :return: the data for that id if found.
         """
         sql = """
-        SELECT (dict, cachetime) FROM {} WHERE id=$1 AND site=$2;
+        SELECT dict, cachetime FROM {} WHERE id=$1 AND site=$2;
         """.format(self.__get_table(medium))
         res = await self.pool.fetchrow(sql, id_, site.value)
         if not res:
