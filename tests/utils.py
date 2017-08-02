@@ -15,8 +15,7 @@ def __random_enum_members(enum) -> list:
     :param enum: the enum.
     :return: a list of unique random members from an enum
     """
-    members = tuple(enum.__members__.values())
-    return sample(members, randint(1, len(members)))
+    return sample(list(enum), randint(1, len(enum)))
 
 
 def random_sites() -> List[Site]:
