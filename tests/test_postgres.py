@@ -60,6 +60,13 @@ async def test_data(postgres: PostgresController):
     """
     ids = set(random_str() for _ in range(randint(5, 15)))
     names = [f'name {i} {random_str()}' for i in ids]
+
+    sql = """
+    UPDATE robotesting.anime
+    SET cachetime=$1
+    WHERE id=$2 AND site=$3
+    """
+
     for id_, name in zip(ids, names):
         tmp = {}
         sites = random_sites()
@@ -69,11 +76,6 @@ async def test_data(postgres: PostgresController):
             await postgres.set_identifier(name, Medium.ANIME, site, id_)
             await postgres.set_medium_data(id_, Medium.ANIME, site, data)
         assert await postgres.get_medium_data(name, Medium.ANIME) == tmp
-        sql = """
-        UPDATE robotesting.anime
-        SET cachetime=$1
-        WHERE id=$2 AND site=$3
-        """
 
         updated_site = choice(sites)
         await postgres.pool.execute(
