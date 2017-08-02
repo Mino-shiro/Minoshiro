@@ -81,4 +81,4 @@ async def test_data(postgres: PostgresController):
             id_, updated_site.value
         )
         new_data = await postgres.get_medium_data(name, Medium.ANIME)
-        assert updated_site not in new_data
+        assert not new_data or updated_site not in new_data
