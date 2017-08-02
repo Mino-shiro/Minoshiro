@@ -6,8 +6,8 @@ from typing import Dict, Optional
 from asyncpg import InterfaceError, create_pool
 from asyncpg.pool import Pool
 
-from data_controller import DataController
-from data_controller.enums import Medium, Site
+from .abc import DataController
+from .enums import Medium, Site
 from .postgres_utils import make_tables, parse_record, populate_lookup
 
 _tables = {

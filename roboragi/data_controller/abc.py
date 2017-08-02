@@ -1,7 +1,7 @@
 from abc import abstractmethod
 from typing import Dict, Optional
 
-from data_controller.enums import Medium, Site
+from .enums import Medium, Site
 
 
 class DataController:

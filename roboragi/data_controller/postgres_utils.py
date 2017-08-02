@@ -8,7 +8,7 @@ from typing import Optional
 from asyncpg import Record
 from asyncpg.pool import Pool
 
-from data_controller.data_utils import get_all_synonyms
+from .data_utils import get_all_synonyms
 
 
 def parse_record(record: Record) -> Optional[tuple]:

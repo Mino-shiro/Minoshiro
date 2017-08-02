@@ -3,7 +3,7 @@ Database utility functions.
 """
 from sqlite3 import connect
 
-from data import data_path
+from roboragi.data import data_path
 
 
 def get_all_synonyms() -> list:

@@ -11,4 +11,5 @@ __pycache__/
 /roboragi_old/Config.py
 
 # Unignore
-!/roboragi.py
+!/roboragi/roboragi.py
+!/roboragi/data/synonyms.db

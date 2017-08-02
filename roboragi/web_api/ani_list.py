@@ -1,8 +1,9 @@
+from difflib import SequenceMatcher
 from itertools import chain
 from typing import List, Optional
 from urllib.parse import quote
-from difflib import SequenceMatcher
-from session_manager import HTTPStatusError, SessionManager
+
+from roboragi.session_manager import HTTPStatusError, SessionManager
 
 __escape_table = {
     '&': ' ',

@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 from pyquery import PyQuery
 
-from session_manager import SessionManager
+from roboragi.session_manager import SessionManager
 
 
 async def get_anime_url(
