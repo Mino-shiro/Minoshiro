@@ -193,15 +193,14 @@ class AniList:
         }
         try:
             return await session_manager.get_json(url, params)
-        except HTTPStatusError as e:
+        except Exception as e:
             session_manager.logger.warn(str(e))
-            return
 
     async def get_page_by_popularity(
             self,
             session_manager: SessionManager,
-            medium: str,
-            page: str) -> dict:
+            medium: Medium,
+            page: int) -> Optional[list]:
         """
         Gets the 40 entries in the medium from specified page.
         :param session_manager: the session manager.
@@ -209,21 +208,19 @@ class AniList:
         :param genre: genre we want info from
         :return: list of genres
         """
+        med_str = filter_anime_manga(medium)
         if not self.access_token:
             self.access_token = await self.get_token()
-        url = f'{self.base_url}/browse/{medium}'
+        url = f'{self.base_url}/browse/{med_str}'
         params = {
             'access_token': self.access_token,
             'page': page,
             'sort': 'popularity-desc'
         }
         try:
-            async with await session_manager.get(url, params=params) as resp:
-                js = await resp.json()
+            return await session_manager.get_json(url, params)
         except Exception as e:
             session_manager.logger.warn(str(e))
-            return
-        return js
 
     def __get_closest(self, query: str, thing_list: List[dict]) -> dict:
         """

@@ -10,14 +10,14 @@ from roboragi.session_manager import SessionManager
 from roboragi.web_api import AniList
 from roboragi.web_api.mal import get_entry_details
 
-__all__ = ['cache_top_40']
+__all__ = ['cache_top_40', 'cache_top_pages']
 
 
 async def cache_top_40(medium: Medium, session_manager: SessionManager,
                        db: DataController, anilist: AniList, mal_headers: dict):
     """
     Cache the top 40 entries for all genres from Anilist, and try to cache
-    each entry for a MAL entry as well.
+    each entry for MAL as well.
 
     :param medium: The medium type.
 
@@ -30,7 +30,54 @@ async def cache_top_40(medium: Medium, session_manager: SessionManager,
     :param mal_headers: dict of mal auth headers.
 
     """
-    async for entry in __top_40_anilist(medium, session_manager, anilist):
+    await __cache(
+        __top_40_anilist(medium, session_manager, anilist),
+        db, medium, mal_headers, session_manager
+    )
+
+
+async def cache_top_pages(medium: Medium, session_manager: SessionManager,
+                          db: DataController, anilist: AniList,
+                          mal_headers: dict, page_count: int):
+    """
+    Cache the top n pages of anime/manga from Anilist, and try to cache each
+    entry for MAL as well.
+
+    :param medium: The medium type.
+
+    :param session_manager: the `SessionManager` instance.
+
+    :param db: the `DataController` instance.
+
+    :param anilist: the `AniList` instance.
+
+    :param mal_headers: dict of mal auth headers.
+
+    :param page_count: the number of desired pages.
+    """
+    assert page_count > 0, 'Please enter a page count greater than 0.'
+    await __cache(
+        __n_popular_anilist(page_count, medium, session_manager, anilist),
+        db, medium, mal_headers, session_manager
+    )
+
+
+async def __cache(async_iter: AsyncGenerator[dict],
+                  db, medium, mal_headers, session_manager):
+    """
+    Cache entries from an `AsyncGenerator`
+
+    :param async_iter: the `AsyncGenerator`
+
+    :param db: the `DataController` instance.
+    
+    :param medium: The medium type.
+
+    :param mal_headers: dict of mal auth headers.
+
+    :param session_manager: the `SessionManager` instance.
+    """
+    async for entry in async_iter:
         anilist_id = entry['id']
         await db.set_medium_data(str(anilist_id), medium, Site.ANILIST, entry)
 
@@ -57,8 +104,8 @@ async def __top_40_anilist(medium: Medium, session_manager: SessionManager,
 
     :param anilist: the `Anilist` instance.
 
-    :return: an asynchronous generators that yields top 40 anime/manga
-    for each genre in Anilist.
+    :return: an asynchronous generator that yields top 40 anime/manga
+             for each genre in Anilist.
     """
     genres = await anilist.get_genres(session_manager, medium)
     if not genres:
@@ -72,8 +119,38 @@ async def __top_40_anilist(medium: Medium, session_manager: SessionManager,
         )
         if res:
             for data in res:
-                if data.get('id') is not None:
+                id_ = data.get('id')
+                if id_ or isinstance(id_, int):
                     yield data
+
+
+async def __n_popular_anilist(
+        page_count: int, medium: Medium, session_manager: SessionManager,
+        anilist: AniList) -> AsyncGenerator[dict]:
+    """
+    Yields top n pages of anime/manga by popularity from Anilist.
+
+    :param page_count: the desired number of pages.
+
+    :param medium: the medium type.
+
+    :param session_manager: the `SessionManager` instance.
+
+    :param anilist: the `Anilist` instance.
+
+    :return: an asynchronous generator that
+             yields top n pages of anime/manga for Anilist.
+    """
+    for i in range(page_count):
+        page_entries = await anilist.get_page_by_popularity(
+            session_manager, medium, i + 1
+        )
+        if not page_entries:
+            break
+        for entry in page_entries:
+            id_ = entry.get('id')
+            if id_ or isinstance(id_, int):
+                yield entry
 
 
 async def __cache_anilist_id(name, medium, id_, db):
