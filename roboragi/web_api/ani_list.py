@@ -3,7 +3,9 @@ from itertools import chain
 from typing import List, Optional
 from urllib.parse import quote
 
+from roboragi.data_controller.enums import Medium
 from roboragi.session_manager import HTTPStatusError, SessionManager
+from roboragi.utils.helpers import filter_anime_manga
 
 __escape_table = {
     '&': ' ',
@@ -101,7 +103,7 @@ class AniList:
             url = f'{self.base_url}/anime/{entry_id}'
         try:
             async with await session_manager.get(url, params=params) as resp:
-                    js = await resp.json()
+                js = await resp.json()
         except Exception as e:
             session_manager.logger.warn(str(e))
             return
@@ -112,7 +114,7 @@ class AniList:
             session_manager: SessionManager,
             medium: str,
             query: str,
-            thing_id: str=None) -> Optional[dict]:
+            thing_id: str = None) -> Optional[dict]:
         """
         Get the details of an thing by search query.
         :param session_manager: session manager object
@@ -135,7 +137,7 @@ class AniList:
 
             print(url)
             async with await session_manager.get(url, params=params) as resp:
-                    thing = await resp.json()
+                thing = await resp.json()
         except Exception as e:
             session_manager.logger.warn(str(e))
             return
@@ -146,37 +148,33 @@ class AniList:
                 thing.remove(entry)
         closest_entry = self.__get_closest(query, thing)
         return await self.get_entry_by_id(
-                session_manager, medium, closest_entry['id'])
+            session_manager, medium, closest_entry['id'])
 
     async def get_genres(
             self,
             session_manager: SessionManager,
-            medium: str) -> dict:
+            medium: Medium) -> Optional[list]:
         """
         Gets a list of genres for a specified medium.
         :param session_manager: the session manager.
         :param medium:medium to get genres for 'manga' or 'anime'.
         :return: list of genres
         """
+        med_str = filter_anime_manga(medium)
         if not self.access_token:
             self.access_token = await self.get_token()
-        url = f'{self.base_url}/genre_list/'
-        params = {
-            'access_token': self.access_token
-        }
+        url = f'{self.base_url}/genre_list/{med_str}'
+        params = {'access_token': self.access_token}
         try:
-            async with await session_manager.get(url, params=params) as resp:
-                js = await resp.json()
-        except Exception as e:
+            return await session_manager.get_json(url, params)
+        except HTTPStatusError as e:
             session_manager.logger.warn(str(e))
-            return
-        return js
 
     async def get_top_40_by_genre(
             self,
             session_manager: SessionManager,
-            medium: str,
-            genre: str) -> dict:
+            medium: Medium,
+            genre: str) -> Optional[list]:
         """
         Gets the top 40 entries in the medium for specified genre.
         :param session_manager: the session manager.
@@ -184,21 +182,20 @@ class AniList:
         :param genre: genre we want info from
         :return: list of genres
         """
+        med_str = filter_anime_manga(medium)
         if not self.access_token:
             self.access_token = await self.get_token()
-        url = f'{self.base_url}/browse/{medium}'
+        url = f'{self.base_url}/browse/{med_str}'
         params = {
             'access_token': self.access_token,
             'genres': genre,
             'sort': 'popularity-desc'
         }
         try:
-            async with await session_manager.get(url, params=params) as resp:
-                js = await resp.json()
-        except Exception as e:
+            return await session_manager.get_json(url, params)
+        except HTTPStatusError as e:
             session_manager.logger.warn(str(e))
             return
-        return js
 
     async def get_page_by_popularity(
             self,
@@ -265,7 +262,7 @@ class AniList:
 
         if 'synonyms' in thing:
             for synonym in thing['synonyms']:
-                    thing_name_list.append(synonym.lower())
+                thing_name_list.append(synonym.lower())
 
         for name in thing_name_list:
             matcher.set_seq1(name.lower())
