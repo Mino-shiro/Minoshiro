@@ -28,7 +28,6 @@ async def cache_top_40(medium: Medium, session_manager: SessionManager,
     :param anilist: the `AniList` instance.
 
     :param mal_headers: dict of mal auth headers.
-
     """
     await __cache(
         __top_40_anilist(medium, session_manager, anilist),
@@ -70,7 +69,7 @@ async def __cache(async_iter: AsyncGenerator[dict],
     :param async_iter: the `AsyncGenerator`
 
     :param db: the `DataController` instance.
-    
+
     :param medium: The medium type.
 
     :param mal_headers: dict of mal auth headers.
