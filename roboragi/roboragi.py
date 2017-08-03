@@ -87,12 +87,12 @@ class SearchInstance:
             entry_resp = {}
             entry_resp['anilist'] = await self.anilist_client.get_entry_details(
                     self.session,
-                    'anime',
+                    Medium.ANIME,
                     anime_title) if self.anilist_client else None
             entry_resp['mal'] = await mal.get_entry_details(
                     self.session,
                     self.mal_headers,
-                    'anime',
+                    Medium.ANIME,
                     anime_title) if self.mal_headers else None
             entry_resp['anidb'] = await ani_db.get_anime_url(
                     self.session, anime_title)
@@ -116,12 +116,12 @@ class SearchInstance:
             entry_resp = {}
             entry_resp['anilist'] = await self.anilist_client.get_entry_details(
                     self.session,
-                    'manga',
+                    Medium.MANGA,
                     manga_title) if self.anilist_client else None
             entry_resp['mal'] = await mal.get_entry_details(
                     self.session,
                     self.mal_headers,
-                    'manga',
+                    Medium.MANGA,
                     manga_title) if self.mal_headers else None
             entry_resp['animeplanet'] = await anime_planet.get_manga_url(
                     self.session,
@@ -147,12 +147,12 @@ class SearchInstance:
             entry_resp = {}
             entry_resp['anilist'] = await self.anilist_client.get_entry_details(
                     self.session,
-                    'novel',
+                    Medium.LN,
                     novel_title) if self.anilist_client else None
             entry_resp['mal'] = await mal.get_entry_details(
                     self.session,
                     self.mal_headers,
-                    'novel',
+                    Medium.LN,
                     novel_title) if self.mal_headers else None
             entry_resp['lndb'] = lndb.get_light_novel_url(
                     self.session,
@@ -167,7 +167,7 @@ class SearchInstance:
 
     async def get_cached(self, title: str, medium: Medium) -> Optional[dict]:
         entry_resp = {}
-        identifiers = self.db_controller.get_identifier(title, medium)
+        identifiers = await self.db_controller.get_identifier(title, medium)
         if identifiers is not None:
             for site in identifiers.keys():
                 if site == Site.MAL:
