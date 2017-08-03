@@ -2,7 +2,6 @@
 Populate the database with some data
 before the main search class is initialized.
 """
-from typing import AsyncGenerator
 
 from roboragi.data_controller import DataController
 from roboragi.data_controller.enums import Medium, Site
