@@ -42,7 +42,7 @@ async def get_entry_details(
         synonyms = None
         if thing.find('synonyms').text is not None:
             synonyms = thing.find('synonyms').text.split(";")
-        if medium == 'anime':
+        if medium == Medium.ANIME:
             data = {
                 'id': thing.find('id').text,
                 'title': thing.find('title').text,
