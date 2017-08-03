@@ -126,6 +126,17 @@ class Roboragi:
                     self.anilist, self.mal_headers, cache_pages
                 )
 
+    async def __cache_entry(self, entry_resp: dict, medium: Medium):
+        """
+        Adds entry to cache
+
+        :param entry_resp: dict of all entries to be added
+
+        :param medium: Medium type of entries
+        """
+        for entry in entry_resp:
+            pass
+
     async def find_anime(self, anime_title) -> dict:
         """
         Searches all of the databases and returns the info
@@ -150,6 +161,7 @@ class Roboragi:
                     self.session, anime_title)
             entry_resp['animeplanet'] = await anime_planet.get_anime_url(
                     self.session, anime_title)
+            self.__cache_entry(entry_resp, Medium.ANIME)
             return entry_resp
         except Exception as e:
             self.logger.error(str(e))
@@ -181,6 +193,7 @@ class Roboragi:
             entry_resp['mangaupdates'] = await mu.get_manga_url(
                 self.session,
                 manga_title)
+            self.__cache_entry(entry_resp, Medium.MANGA)
             return entry_resp
         except Exception as e:
             self.logger.error(str(e))
@@ -212,6 +225,7 @@ class Roboragi:
             entry_resp['novelupdates'] = await nu.get_light_novel_url(
                 self.session,
                 novel_title)
+            self.__cache_entry(entry_resp, Medium.LN)
             return entry_resp
         except Exception as e:
             self.logger.error(str(e))
@@ -222,25 +236,30 @@ class Roboragi:
         identifiers = await self.db_controller.get_identifier(title, medium)
         if identifiers is not None:
             for site in identifiers.keys():
-                if site == Site.MAL:
-                    title = self.db_controller.get_mal_title(
-                        identifiers['mal'], medium)
-                    entry_resp[site.name] = await mal.get_entry_details(
-                        self.session,
-                        self.mal_headers,
-                        medium,
-                        title,
-                        identifiers[site]
-                    )
-                elif site == Site.ANILIST:
-                    entry_resp[
-                        site.name] = await self.anilist_client.get_entry_by_id(
-                        self.session,
-                        medium,
-                        identifiers[site]
-                    )
+                medium_data = await self.db_controller.medium_data_by_id(
+                            identifiers[site.name], Medium, site)
+                if medium_data is not None:
+                    entry_resp[site.name] = medium_data
                 else:
-                    entry_resp[site.name] = identifiers[site]
+                    if site == Site.MAL:
+                        title = self.db_controller.get_mal_title(
+                            identifiers['mal'], medium)
+                        entry_resp[site.name] = await mal.get_entry_details(
+                            self.session,
+                            self.mal_headers,
+                            medium,
+                            title,
+                            identifiers[site]
+                        )
+                    elif site == Site.ANILIST:
+                        entry_resp[
+                            site.name] = await self.anilist_client.get_entry_by_id(
+                            self.session,
+                            medium,
+                            identifiers[site]
+                        )
+                    else:
+                        entry_resp[site.name] = identifiers[site]
             return entry_resp
         else:
             return None
