@@ -77,9 +77,9 @@ async def populate_lookup(pool: Pool, schema: str):
         'LN': 3
     }
     mal_sql = """
-    INSERT INTO {} VALUES ($1, $2, $3)
-    ON CONFLICT (id, medium)
-    DO NOTHING
+    INSERT INTO {} VALUES ($1, $2, $3) 
+    ON CONFLICT (id, medium) 
+    DO NOTHING 
     """.format(f'{schema}.mal')
 
     for name, type_, db_links in rows:
@@ -99,8 +99,8 @@ async def populate_lookup(pool: Pool, schema: str):
 
 async def __populate_one(schema, pool, name, medium, site, id_):
     sql = """
-    INSERT INTO {} VALUES ($1, $2, $3, $4)
-    ON CONFLICT (syname, medium, site)
+    INSERT INTO {} VALUES ($1, $2, $3, $4) 
+    ON CONFLICT (syname, medium, site) 
     DO NOTHING
     """.format(f'{schema}.lookup')
     if str(id_):
