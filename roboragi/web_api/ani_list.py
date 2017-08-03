@@ -83,7 +83,7 @@ class AniList:
     async def get_entry_by_id(
             self,
             session_manager: SessionManager,
-            medium: str,
+            medium: Medium,
             entry_id: str) -> dict:
         """
         Get the full details of an thing by id
@@ -97,10 +97,10 @@ class AniList:
         params = {
             'access_token': self.access_token
         }
-        if medium == 'novel' or medium == 'manga':
-            url = f'{self.base_url}/manga/{entry_id}'
-        elif medium == 'anime':
-            url = f'{self.base_url}/anime/{entry_id}'
+        if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
+            raise ValueError('Only Anime, Manga and LN are supported.')
+        medium_str = 'anime' if medium == Medium.ANIME else 'manga'
+        url = f'{self.base_url}/{medium_str}/{entry_id}'
         try:
             async with await session_manager.get(url, params=params) as resp:
                 js = await resp.json()
@@ -112,7 +112,7 @@ class AniList:
     async def get_entry_details(
             self,
             session_manager: SessionManager,
-            medium: str,
+            medium: Medium,
             query: str,
             thing_id: str = None) -> Optional[dict]:
         """
@@ -130,12 +130,10 @@ class AniList:
             'access_token': self.access_token
         }
         try:
-            if medium == 'novel' or medium == 'manga':
-                url = f'{self.base_url}/manga/search/{quote(clean_query)}'
-            elif medium == 'anime':
-                url = f'{self.base_url}/anime/search/{quote(clean_query)}'
-
-            print(url)
+            if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
+                raise ValueError('Only Anime, Manga and LN are supported.')
+            medium_str = 'anime' if medium == Medium.ANIME else 'manga'
+            url = f'{self.base_url}/{medium_str}/search/{quote(clean_query)}'
             async with await session_manager.get(url, params=params) as resp:
                 thing = await resp.json()
         except Exception as e:
