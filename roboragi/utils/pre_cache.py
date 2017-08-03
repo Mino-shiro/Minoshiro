@@ -10,6 +10,8 @@ from roboragi.session_manager import SessionManager
 from roboragi.web_api import AniList
 from roboragi.web_api.mal import get_entry_details
 
+__all__ = ['cache_top_40']
+
 
 async def cache_top_40(medium: Medium, session_manager: SessionManager,
                        db: DataController, anilist: AniList, mal_headers: dict):
@@ -70,7 +72,7 @@ async def __top_40_anilist(medium: Medium, session_manager: SessionManager,
         )
         if res:
             for data in res:
-                if data.get('id'):
+                if data.get('id') is not None:
                     yield data
 
 
