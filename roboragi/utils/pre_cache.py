@@ -61,8 +61,7 @@ async def cache_top_pages(medium: Medium, session_manager: SessionManager,
     )
 
 
-async def __cache(async_iter: AsyncGenerator[dict],
-                  db, medium, mal_headers, session_manager):
+async def __cache(async_iter, db, medium, mal_headers, session_manager):
     """
     Cache entries from an `AsyncGenerator`
 
@@ -93,7 +92,7 @@ async def __cache(async_iter: AsyncGenerator[dict],
 
 
 async def __top_40_anilist(medium: Medium, session_manager: SessionManager,
-                           anilist: AniList) -> AsyncGenerator[dict]:
+                           anilist: AniList):
     """
     Yields top 40 anime/manga for each genre in Anilist.
 
@@ -125,7 +124,7 @@ async def __top_40_anilist(medium: Medium, session_manager: SessionManager,
 
 async def __n_popular_anilist(
         page_count: int, medium: Medium, session_manager: SessionManager,
-        anilist: AniList) -> AsyncGenerator[dict]:
+        anilist: AniList):
     """
     Yields top n pages of anime/manga by popularity from Anilist.
 
