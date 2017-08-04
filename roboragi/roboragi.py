@@ -55,43 +55,38 @@ class Roboragi:
 
         self.__anidb_list = None
         self.__anidb_time = None
-        self.__initialized = False
 
-    def __await__(self):
+    async def fetch_anidb(self):
         """
-        Mutate self to get the datadump from anidb.
-        If the data is less than 1 day old, don't request the data.
-        :return: self
+        Fetch data dump from anidb if one of the following is True:
+            The data dump file is not found.
+            The data dump file is more than a day old.
         """
         now = int(time())
-        time_path = data_path.joinpath('.anidb_time')
-
-        if not self.__initialized:
-            if time_path.is_file():
-                with time_path.open() as time_file:
-                    self.__anidb_time = int(time_file.read())
-            else:
-                ani_db.write_timestamp(now)
-                self.__anidb_time = now
-
         if self.__anidb_list and now - self.__anidb_time < 86400:
-            return self
+            return
 
+        time_path = data_path.joinpath('.anidb_time')
         dump_path = data_path.joinpath('anime-titles.xml')
-        if dump_path.is_file() and now - self.__anidb_time < 86400:
-            with dump_path.open() as dump_file:
-                xml = dump_file.read()
-        else:
-            xml = ani_db.get_data_dump(self.session_manager).__await__()
-            with dump_path.open('w+') as write_dump:
-                write_dump.write(xml)
-            if self.__initialized:
-                self.__anidb_time = now
-                ani_db.write_timestamp(self.__anidb_time)
 
+        if time_path.is_file():
+            with time_path.open() as tf:
+                self.__anidb_time = int(tf.read())
+        else:
+            with time_path.open('w+') as tfw:
+                tfw.write(str(now))
+            self.__anidb_time = now
+
+        if now - self.__anidb_time < 86400 and dump_path.is_file():
+            with dump_path.open() as xml_file:
+                xml = xml_file.read()
+        else:
+            url = 'http://anidb.net/api/anime-titles.xml.gz'
+            async with await self.session_manager.get(url) as resp:
+                xml = await resp.read()
+            with dump_path.open('w+') as write_xml:
+                write_xml.write(xml)
         self.__anidb_list = ani_db.process_xml(xml)
-        self.__initialized = True
-        return self
 
     @classmethod
     async def from_postgres(cls, db_config: dict, mal_config: dict,
@@ -146,8 +141,8 @@ class Roboragi:
         )
 
         session_manager = SessionManager(ClientSession(), logger)
-        instance = await cls(session_manager, db_controller,
-                             mal_config, anilist_config, logger)
+        instance = cls(session_manager, db_controller,
+                       mal_config, anilist_config, logger)
         await instance.__pre_cache(cache_pages)
         return instance
 
@@ -185,7 +180,7 @@ class Roboragi:
         :param query: the search term.
         :return: dict with anime info.
         """
-        await self
+        await self.fetch_anidb()
         try:
             cached_anime = await self.get_cached(anime_title, Medium.ANIME)
             if cached_anime is not None:
