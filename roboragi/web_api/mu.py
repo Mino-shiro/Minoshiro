@@ -26,6 +26,7 @@ async def get_manga_url(
         async with await session_manager.get(
                 'https://mangaupdates.com/series.html', params=params) as resp:
             html = await resp.text()
+            print(html)
     except Exception as e:
         session_manager.logger.warn(str(e))
         return
@@ -41,7 +42,7 @@ async def get_manga_url(
                 'rating': PyQuery(thing).find('.col4').text()
             }
             manga_list.append(data)
-    return __get_closest(query, manga_list).get('url')
+    return __get_closest(query, manga_list)
 
 
 def get_manga_url_by_id(manga_id) -> str:
@@ -62,9 +63,11 @@ def __get_closest(query: str, manga_list: List[dict]) -> dict:
         Closest matching manga by search query if found else an empty dict.
     """
     max_ratio, match = 0, None
-    matcher = SequenceMatcher(b=query.lower())
+    matcher = SequenceMatcher(b=query.lower().strip())
     for ln in manga_list:
-        ratio = matcher.set_seq1(ln['title'].lower())
+        title = ln['title'].lower()
+        matcher.set_seq1(title)
+        ratio = matcher.ratio()
         if ratio > max_ratio and ratio >= 0.85:
             max_ratio = ratio
             match = ln

@@ -11,7 +11,7 @@ from roboragi.session_manager import SessionManager
 
 
 async def get_light_novel_url(
-        session_manager: SessionManager, query: str) -> Optional[str]:
+        session_manager: SessionManager, query: str) -> Optional[dict]:
     """
     Get ln url by search query.
     :param session_manager: the `SessionManager` instance.
@@ -67,7 +67,8 @@ def __get_closest(query: str, ln_list: List[dict]) -> dict:
     max_ratio, match = 0, None
     matcher = SequenceMatcher(b=query.lower())
     for ln in ln_list:
-        ratio = matcher.set_seq1(ln['title'].lower())
+        matcher.set_seq1(ln['title'].lower())
+        ratio = matcher.ratio()
         if ratio > max_ratio and ratio >= 0.85:
             max_ratio = ratio
             match = ln
