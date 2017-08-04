@@ -30,7 +30,7 @@ async def get_anime_url(
     """
     query = sanitize_search_text(query)
     params = {
-        'query': quote(query)
+        'name': quote(query)
     }
     try:
         async with await session_manager.get(
