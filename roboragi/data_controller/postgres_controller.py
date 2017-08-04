@@ -8,7 +8,7 @@ from asyncpg.pool import Pool
 
 from .abc import DataController
 from .enums import Medium, Site
-from .postgres_utils import make_tables, parse_record, populate_lookup
+from .postgres_utils import make_tables, parse_record
 
 _tables = {
     Medium.ANIME: 'anime',
@@ -76,9 +76,6 @@ class PostgresController(DataController):
         logger.info('Creating tables...')
         await make_tables(pool, schema)
         logger.info('Tables created.')
-        logger.info('Populating database...')
-        await populate_lookup(pool, schema)
-        logger.info('Database populated.')
         return cls(pool, logger, schema)
 
     def __get_table(self, medium: Medium) -> str:
