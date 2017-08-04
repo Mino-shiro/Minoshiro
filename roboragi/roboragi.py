@@ -1,6 +1,7 @@
 from asyncio import get_event_loop
 from base64 import b64encode
 from time import time
+from typing import Any, Dict
 
 from aiohttp import ClientSession
 
@@ -14,6 +15,10 @@ from .utils.pre_cache import cache_top_40, cache_top_pages
 
 
 class Roboragi:
+    """
+
+    """
+
     def __init__(self, session_manager: SessionManager,
                  db_controller: DataController, mal_config: dict,
                  anilist_config: dict, loop=None, logger=None):
@@ -23,6 +28,7 @@ class Roboragi:
         :param db_controller:
         :param mal_config:
         :param anilist_config:
+        :param loop:
         :param logger:
         """
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
@@ -148,10 +154,10 @@ class Roboragi:
         session_manager = SessionManager(ClientSession(), logger)
         instance = cls(session_manager, db_controller,
                        mal_config, anilist_config, logger, loop)
-        await instance.__pre_cache(cache_pages)
+        await instance.pre_cache(cache_pages)
         return instance
 
-    async def __pre_cache(self, cache_pages: int):
+    async def pre_cache(self, cache_pages: int):
         """
         Pre cache the data base with some anime and managa data.
 
@@ -168,49 +174,32 @@ class Roboragi:
                     self.anilist, self.mal_headers, cache_pages
                 )
 
-    async def __cache_entry(self, entry_resp: dict, medium: Medium):
+    async def find_anime(self, query: str) -> dict:
         """
-        Adds entry to cache
+        Searches all of the databases and returns the info.
 
-        :param entry_resp: dict of all entries to be added
-
-        :param medium: Medium type of entries
-        """
-        for entry in entry_resp:
-            pass
-
-    async def find_anime(self, query) -> dict:
-        """
-        Searches all of the databases and returns the info
         :param query: the search term.
+
         :return: dict with anime info.
         """
         await self.fetch_anidb()
-        entry_resp = {}
-        cached_anime, cached_ids = await self.get_cached(
-            query, Medium.ANIME
-        )
-        anilist_data = await self.__find_anilist(
-            cached_anime, cached_ids, Medium.ANIME, query
-        )
-        if anilist_data:
-            entry_resp[Site.ANILIST] = anilist_data
+        return await self.__get_results(query, Medium.ANIME)
 
-        mal_data = await self.__find_mal(
-            cached_anime, cached_ids, Medium.ANIME, query
-        )
-        if mal_data:
-            entry_resp[Site.MAL] = mal_data
+    async def find_manga(self, query: str) -> dict:
+        """
+        Searches all of the databases and returns the info
+        :param query: the search term.
+        :return: dict with manga info.
+        """
+        return await self.__get_results(query, Medium.MANGA)
 
-        anidb_url = await self.__find_anidb(cached_ids, query)
-        if anidb_url:
-            entry_resp[Site.ANIDB] = anidb_url
-
-        ani_planet_url = await anime_planet.get_anime_url(
-            self.session_manager, query)
-        if ani_planet_url:
-            entry_resp[Site.ANIMEPLANET] = ani_planet_url
-        return entry_resp
+    async def find_novel(self, query: str) -> dict:
+        """
+        Searches all of the databases and returns the info
+        :param query: the search term.
+        :return: dict with novel info.
+        """
+        return await self.__get_results(query, Medium.LN)
 
     async def __find_anilist(self, cached_data, cached_ids, medium, query):
         """
@@ -232,20 +221,26 @@ class Roboragi:
 
         :return: the anilist data if found.
         """
+        if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
+            return
         cached_anilist = cached_data.get(Site.ANILIST)
         if cached_anilist:
             return cached_anilist
 
         anilist_id = cached_ids.get(Site.ANILIST)
 
-        if anilist_id:
-            resp = await self.anilist.get_entry_by_id(
-                self.session_manager, medium, anilist_id
-            )
-        else:
-            resp = await self.anilist.get_entry_details(
-                self.session_manager, medium, query
-            )
+        try:
+            if anilist_id:
+                resp = await self.anilist.get_entry_by_id(
+                    self.session_manager, medium, anilist_id
+                )
+            else:
+                resp = await self.anilist.get_entry_details(
+                    self.session_manager, medium, query
+                )
+        except Exception as e:
+            self.logger.warning(str(e))
+            resp = None
 
         try:
             return resp
@@ -277,6 +272,8 @@ class Roboragi:
 
         :return: the MAL data if found.
         """
+        if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
+            return
         cached_mal = cached_data.get(Site.MAL)
         if cached_mal:
             return cached_mal
@@ -286,14 +283,19 @@ class Roboragi:
                 mal_id, medium)
             if cached_title:
                 query = cached_title
-        resp = await mal.get_entry_details(
-            self.session_manager, self.mal_headers, medium, query, mal_id
-        )
+        try:
+            resp = await mal.get_entry_details(
+                self.session_manager, self.mal_headers, medium, query, mal_id
+            )
+        except Exception as e:
+            self.logger.warning(str(e))
+            resp = None
+
         try:
             return resp
         finally:
-            id_ = str(resp['id'])
             if resp:
+                id_ = str(resp['id'])
                 await self.db_controller.set_mal_title(
                     id_, medium, resp['title']
                 )
@@ -302,7 +304,7 @@ class Roboragi:
                         syn, medium, Site.MAL, id_
                     )
 
-    async def __find_anidb(self, cached_ids, query):
+    async def __find_anidb(self, cached_ids, medium, query):
         """
         Find Anidb url.
 
@@ -317,6 +319,8 @@ class Roboragi:
 
         :return: The url if found.
         """
+        if medium != Medium.ANIME:
+            return
         cached_id = cached_ids.get(Site.ANIDB)
         base_url = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid='
         if cached_id:
@@ -324,6 +328,7 @@ class Roboragi:
         res = await self.loop.run_in_executor(
             None, ani_db.get_anime, query, self.__anidb_list
         )
+
         if res:
             id_ = res['id']
             try:
@@ -334,72 +339,97 @@ class Roboragi:
                         title, Medium.ANIME, Site.ANIDB, id_
                     )
 
-    async def find_manga(self, manga_title) -> dict:
+    async def __find_ani_planet(self, medium: Medium, query: str):
         """
-        Searches all of the databases and returns the info
-        :param query: the search term.
-        :return: dict with manga info.
+        Find a anime or manga url from ani planet.
+
+        :param medium: the medium type.
+
+        :param query: the search query.
+
+        :return: the ani planet url if found.
         """
         try:
-            cached_manga = await self.get_cached(manga_title, Medium.MANGA)
-            if cached_manga is not None:
-                return cached_manga
-            entry_resp = {}
-            entry_resp['anilist'] = await self.anilist.get_entry_details(
-                self.session_manager,
-                Medium.MANGA,
-                manga_title)
-            entry_resp['mal'] = await mal.get_entry_details(
-                self.session_manager,
-                self.mal_headers,
-                Medium.MANGA,
-                manga_title)
-            entry_resp['animeplanet'] = await anime_planet.get_manga_url(
-                self.session_manager,
-                manga_title)
-            entry_resp['mangaupdates'] = await mu.get_manga_url(
-                self.session_manager,
-                manga_title)
-            self.__cache_entry(entry_resp, Medium.MANGA)
-            return entry_resp
-        except Exception as e:
-            self.logger.error(str(e))
-            raise e
+            if medium == Medium.ANIME:
+                return await anime_planet.get_anime_url(
+                    self.session_manager, query
+                )
 
-    async def find_novel(self, novel_title) -> dict:
-        """
-        Searches all of the databases and returns the info
-        :param query: the search term.
-        :return: dict with novel info.
-        """
-        try:
-            cached_novel = await self.get_cached(novel_title, Medium.LN)
-            if cached_novel is not None:
-                return cached_novel
-            entry_resp = {}
-            entry_resp['anilist'] = await self.anilist.get_entry_details(
-                self.session_manager,
-                Medium.LN,
-                novel_title)
-            entry_resp['mal'] = await mal.get_entry_details(
-                self.session_manager,
-                self.mal_headers,
-                Medium.LN,
-                novel_title)
-            entry_resp['lndb'] = lndb.get_light_novel_url(
-                self.session_manager,
-                novel_title)
-            entry_resp['novelupdates'] = await nu.get_light_novel_url(
-                self.session_manager,
-                novel_title)
-            self.__cache_entry(entry_resp, Medium.LN)
-            return entry_resp
+            if medium == Medium.MANGA:
+                return await anime_planet.get_manga_url(
+                    self.session_manager, query
+                )
         except Exception as e:
-            self.logger.error(str(e))
-            raise e
+            self.logger.warning(str(e))
 
-    async def get_cached(self, title: str, medium: Medium) -> tuple:
-        identifiers = await self.db_controller.get_identifier(title, medium)
+    async def __find_kitsu(self, medium: Medium, query: str):
+        pass
+
+    async def __find_manga_updates(self, medium, query):
+        """
+        Find a manga updates url.
+
+        :param medium: the medium type.
+
+        :param query: the search query.
+
+        :return: the url if found.
+        """
+        if medium == Medium.MANGA:
+            try:
+                return await mu.get_manga_url(
+                    self.session_manager, query
+                )
+            except Exception as e:
+                self.logger.warning(str(e))
+
+    async def __find_lndb(self, medium, query):
+        """
+        Find an lndb url.
+
+        :param medium: the medium type.
+
+        :param query: the search query.
+
+        :return: the lndb url if found.
+        """
+        if medium == Medium.LN:
+            try:
+                return await lndb.get_light_novel_url(
+                    self.session_manager, query
+                )
+            except Exception as e:
+                self.logger.warning(str(e))
+
+    async def __find_novel_updates(self, medium, query):
+        """
+        Find a Novel Updates url.
+
+        :param medium: the medium type.
+
+        :param query: the search query.
+
+        :return: the url if found.
+        """
+        if medium == Medium.LN:
+            try:
+                return await nu.get_light_novel_url(
+                    self.session_manager, query
+                )
+            except Exception as e:
+                self.logger.warning(str(e))
+
+    async def __find_vndb(self, medium, query):
+        pass
+
+    async def __get_cached(self, query: str, medium: Medium) -> tuple:
+        """
+        Get cached data from the database.
+        :param query: the search query.
+        :param medium: the medium type.
+        :return: a tuple of (cached data, cached ids)
+        """
+        identifiers = await self.db_controller.get_identifier(query, medium)
         if not identifiers:
             return {}, None
         entry_resp = {}
@@ -410,3 +440,40 @@ class Roboragi:
                 entry_resp[site] = medium_data
 
         return entry_resp, identifiers
+
+    async def __get_results(self, query, medium: Medium) -> Dict[Site, Any]:
+        """
+        Get results from all sites.
+
+        :param query: the search query.
+
+        :param medium: the medium type.
+
+        :return: Search results from all sites if found.
+        """
+        res = {}
+        cached_data, cached_id = await self.__get_cached(query, medium)
+
+        res[Site.ANILIST] = await self.__find_anilist(
+            cached_data, cached_id, medium, query
+        )
+
+        res[Site.MAL] = await self.__find_mal(
+            cached_data, cached_id, medium, query
+        )
+
+        res[Site.ANIDB] = await self.__find_anidb(cached_id, medium, query)
+
+        res[Site.ANIMEPLANET] = await self.__find_ani_planet(medium, query)
+
+        res[Site.KITSU] = None
+
+        res[Site.MANGAUPDATES] = await self.__find_manga_updates(medium, query)
+
+        res[Site.LNDB] = await self.__find_lndb(medium, query)
+
+        res[Site.NOVELUPDATES] = await self.__find_novel_updates(medium, query)
+
+        res[Site.VNDB] = None
+
+        return {k: v for k, v in res.items() if v}
