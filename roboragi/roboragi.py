@@ -217,7 +217,7 @@ class Roboragi:
             with time_path.open('w+') as tfw:
                 tfw.write(str(now))
             self.__anidb_time = now
-        if (not data_path.is_file()) or (now - self.__anidb_time >= 86400):
+        if (not data_path.is_file()) or ((now - self.__anidb_time) >= 86400):
             async with await self.session_manager.get(
                     'http://anidb.net/api/anime-titles.xml.gz'
             ) as resp:

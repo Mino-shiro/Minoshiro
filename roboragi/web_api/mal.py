@@ -18,11 +18,13 @@ def get_synonyms(request: dict):
     :param request: the request data.
     :return: all synonyms form the request.
     """
-    iterator = chain(
-        (request.get('title'), request.get('english')),
-        request.get('synonyms', ())
-    )
-    return [s for s in iterator if s]
+    synonyms = []
+    synonyms.append(request['title'] if request['title'] else [])
+    synonyms.append(request['english'] if request['english'] else [])
+    if request['synonyms']:
+        for syn in request['synonyms']:
+            synonyms.append(syn)
+    return ''.join(str(i) for i in synonyms)
 
 
 async def get_entry_details(
