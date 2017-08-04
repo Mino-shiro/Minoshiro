@@ -4,27 +4,11 @@ Search MAL for anime/manga/lightnovels.
 
 import xml.etree.cElementTree as ET
 from difflib import SequenceMatcher
-from itertools import chain
 from typing import List, Optional
 from urllib.parse import quote
 
 from roboragi.data_controller.enums import Medium
 from roboragi.session_manager import SessionManager
-
-
-def get_synonyms(request: dict):
-    """
-    Get all synonyms from a request.
-    :param request: the request data.
-    :return: all synonyms form the request.
-    """
-    synonyms = []
-    synonyms.append(request['title'] if request['title'] else [])
-    synonyms.append(request['english'] if request['english'] else [])
-    if request['synonyms']:
-        for syn in request['synonyms']:
-            synonyms.append(syn)
-    return ''.join(str(i) for i in synonyms)
 
 
 async def get_entry_details(

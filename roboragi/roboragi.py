@@ -9,6 +9,7 @@ from roboragi.data import data_path
 from roboragi.data_controller import DataController, PostgresController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
+from roboragi.utils.helpers import get_synonyms
 from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu
 from .logger import get_default_logger
 from .utils.pre_cache import cache_top_40, cache_top_pages
@@ -274,7 +275,7 @@ class Roboragi:
         finally:
             if resp:
                 id_ = str(resp['id'])
-                for syn in ani_list.get_synonyms(resp):
+                for syn in get_synonyms(resp, Site.ANILIST):
                     await self.db_controller.set_identifier(
                         syn, medium, Site.ANILIST, id_
                     )
@@ -329,7 +330,7 @@ class Roboragi:
                 await self.db_controller.set_mal_title(
                     id_, medium, resp['title']
                 )
-                for syn in mal.get_synonyms(resp):
+                for syn in get_synonyms(resp, Site.MAL):
                     await self.db_controller.set_identifier(
                         syn, medium, Site.MAL, id_
                     )
