@@ -3,7 +3,6 @@ Search LNDB for anime.
 """
 from difflib import SequenceMatcher
 from typing import List, Optional
-from urllib.parse import quote
 
 from pyquery import PyQuery
 
@@ -19,17 +18,18 @@ async def get_light_novel_url(
     :return: the ln url if it's found.
     """
     query = query.replace(' ', '+')
-    params = {
-        'text': quote(query)
-    }
+    params = f'text={query}'
     try:
+
         async with await session_manager.get(
                 'http://lndb.info/search?',
                 params=params) as resp:
+            if 'light_novel' in str(resp.url):
+                print('test')
+                s = (str(resp.url)).rsplit('/', 1)
+                title = s[-1].replace('_', ' ')
+                return {'title': title, 'url': str(resp.url)}
             html = await resp.text()
-            if 'light_novel' in html.url:
-                return html.url
-
         lndb = PyQuery(html)
     except Exception as e:
             session_manager.logger.warn(str(e))
@@ -41,8 +41,7 @@ async def get_light_novel_url(
                 'title': PyQuery(thing).find('a').text(),
                 'url': PyQuery(thing).find('a').attr('href')
             }
-            ln_list.append(data)
-
+            ln_list.append(data)  
     return __get_closest(query, ln_list).get('url')
 
 
