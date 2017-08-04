@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
 from json import loads
 from typing import Dict, Optional
 
@@ -12,7 +12,7 @@ _convert_medium = {
 }
 
 
-class DataController:
+class DataController(metaclass=ABCMeta):
     """
     An ABC for all classes that deals with database read write.
     """
