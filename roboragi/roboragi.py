@@ -21,14 +21,24 @@ class Roboragi:
 
     def __init__(self, session_manager: SessionManager,
                  db_controller: DataController, mal_config: dict,
-                 anilist_config: dict, loop=None, logger=None):
+                 anilist_config: dict, *, loop=None, logger=None):
         """
+        Initialize the class.
 
         :param session_manager:
+            The `SessionManager` instance.
+            See class `roboragi.session_manager.SessionManager` for details.
+
         :param db_controller:
+            Any sub class of `roboragi.data_controller.abc.DataController`
+            will
+
         :param mal_config:
+
         :param anilist_config:
+
         :param loop:
+
         :param logger:
         """
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
@@ -63,7 +73,113 @@ class Roboragi:
         self.__anidb_list = None
         self.__anidb_time = None
 
-    async def fetch_anidb(self):
+    @classmethod
+    async def from_postgres(cls, db_config: dict, mal_config: dict,
+                            anilist_config: dict, *,
+                            cache_pages: int = 0, logger=None, loop=None):
+        """
+        Get an instance of `Roboragi` with class `PostgresController` as the
+        database controller.
+
+        :param db_config:
+            A dict of database config for the connection.
+
+            It should contain the keys in  keyword arguments for the :func:
+            `asyncpg.connection.connect` function.
+
+            It may contain an extra key "schema" for the name of the databse
+            schema.
+            If this key is not present, the schema defaults to "roboragi"
+
+        :param mal_config:
+
+            A dict for MAL authorization.
+            It must contain the keys "user" and "password"
+
+            It may also contain a key "description" for the description you
+            wish to use in the auth header.
+
+            If this key is not present, the description defaults to:
+                "A Python library for anime search."
+
+        :param anilist_config:
+            A dict for Anilist authorization. It must contain the keys:
+                "id" for client id and "secret" for client secret.
+
+        :param cache_pages:
+            The number of pages of anime and manga from Anilist to cache
+            before the instance is created. Each page contains 40 entries max.
+
+        :param logger:
+            The logger object. If it's not provided, will use the
+            defualt logger provided by the library.
+
+        :param loop:
+            An asyncio event loop. If not provided will use the default
+            event loop.
+
+        :return: Instance of `Roboragi` with class `PostgresController` as the
+                 database controller.
+        """
+        assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
+        db_config = dict(db_config)
+        logger = logger or get_default_logger()
+        schema = db_config.pop('schema', 'roboragi')
+        db_controller = await PostgresController.get_instance(
+            logger, db_config, schema=schema
+        )
+
+        session_manager = SessionManager(ClientSession(), logger)
+        instance = cls(session_manager, db_controller, mal_config,
+                       anilist_config, logger=logger, loop=loop)
+        await instance.pre_cache(cache_pages)
+        return instance
+
+    async def pre_cache(self, cache_pages: int):
+        """
+        Pre cache the data base with some anime and managa data.
+
+        :param cache_pages: the number of pages to cache.
+        """
+        for med in (Medium.ANIME, Medium.MANGA):
+            await cache_top_40(
+                med, self.session_manager, self.db_controller,
+                self.anilist, self.mal_headers
+            )
+            if cache_pages:
+                await cache_top_pages(
+                    med, self.session_manager, self.db_controller,
+                    self.anilist, self.mal_headers, cache_pages
+                )
+
+    async def find_anime(self, query: str) -> dict:
+        """
+        Searches all of the databases and returns the info.
+
+        :param query: the search term.
+
+        :return: dict with anime info.
+        """
+        await self.__fetch_anidb()
+        return await self.__get_results(query, Medium.ANIME)
+
+    async def find_manga(self, query: str) -> dict:
+        """
+        Searches all of the databases and returns the info
+        :param query: the search term.
+        :return: dict with manga info.
+        """
+        return await self.__get_results(query, Medium.MANGA)
+
+    async def find_novel(self, query: str) -> dict:
+        """
+        Searches all of the databases and returns the info
+        :param query: the search term.
+        :return: dict with novel info.
+        """
+        return await self.__get_results(query, Medium.LN)
+
+    async def __fetch_anidb(self):
         """
         Fetch data dump from anidb if one of the following is True:
             The data dump file is not found.
@@ -94,112 +210,6 @@ class Roboragi:
             with dump_path.open('w+') as write_xml:
                 write_xml.write(xml)
         self.__anidb_list = ani_db.process_xml(xml)
-
-    @classmethod
-    async def from_postgres(cls, db_config: dict, mal_config: dict,
-                            anilist_config: dict, logger=None,
-                            cache_pages: int = 0, loop=None):
-        """
-        Get an instance of `Roboragi` with class `PostgresController` as the
-        database controller.
-
-        :param db_config:
-            A dict of database config for the connection.
-
-            It should contain the keys in  keyword arguments for the :func:
-            `asyncpg.connection.connect` function.
-
-            It may contain an extra key "schema" for the name of the databse
-            schema.
-            If this key is not present, the schema defaults to "roboragi"
-
-        :param mal_config:
-
-            A dict for MAL authorization.
-            It must contain the keys "user" and "password"
-
-            It may also contain a key "description" for the description you
-            wish to use in the auth header.
-
-            If this key is not present, the description defaults to:
-                "A Python library for anime search."
-
-        :param anilist_config:
-            A dict for Anilist authorization. It must contain the keys:
-                "id" for client id and "secret" for client secret.
-
-        :param logger:
-            The logger object. If it's not provided, will use the
-            defualt logger provided by the library.
-
-        :param cache_pages:
-            The number of pages of anime and manga from Anilist to cache
-            before the instance is created. Each page contains 40 entries max.
-
-        :param loop:
-            An asyncio event loop. If not provided will use the default
-            event loop.
-
-        :return: Instance of `Roboragi` with class `PostgresController` as the
-                 database controller.
-        """
-        assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
-        db_config = dict(db_config)
-        logger = logger or get_default_logger()
-        schema = db_config.pop('schema', 'roboragi')
-        db_controller = await PostgresController.get_instance(
-            logger, db_config, schema=schema
-        )
-
-        session_manager = SessionManager(ClientSession(), logger)
-        instance = cls(session_manager, db_controller,
-                       mal_config, anilist_config, logger, loop)
-        await instance.pre_cache(cache_pages)
-        return instance
-
-    async def pre_cache(self, cache_pages: int):
-        """
-        Pre cache the data base with some anime and managa data.
-
-        :param cache_pages: the number of pages to cache.
-        """
-        for med in (Medium.ANIME, Medium.MANGA):
-            await cache_top_40(
-                med, self.session_manager, self.db_controller,
-                self.anilist, self.mal_headers
-            )
-            if cache_pages:
-                await cache_top_pages(
-                    med, self.session_manager, self.db_controller,
-                    self.anilist, self.mal_headers, cache_pages
-                )
-
-    async def find_anime(self, query: str) -> dict:
-        """
-        Searches all of the databases and returns the info.
-
-        :param query: the search term.
-
-        :return: dict with anime info.
-        """
-        await self.fetch_anidb()
-        return await self.__get_results(query, Medium.ANIME)
-
-    async def find_manga(self, query: str) -> dict:
-        """
-        Searches all of the databases and returns the info
-        :param query: the search term.
-        :return: dict with manga info.
-        """
-        return await self.__get_results(query, Medium.MANGA)
-
-    async def find_novel(self, query: str) -> dict:
-        """
-        Searches all of the databases and returns the info
-        :param query: the search term.
-        :return: dict with novel info.
-        """
-        return await self.__get_results(query, Medium.LN)
 
     async def __find_anilist(self, cached_data, cached_ids, medium, query):
         """
@@ -251,6 +261,9 @@ class Roboragi:
                     await self.db_controller.set_identifier(
                         syn, medium, Site.ANILIST, id_
                     )
+                await self.db_controller.set_medium_data(
+                    id_, medium, Site.ANILIST, resp
+                )
 
     async def __find_mal(self, cached_data, cached_ids, medium, query):
         """
@@ -303,6 +316,9 @@ class Roboragi:
                     await self.db_controller.set_identifier(
                         syn, medium, Site.MAL, id_
                     )
+                await self.db_controller.set_medium_data(
+                    id_, medium, Site.MAL, resp
+                )
 
     async def __find_anidb(self, cached_ids, medium, query):
         """
