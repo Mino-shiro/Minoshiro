@@ -31,11 +31,22 @@ class Roboragi:
 
         :param db_controller:
             Any sub class of `roboragi.data_controller.abc.DataController`
-            will
+            will work here.
 
         :param mal_config:
+            A dict for MAL authorization.
+            It must contain the keys "user" and "password"
+
+            It may also contain a key "description" for the description you
+            wish to use in the auth header.
+
+            If this key is not present, the description defaults to:
+                "A Python library for anime search."
 
         :param anilist_config:
+            A dict for Anilist authorization. It must contain the keys:
+                id: Your Anilist client id
+                secret: Your Anilist client secret.
 
         :param loop:
 
@@ -56,7 +67,7 @@ class Roboragi:
         mal_agent = mal_config.get(
             'description', 'A Python library for anime search.'
         )
-        mal_auth = b64encode(f'{mal_user}:{mal_pass}')
+        mal_auth = b64encode(f'{mal_user}:{mal_pass}'.encode())
 
         self.mal_headers = {
             'Authorization': f'Basic {mal_auth}',
