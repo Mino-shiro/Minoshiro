@@ -77,7 +77,7 @@ class Roboragi:
         if self.__anidb_list and now - self.__anidb_time < 86400:
             return self
 
-        dump_path = data_path.joinpath('anime-titles.xml.gz')
+        dump_path = data_path.joinpath('anime-titles.xml')
         if dump_path.is_file() and now - self.__anidb_time < 86400:
             with dump_path.open() as dump_file:
                 xml = dump_file.read()

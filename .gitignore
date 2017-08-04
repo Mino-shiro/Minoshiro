@@ -5,7 +5,7 @@ __pycache__/
 \.idea/
 
 # File ignores
-/roboragi/data/anime-titles.xml.gz.xml
+/roboragi/data/anime-titles.xml
 /roboragi/data/.anidb_time
 /*.py
 *.json
