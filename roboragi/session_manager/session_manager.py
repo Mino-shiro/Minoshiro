@@ -28,10 +28,7 @@ class SessionManager:
         """
         self.session = session
         self.logger = logger
-        self.codes = {
-            val.value: key
-            for key, val in HTTPStatus.__members__.items()
-        }
+        self.codes = {l.value: l.description for l in list(HTTPStatus)}
 
     def __del__(self):
         """
