@@ -213,6 +213,25 @@ class Roboragi:
         return entry_resp
 
     async def __find_anilist(self, cached_data, cached_ids, medium, query):
+        """
+        Find Anilist data.
+
+        Return the cached data if it exists.
+
+        If there are no cached data, attempt make an api call to Anilist and
+        find the data. Return and cache the api call result if it's found,
+        else return None.
+
+        :param cached_data: a dict of cached data.
+
+        :param cached_ids: a dict of cached ids.
+
+        :param medium: the medium type.
+
+        :param query: the search query.
+
+        :return: the anilist data if found.
+        """
         cached_anilist = cached_data.get(Site.ANILIST)
         if cached_anilist:
             return cached_anilist
@@ -239,6 +258,25 @@ class Roboragi:
                     )
 
     async def __find_mal(self, cached_data, cached_ids, medium, query):
+        """
+        Find MAL data.
+
+        Return the cached data if it exists.
+
+        If there are no cached data, attempt make an api call to MAL and
+        find the data. Return and cache the api call result if it's found,
+        else return None.
+
+        :param cached_data: a dict of cached data.
+
+        :param cached_ids: a dict of cached ids.
+
+        :param medium: the medium type.
+
+        :param query: the search query.
+
+        :return: the MAL data if found.
+        """
         cached_mal = cached_data.get(Site.MAL)
         if cached_mal:
             return cached_mal
@@ -265,6 +303,20 @@ class Roboragi:
                     )
 
     async def __find_anidb(self, cached_ids, query):
+        """
+        Find Anidb url.
+
+        Return the cached url if it's found.
+
+        If no cached url is found, try search through the datadump,
+        return and cache the url if it's found.
+
+        :param cached_ids: a dict of cached ids.
+
+        :param query: the search query.
+
+        :return: The url if found.
+        """
         cached_id = cached_ids.get(Site.ANIDB)
         base_url = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid='
         if cached_id:
