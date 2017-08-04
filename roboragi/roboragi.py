@@ -67,7 +67,7 @@ class Roboragi:
         mal_agent = mal_config.get(
             'description', 'A Python library for anime search.'
         )
-        mal_auth = b64encode(f'{mal_user}:{mal_pass}'.encode())
+        mal_auth = b64encode(f'{mal_user}:{mal_pass}'.encode()).decode()
 
         self.mal_headers = {
             'Authorization': f'Basic {mal_auth}',
@@ -211,15 +211,16 @@ class Roboragi:
                 tfw.write(str(now))
             self.__anidb_time = now
 
-        if now - self.__anidb_time < 86400 and dump_path.is_file():
-            with dump_path.open() as xml_file:
-                xml = xml_file.read()
-        else:
-            url = 'http://anidb.net/api/anime-titles.xml.gz'
-            async with await self.session_manager.get(url) as resp:
-                xml = await resp.read()
-            with dump_path.open('w+') as write_xml:
-                write_xml.write(xml)
+        if not data_path.is_file() or now - self.__anidb_time >= 86400:
+            async with await self.session_manager.get(
+                    'http://anidb.net/api/anime-titles.xml.gz'
+            ) as resp:
+                with dump_path.open('wb') as f:
+                    f.write(await resp.read())
+
+        with dump_path.open() as xml_file:
+            xml = xml_file.read()
+
         self.__anidb_list = ani_db.process_xml(xml)
 
     async def __find_anilist(self, cached_data, cached_ids, medium, query):
