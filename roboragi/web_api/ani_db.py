@@ -22,12 +22,12 @@ def process_xml(xml_string: str) -> List[dict]:
     ]
 
 
-def get_anime_url(query: str, anime_list: List[dict]) -> Optional[str]:
+def get_anime(query: str, anime_list: List[dict]) -> Optional[dict]:
     """
     Get an anime url from a list of animes.
     :param query: the search query.
     :param anime_list: the list of animes.
-    :return: the anime url if found, else None.
+    :return: the anime id if found, else None.
     """
     max_ratio, match = 0, None
     matcher = SequenceMatcher(b=query.lower())
@@ -37,8 +37,7 @@ def get_anime_url(query: str, anime_list: List[dict]) -> Optional[str]:
             max_ratio = ratio
             match = anime
     if match:
-        return (f'https://anidb.net/perl-bin/'
-                f'animedb.pl?show=anime&aid={match["id"]}')
+        return match
 
 
 def __format_anime(anime_dict: dict) -> Optional[dict]:

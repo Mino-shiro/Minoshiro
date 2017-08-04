@@ -7,6 +7,7 @@ from roboragi.data_controller import DataController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
 from roboragi.web_api import AniList
+from roboragi.web_api.ani_list import get_synonyms
 from roboragi.web_api.mal import get_entry_details
 
 __all__ = ['cache_top_40', 'cache_top_pages']
@@ -83,8 +84,8 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager):
         anime_name = romanji_name or english_name
         if not anime_name:
             continue
-        await __cache_anilist_id(romanji_name, medium, anilist_id, db)
-        await __cache_anilist_id(english_name, medium, anilist_id, db)
+        for syn in get_synonyms(entry):
+            await __cache_anilist_id(syn, medium, anilist_id, db)
         await __cache_mal_entry(
             db, anime_name, medium, mal_headers, session_manager
         )
