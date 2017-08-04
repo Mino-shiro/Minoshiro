@@ -15,15 +15,15 @@ from .utils.pre_cache import cache_top_40, cache_top_pages
 
 
 class Roboragi:
-    """
-
-    """
-
     def __init__(self, session_manager: SessionManager,
                  db_controller: DataController, mal_config: dict,
-                 anilist_config: dict, *, loop=None, logger=None):
+                 anilist_config: dict, *, logger=None, loop=None):
         """
-        Initialize the class.
+        It is suggested to use one of the class methods to create the instance
+        if you wish to use one of the data controllers provided by the library.
+
+        Make sure you run the `pre_cache` method if you initializeed the class
+        directly from the `__init__` method.
 
         :param session_manager:
             The `SessionManager` instance.
@@ -35,7 +35,9 @@ class Roboragi:
 
         :param mal_config:
             A dict for MAL authorization.
-            It must contain the keys "user" and "password"
+            It must contain the keys:
+                user: Your MAL username
+                password: Your MAL password
 
             It may also contain a key "description" for the description you
             wish to use in the auth header.
@@ -48,9 +50,13 @@ class Roboragi:
                 id: Your Anilist client id
                 secret: Your Anilist client secret.
 
-        :param loop:
-
         :param logger:
+            The logger object. If it's not provided, will use the
+            defualt logger provided by the library.
+
+        :param loop:
+            An asyncio event loop. If not provided will use the default
+            event loop.
         """
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
         assert mal_user and mal_pass, ('Please provide MAL user'
@@ -103,9 +109,10 @@ class Roboragi:
             If this key is not present, the schema defaults to "roboragi"
 
         :param mal_config:
-
             A dict for MAL authorization.
-            It must contain the keys "user" and "password"
+            It must contain the keys:
+                user: Your MAL username
+                password: Your MAL password
 
             It may also contain a key "description" for the description you
             wish to use in the auth header.
