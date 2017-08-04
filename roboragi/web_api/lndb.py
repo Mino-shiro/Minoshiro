@@ -25,7 +25,6 @@ async def get_light_novel_url(
                 'http://lndb.info/search?',
                 params=params) as resp:
             if 'light_novel' in str(resp.url):
-                print('test')
                 s = (str(resp.url)).rsplit('/', 1)
                 title = s[-1].replace('_', ' ')
                 return {'title': title, 'url': str(resp.url)}
