@@ -26,7 +26,6 @@ async def get_manga_url(
         async with await session_manager.get(
                 'https://mangaupdates.com/series.html', params=params) as resp:
             html = await resp.text()
-            print(html)
     except Exception as e:
         session_manager.logger.warn(str(e))
         return
