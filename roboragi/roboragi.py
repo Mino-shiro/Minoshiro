@@ -1,8 +1,10 @@
 from base64 import b64encode
+from time import time
 from typing import Optional
 
 from aiohttp import ClientSession
 
+from roboragi.data import data_path
 from roboragi.data_controller import DataController, PostgresController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
@@ -50,6 +52,46 @@ class Roboragi:
         )
 
         self.logger = logger or get_default_logger()
+
+        self.__anidb_list = None
+        self.__anidb_time = None
+        self.__initialized = False
+
+    def __await__(self):
+        """
+        Mutate self to get the datadump from anidb.
+        If the data is less than 1 day old, don't request the data.
+        :return: self
+        """
+        now = int(time())
+        time_path = data_path.joinpath('.anidb_time')
+
+        if not self.__initialized:
+            if time_path.is_file():
+                with time_path.open() as time_file:
+                    self.__anidb_time = int(time_file.read())
+            else:
+                ani_db.write_timestamp(now)
+                self.__anidb_time = now
+
+        if self.__anidb_list and now - self.__anidb_time < 86400:
+            return self
+
+        dump_path = data_path.joinpath('anime-titles.xml.gz')
+        if dump_path.is_file() and now - self.__anidb_time < 86400:
+            with dump_path.open() as dump_file:
+                xml = dump_file.read()
+        else:
+            xml = ani_db.get_data_dump(self.session_manager).__await__()
+            with dump_path.open('w+') as write_dump:
+                write_dump.write(xml)
+            if self.__initialized:
+                self.__anidb_time = now
+                ani_db.write_timestamp(self.__anidb_time)
+
+        self.__anidb_list = ani_db.process_xml(xml)
+        self.__initialized = True
+        return self
 
     @classmethod
     async def from_postgres(cls, db_config: dict, mal_config: dict,
@@ -104,8 +146,8 @@ class Roboragi:
         )
 
         session_manager = SessionManager(ClientSession(), logger)
-        instance = cls(session_manager, db_controller,
-                       mal_config, anilist_config, logger)
+        instance = await cls(session_manager, db_controller,
+                             mal_config, anilist_config, logger)
         await instance.__pre_cache(cache_pages)
         return instance
 
@@ -143,24 +185,25 @@ class Roboragi:
         :param query: the search term.
         :return: dict with anime info.
         """
+        await self
         try:
             cached_anime = await self.get_cached(anime_title, Medium.ANIME)
             if cached_anime is not None:
                 return cached_anime
             entry_resp = {}
             entry_resp['anilist'] = await self.anilist_client.get_entry_details(
-                    self.session,
-                    Medium.ANIME,
-                    anime_title) if self.anilist_client else None
+                self.session,
+                Medium.ANIME,
+                anime_title) if self.anilist_client else None
             entry_resp['mal'] = await mal.get_entry_details(
-                    self.session,
-                    self.mal_headers,
-                    Medium.ANIME,
-                    anime_title) if self.mal_headers else None
+                self.session,
+                self.mal_headers,
+                Medium.ANIME,
+                anime_title) if self.mal_headers else None
             entry_resp['anidb'] = await ani_db.get_anime_url(
-                    self.session, anime_title)
+                self.session, anime_title)
             entry_resp['animeplanet'] = await anime_planet.get_anime_url(
-                    self.session, anime_title)
+                self.session, anime_title)
             self.__cache_entry(entry_resp, Medium.ANIME)
             return entry_resp
         except Exception as e:
@@ -179,14 +222,14 @@ class Roboragi:
                 return cached_manga
             entry_resp = {}
             entry_resp['anilist'] = await self.anilist_client.get_entry_details(
-                    self.session,
-                    Medium.MANGA,
-                    manga_title) if self.anilist_client else None
+                self.session,
+                Medium.MANGA,
+                manga_title) if self.anilist_client else None
             entry_resp['mal'] = await mal.get_entry_details(
-                    self.session,
-                    self.mal_headers,
-                    Medium.MANGA,
-                    manga_title) if self.mal_headers else None
+                self.session,
+                self.mal_headers,
+                Medium.MANGA,
+                manga_title) if self.mal_headers else None
             entry_resp['animeplanet'] = await anime_planet.get_manga_url(
                 self.session,
                 manga_title)
@@ -211,14 +254,14 @@ class Roboragi:
                 return cached_novel
             entry_resp = {}
             entry_resp['anilist'] = await self.anilist_client.get_entry_details(
-                    self.session,
-                    Medium.LN,
-                    novel_title) if self.anilist_client else None
+                self.session,
+                Medium.LN,
+                novel_title) if self.anilist_client else None
             entry_resp['mal'] = await mal.get_entry_details(
-                    self.session,
-                    self.mal_headers,
-                    Medium.LN,
-                    novel_title) if self.mal_headers else None
+                self.session,
+                self.mal_headers,
+                Medium.LN,
+                novel_title) if self.mal_headers else None
             entry_resp['lndb'] = lndb.get_light_novel_url(
                 self.session,
                 novel_title)
@@ -237,7 +280,7 @@ class Roboragi:
         if identifiers is not None:
             for site in identifiers.keys():
                 medium_data = await self.db_controller.medium_data_by_id(
-                            identifiers[site.name], Medium, site)
+                    identifiers[site.name], Medium, site)
                 if medium_data is not None:
                     entry_resp[site.name] = medium_data
                 else:

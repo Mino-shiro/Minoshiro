@@ -2,7 +2,6 @@
 Search AniDB for anime.
 """
 from difflib import SequenceMatcher
-from time import time
 from typing import List, Optional
 
 from xmltodict import parse
@@ -11,18 +10,19 @@ from roboragi.data import data_path
 from roboragi.session_manager import SessionManager
 
 
-async def get_data_dump(session_manager: SessionManager):
+def write_timestamp(time_stamp: int):
+    with data_path.joinpath('.anidb_time').open('w+') as time_file:
+        time_file.write(str(time_stamp))
+
+
+async def get_data_dump(session_manager: SessionManager) -> str:
     """
     Get the data dump from anidb and write it to file.
     :param session_manager: the `SessionManager` instance.
     """
     url = 'http://anidb.net/api/anime-titles.xml.gz'
     async with await session_manager.get(url) as resp:
-        xml = await resp.read()
-    with data_path.joinpath('anime-titles.xml.gz').open('w+') as file:
-        file.write(xml)
-    with data_path.joinpath('.anidb_time').open('w+') as time_file:
-        time_file.write(str(int(time())))
+        return await resp.read()
 
 
 def process_xml(xml_string: str) -> List[dict]:
