@@ -256,7 +256,7 @@ class Roboragi:
         if cached_anilist:
             return cached_anilist
 
-        anilist_id = cached_ids.get(Site.ANILIST)
+        anilist_id = cached_ids.get(Site.ANILIST) if cached_ids else None
 
         try:
             if anilist_id:
@@ -309,7 +309,7 @@ class Roboragi:
         cached_mal = cached_data.get(Site.MAL)
         if cached_mal:
             return cached_mal
-        mal_id = cached_ids.get(Site.MAL)
+        mal_id = cached_ids.get(Site.MAL) if cached_ids else None
         if mal_id:
             cached_title = await self.db_controller.get_mal_title(
                 mal_id, medium)
@@ -356,7 +356,7 @@ class Roboragi:
         """
         if medium != Medium.ANIME:
             return
-        cached_id = cached_ids.get(Site.ANIDB)
+        cached_id = cached_ids.get(Site.ANIDB) if cached_ids else None
         base_url = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid='
         if cached_id:
             return f'{base_url}/{cached_id}'
