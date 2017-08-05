@@ -22,13 +22,11 @@ async def get_light_novel_url(
     params = {
         's': quote(query)
     }
-    try:
-        async with await session_manager.get(
-                'http://www.novelupdates.com/?', params=params) as resp:
-            html = await resp.text()
-    except Exception as e:
-        session_manager.logger.warn(str(e))
-        return
+
+    async with await session_manager.get(
+            'http://www.novelupdates.com/?', params=params) as resp:
+        html = await resp.text()
+
     nu = PyQuery(html)
     ln_list = []
 

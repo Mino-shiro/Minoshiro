@@ -16,6 +16,17 @@ from .logger import get_default_logger
 from .utils.pre_cache import cache_top_40, cache_top_pages
 
 
+def timer(func):
+    async def wrap(*args, **kwargs):
+        start = time()
+        res = await func(*args, **kwargs)
+        end = time()
+        print(func.__name__, end - start)
+        return res
+
+    return wrap
+
+
 class Roboragi:
     def __init__(self, session_manager: SessionManager,
                  db_controller: DataController, mal_config: dict,
@@ -124,7 +135,8 @@ class Roboragi:
 
         :param anilist_config:
             A dict for Anilist authorization. It must contain the keys:
-                "id" for client id and "secret" for client secret.
+                id: Your Anilist client id
+                secret: Your Anilist client secret.
 
         :param cache_pages:
             The number of pages of anime and manga from Anilist to cache
@@ -177,6 +189,9 @@ class Roboragi:
                     self.anilist, self.mal_headers, cache_pages
                 )
         self.logger.info('Data populated.')
+        self.logger.info('Fetching anidb datadump...')
+        await self.__fetch_anidb()
+        self.logger.info('Anidb datadump fetched.')
 
     async def yield_data(self, query: str, medium: Medium,
                          sites: Iterable[Site] = None):
@@ -195,7 +210,7 @@ class Roboragi:
             an asynchronous generator that yields the site and data
             in a tuple for all sites requested.
         """
-        sites = sites or list(Site)
+        sites = sites if sites else list(Site)
         cached_data, cached_id = await self.__get_cached(query, medium)
         to_be_cached = {}
         names = []
@@ -209,12 +224,17 @@ class Roboragi:
             if id_:
                 to_be_cached[site] = id_
 
+        start = time()
         for site, id_ in to_be_cached.items():
             for name in chain(*names):
+                print(name, site, id_)
                 await self.db_controller.set_identifier(
                     name, medium, site, id_
                 )
+        end = time()
+        print(start - end)
 
+    @timer
     async def get_data(self, query: str, medium: Medium,
                        sites: Iterable[Site] = None) -> Dict[Site, dict]:
         """
@@ -234,6 +254,7 @@ class Roboragi:
             query, medium, sites
         )}
 
+    @timer
     async def __fetch_anidb(self):
         """
         Fetch data dump from anidb if one of the following is True:
@@ -241,6 +262,12 @@ class Roboragi:
             The data dump file is more than a day old.
         """
         now = int(time())
+
+        def __write_time(p):
+            with p.open('w+') as tfw:
+                tfw.write(str(now))
+            self.__anidb_time = now
+
         if self.__anidb_list and now - self.__anidb_time < 86400:
             return
 
@@ -251,20 +278,22 @@ class Roboragi:
             with time_path.open() as tf:
                 self.__anidb_time = int(tf.read())
         else:
-            with time_path.open('w+') as tfw:
-                tfw.write(str(now))
-            self.__anidb_time = now
-        if (not data_path.is_file()) or ((now - self.__anidb_time) >= 86400):
+            __write_time(time_path)
+
+        if not dump_path.is_file() or now - self.__anidb_time >= 86400:
             async with await self.session_manager.get(
                     'http://anidb.net/api/anime-titles.xml.gz'
             ) as resp:
                 with dump_path.open('wb') as f:
                     f.write(await resp.read())
+                __write_time(time_path)
+
         with dump_path.open() as xml_file:
             xml = xml_file.read()
 
         self.__anidb_list = ani_db.process_xml(xml)
 
+    @timer
     async def __find_anilist(self, cached_data, cached_ids, medium, query):
         """
         Find Anilist data.
@@ -303,7 +332,7 @@ class Roboragi:
                     self.session_manager, medium, query
                 )
         except Exception as e:
-            self.logger.warning(str(e))
+            self.logger.warning(f'Error raised by Anilist: {e}')
             resp = None
 
         id_ = str(resp['id']) if resp else None
@@ -315,6 +344,7 @@ class Roboragi:
                     id_, medium, Site.ANILIST, resp
                 )
 
+    @timer
     async def __find_mal(self, cached_data, cached_ids, medium, query):
         """
         Find MAL data.
@@ -351,7 +381,7 @@ class Roboragi:
                 self.session_manager, self.mal_headers, medium, query, mal_id
             )
         except Exception as e:
-            self.logger.warning(str(e))
+            self.logger.warning(f'Error raised by MAL: {e}')
             resp = None
 
         id_ = str(resp['id']) if resp else None
@@ -366,6 +396,7 @@ class Roboragi:
                     id_, medium, Site.MAL, resp
                 )
 
+    @timer
     async def __find_anidb(self, cached_ids, medium, query):
         """
         Find Anidb url.
@@ -397,6 +428,7 @@ class Roboragi:
         res['url'] = f'{base_url}/{id_}'
         return res, id_
 
+    @timer
     async def __find_ani_planet(self, medium: Medium, query: str):
         """
         Find a anime or manga url from ani planet.
@@ -418,12 +450,14 @@ class Roboragi:
                     self.session_manager, query
                 )}, None
         except Exception as e:
-            self.logger.warning(str(e))
+            self.logger.warning(f'Error raised by Ani-planet: {e}')
         return None, None
 
+    @timer
     async def __find_kitsu(self, medium: Medium, query: str):
         pass
 
+    @timer
     async def __find_manga_updates(self, medium, query):
         """
         Find a manga updates url.
@@ -440,9 +474,10 @@ class Roboragi:
                     self.session_manager, query
                 )}, None
             except Exception as e:
-                self.logger.warning(str(e))
+                self.logger.warning(f'Error raised by Manga Updates: {e}')
         return None, None
 
+    @timer
     async def __find_lndb(self, medium, query):
         """
         Find an lndb url.
@@ -459,9 +494,10 @@ class Roboragi:
                     self.session_manager, query
                 )}, None
             except Exception as e:
-                self.logger.warning(str(e))
+                self.logger.warning(f'Error raised by LNDB: {e}')
         return None, None
 
+    @timer
     async def __find_novel_updates(self, medium, query):
         """
         Find a Novel Updates url.
@@ -478,12 +514,14 @@ class Roboragi:
                     self.session_manager, query
                 )}, None
             except Exception as e:
-                self.logger.warning(str(e))
+                self.logger.warning(f'Error raised by Novel Updates: {e}')
         return None, None
 
+    @timer
     async def __find_vndb(self, medium, query):
         pass
 
+    @timer
     async def __get_cached(self, query: str, medium: Medium) -> tuple:
         """
         Get cached data from the database.
@@ -503,6 +541,7 @@ class Roboragi:
 
         return entry_resp, identifiers
 
+    @timer
     async def __get_result(self, cached_data, cached_id, query,
                            site: Site, medium: Medium) -> tuple:
         """

@@ -83,16 +83,13 @@ class AniList:
         params = {
             'access_token': self.access_token
         }
-        if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
-            raise ValueError('Only Anime, Manga and LN are supported.')
+
         medium_str = 'anime' if medium == Medium.ANIME else 'manga'
         url = f'{self.base_url}/{medium_str}/{entry_id}'
-        try:
-            async with await session_manager.get(url, params=params) as resp:
-                js = await resp.json()
-        except Exception as e:
-            session_manager.logger.warn(str(e))
-            return
+
+        async with await session_manager.get(url, params=params) as resp:
+            js = await resp.json()
+
         return js
 
     async def get_entry_details(
@@ -115,16 +112,14 @@ class AniList:
         params = {
             'access_token': self.access_token
         }
-        try:
-            if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
-                raise ValueError('Only Anime, Manga and LN are supported.')
-            medium_str = 'anime' if medium == Medium.ANIME else 'manga'
-            url = f'{self.base_url}/{medium_str}/search/{quote(clean_query)}'
-            async with await session_manager.get(url, params=params) as resp:
-                thing = await resp.json()
-        except Exception as e:
-            session_manager.logger.warn(str(e))
-            return
+
+        if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
+            raise ValueError('Only Anime, Manga and LN are supported.')
+        medium_str = 'anime' if medium == Medium.ANIME else 'manga'
+        url = f'{self.base_url}/{medium_str}/search/{quote(clean_query)}'
+        async with await session_manager.get(url, params=params) as resp:
+            thing = await resp.json()
+
         for entry in thing:
             if medium == 'manga' and 'novel' in entry['type'].lower():
                 thing.remove(entry)
@@ -149,10 +144,7 @@ class AniList:
             self.access_token = await self.get_token()
         url = f'{self.base_url}/genre_list/{med_str}'
         params = {'access_token': self.access_token}
-        try:
-            return await session_manager.get_json(url, params)
-        except HTTPStatusError as e:
-            session_manager.logger.warn(str(e))
+        return await session_manager.get_json(url, params)
 
     async def get_top_40_by_genre(
             self,
@@ -175,10 +167,7 @@ class AniList:
             'genres': genre,
             'sort': 'popularity-desc'
         }
-        try:
-            return await session_manager.get_json(url, params)
-        except Exception as e:
-            session_manager.logger.warn(str(e))
+        return await session_manager.get_json(url, params)
 
     async def get_page_by_popularity(
             self,
@@ -201,10 +190,8 @@ class AniList:
             'page': page,
             'sort': 'popularity-desc'
         }
-        try:
-            return await session_manager.get_json(url, params)
-        except Exception as e:
-            session_manager.logger.warn(str(e))
+
+        return await session_manager.get_json(url, params)
 
     def __get_closest(self, query: str, thing_list: List[dict]) -> dict:
         """

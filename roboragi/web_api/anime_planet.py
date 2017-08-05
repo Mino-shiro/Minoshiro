@@ -32,15 +32,11 @@ async def get_anime_url(
     params = {
         'name': quote(query)
     }
-    try:
-        async with await session_manager.get(
-                "http://www.anime-planet.com/anime/all?",
-                params=params) as resp:
-            html = await resp.text()
-        ap = PyQuery(html)
-    except Exception as e:
-        session_manager.logger.warn(str(e))
-        return
+    async with await session_manager.get(
+            "http://www.anime-planet.com/anime/all?",
+            params=params) as resp:
+        html = await resp.text()
+    ap = PyQuery(html)
 
     if ap.find('.cardDeck.pure-g.cd-narrow[data-type="anime"]'):
         anime_list = []
@@ -53,7 +49,6 @@ async def get_anime_url(
         return __get_closest(query, anime_list).get('url')
     else:
         return ap.find("meta[property='og:url']").attr('content')
-    return None
 
 
 async def get_manga_url(
@@ -71,34 +66,27 @@ async def get_manga_url(
         }
     if author_name:
         params['author'] = quote(author_name)
-        try:
+        async with await session_manager.get(
+                "http://www.anime-planet.com/manga/all?",
+                params=params) as resp:
+            html = await resp.text()
+        if "No results found" in html:
+            rearranged_author_names = deque(
+                author_name.split(' '))
+            rearranged_author_names.rotate(-1)
+            rearranged_name = ' '.join(rearranged_author_names)
+            params['author'] = quote(rearranged_name)
             async with await session_manager.get(
                     "http://www.anime-planet.com/manga/all?",
                     params=params) as resp:
                 html = await resp.text()
-            if "No results found" in html:
-                rearranged_author_names = deque(
-                    author_name.split(' '))
-                rearranged_author_names.rotate(-1)
-                rearranged_name = ' '.join(rearranged_author_names)
-                params['author'] = quote(rearranged_name)
-                async with await session_manager.get(
-                        "http://www.anime-planet.com/manga/all?",
-                        params=params) as resp:
-                    html = await resp.text()
-        except Exception as e:
-            session_manager.logger.warn(str(e))
-            return
     else:
-        try:
-            async with await session_manager.get(
-                    "http://www.anime-planet.com/manga/all?",
-                    params=params) as resp:
-                html = await resp.text()
-            ap = PyQuery(html)
-        except Exception as e:
-            session_manager.logger.warn(str(e))
-            return
+        async with await session_manager.get(
+                "http://www.anime-planet.com/manga/all?",
+                params=params) as resp:
+            html = await resp.text()
+    ap = PyQuery(html)
+
 
     if ap.find('.cardDeck.pure-g.cd-narrow[data-type="manga"]'):
         manga_list = []
