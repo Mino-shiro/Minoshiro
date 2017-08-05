@@ -76,8 +76,8 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager):
     :param session_manager: the `SessionManager` instance.
     """
     async for entry in async_iter:
-        anilist_id = entry['id']
-        await db.set_medium_data(str(anilist_id), medium, Site.ANILIST, entry)
+        anilist_id = str(entry['id'])
+        await db.set_medium_data(anilist_id, medium, Site.ANILIST, entry)
 
         romanji_name = entry.get('title_romaji')
         english_name = entry.get('title_english')
@@ -105,16 +105,24 @@ async def __top_40_anilist(medium: Medium, session_manager: SessionManager,
     :return: an asynchronous generator that yields top 40 anime/manga
              for each genre in Anilist.
     """
-    genres = await anilist.get_genres(session_manager, medium)
+    try:
+        genres = await anilist.get_genres(session_manager, medium)
+    except Exception as e:
+        session_manager.logger.warning(f'Error raised by Anilist: {e}')
+        genres = None
     if not genres:
         return
     for entry in genres:
         genre = entry.get('genre')
         if not genre:
             continue
-        res = await anilist.get_top_40_by_genre(
-            session_manager, medium, genre
-        )
+        try:
+            res = await anilist.get_top_40_by_genre(
+                session_manager, medium, genre
+            )
+        except Exception as e:
+            session_manager.logger.warning(f'Error raised by Anilist: {e}')
+            res = None
         if res:
             for data in res:
                 id_ = data.get('id')
@@ -140,10 +148,18 @@ async def __n_popular_anilist(
              yields top n pages of anime/manga for Anilist.
     """
     for i in range(page_count):
-        page_entries = await anilist.get_page_by_popularity(
-            session_manager, medium, i + 1
-        )
-        if not page_entries:
+        try:
+            page_entries = await anilist.get_page_by_popularity(
+                session_manager, medium, i + 1
+            )
+            error = False
+        except Exception as e:
+            session_manager.logger.warning(f'Error raised by Anilist: {e}')
+            page_entries = None
+            error = True
+        if not page_entries and error:
+            continue
+        elif not page_entries:
             break
         for entry in page_entries:
             id_ = entry.get('id')
@@ -174,10 +190,13 @@ async def __cache_mal_entry(db, name, medium, mal_headers, session_manager):
     """
     id_dict = await db.get_identifier(name, medium) or {}
     mal_id = id_dict.get(Site.MAL)
-
-    mal_entry = await get_entry_details(
-        session_manager, mal_headers, medium, name, mal_id
-    )
+    try:
+        mal_entry = await get_entry_details(
+            session_manager, mal_headers, medium, name, mal_id
+        )
+    except Exception as e:
+        session_manager.logger.warning(f'Error raised by MAL: {e}')
+        mal_entry = None
     if not mal_entry:
         return
 

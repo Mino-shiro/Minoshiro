@@ -23,20 +23,15 @@ async def get_entry_details(
     :param thing_id: thing id.
     :return: dict with thing info.
     """
-    if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
-        raise ValueError('Only Anime, Manga and LN are supported.')
     medium_str = 'anime' if medium == Medium.ANIME else 'manga'
     url = (f'https://myanimelist.net/api/{medium_str}/'
            f'search.xml?q={quote(query)}')
-    try:
-        async with await session_manager.get(
-                url, headers=header_info) as resp:
-            html = await resp.text()
-            if not html:
-                return
-    except Exception as e:
-        session_manager.logger.warn(str(e))
-        return
+    async with await session_manager.get(
+            url, headers=header_info) as resp:
+        html = await resp.text()
+        if not html:
+            return
+
     thing_list = []
     for thing in ET.fromstring(html).findall('./entry'):
         synonyms = None

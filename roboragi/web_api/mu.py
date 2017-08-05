@@ -22,13 +22,11 @@ async def get_manga_url(
     params = {
         'search': quote(query)
     }
-    try:
-        async with await session_manager.get(
-                'https://mangaupdates.com/series.html', params=params) as resp:
-            html = await resp.text()
-    except Exception as e:
-        session_manager.logger.warn(str(e))
-        return
+
+    async with await session_manager.get(
+            'https://mangaupdates.com/series.html', params=params) as resp:
+        html = await resp.text()
+
     mu = PyQuery(html)
     manga_list = []
     for thing in mu.find('.series_rows_table tr'):

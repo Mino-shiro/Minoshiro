@@ -15,5 +15,6 @@ def get_default_logger():
     console_handler.setFormatter(Formatter(
         '%(asctime)s %(levelname)s %(name)s: %(message)s')
     )
+    logger.addHandler(console_handler)
     logger.setLevel(INFO)
     return logger

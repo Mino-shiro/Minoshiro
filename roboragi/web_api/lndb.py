@@ -19,20 +19,17 @@ async def get_light_novel_url(
     """
     query = query.replace(' ', '+')
     params = f'text={query}'
-    try:
 
-        async with await session_manager.get(
-                'http://lndb.info/search?',
-                params=params) as resp:
-            if 'light_novel' in str(resp.url):
-                s = (str(resp.url)).rsplit('/', 1)
-                title = s[-1].replace('_', ' ')
-                return {'title': title, 'url': str(resp.url)}
-            html = await resp.text()
-        lndb = PyQuery(html)
-    except Exception as e:
-            session_manager.logger.warn(str(e))
-            return
+    async with await session_manager.get(
+            'http://lndb.info/search?',
+            params=params) as resp:
+        if 'light_novel' in str(resp.url):
+            s = (str(resp.url)).rsplit('/', 1)
+            title = s[-1].replace('_', ' ')
+            return {'title': title, 'url': str(resp.url)}
+        html = await resp.text()
+    lndb = PyQuery(html)
+
     ln_list = []
     for thing in lndb.find('#bodylightnovelscontentid table tr'):
         if PyQuery(thing).find('a').text():
@@ -40,7 +37,7 @@ async def get_light_novel_url(
                 'title': PyQuery(thing).find('a').text(),
                 'url': PyQuery(thing).find('a').attr('href')
             }
-            ln_list.append(data)  
+            ln_list.append(data)
     return __get_closest(query, ln_list).get('url')
 
 
