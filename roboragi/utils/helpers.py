@@ -25,6 +25,10 @@ def get_synonyms(entry: dict, site: Site):
     elif site == Site.MAL:
         keys = ('title', 'english')
         lst_key = 'synonyms'
+    elif site == Site.ANIDB:
+        keys = ()
+        lst_key = 'titles'
+        pass
     else:
         return
 
@@ -32,6 +36,7 @@ def get_synonyms(entry: dict, site: Site):
         val = entry.get(key)
         if val:
             yield val
+
     lst = entry.get(lst_key, ())
     if not isinstance(lst, str):
         for syn in lst:

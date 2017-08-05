@@ -1,7 +1,8 @@
 from asyncio import get_event_loop
 from base64 import b64encode
+from itertools import chain
 from time import time
-from typing import Any, Dict
+from typing import Dict, Iterable
 
 from aiohttp import ClientSession
 
@@ -177,31 +178,61 @@ class Roboragi:
                 )
         self.logger.info('Data populated.')
 
-    async def find_anime(self, query: str) -> dict:
+    async def yield_data(self, query: str, medium: Medium,
+                         sites: Iterable[Site] = None):
         """
-        Searches all of the databases and returns the info.
+        Yield the data for the search query for all sites.
 
-        :param query: the search term.
+        :param query: the search query.
 
-        :return: dict with anime info.
-        """
-        return await self.__get_results(query, Medium.ANIME)
+        :param medium: the medium type.
 
-    async def find_manga(self, query: str) -> dict:
-        """
-        Searches all of the databases and returns the info
-        :param query: the search term.
-        :return: dict with manga info.
-        """
-        return await self.__get_results(query, Medium.MANGA)
+        :param sites:
+            an iterable of sites desired. If None is provided, will
+            search all sites by default.
 
-    async def find_novel(self, query: str) -> dict:
+        :return:
+            an asynchronous generator that yields the site and data
+            in a tuple for all sites requested.
         """
-        Searches all of the databases and returns the info
-        :param query: the search term.
-        :return: dict with novel info.
+        sites = sites or list(Site)
+        cached_data, cached_id = await self.__get_cached(query, medium)
+        to_be_cached = {}
+        names = []
+        for site in sites:
+            res, id_ = await self.__get_result(
+                cached_data, cached_id, query, site, medium
+            )
+            if res:
+                yield site, res
+                names.append(get_synonyms(res, site))
+            if id_:
+                to_be_cached[site] = id_
+
+        for site, id_ in to_be_cached.items():
+            for name in chain(*names):
+                await self.db_controller.set_identifier(
+                    name, medium, site, id_
+                )
+
+    async def get_data(self, query: str, medium: Medium,
+                       sites: Iterable[Site] = None) -> Dict[Site, dict]:
         """
-        return await self.__get_results(query, Medium.LN)
+        Get the data for the search query in a dict.
+
+        :param query: the search query.
+
+        :param medium: the medium type.
+
+        :param sites:
+            an iterable of sites desired. If None is provided, will
+            search all sites by default.
+
+        :return: Data for all sites in a dict {Site: data}
+        """
+        return {site: val async for site, val in self.yield_data(
+            query, medium, sites
+        )}
 
     async def __fetch_anidb(self):
         """
@@ -252,13 +283,13 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: the anilist data if found.
+        :return: the anilist data and id in a tuple if found.
         """
         if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
-            return
+            return None, None
         cached_anilist = cached_data.get(Site.ANILIST)
         if cached_anilist:
-            return cached_anilist
+            return cached_anilist, str(cached_anilist['id'])
 
         anilist_id = cached_ids.get(Site.ANILIST) if cached_ids else None
 
@@ -275,15 +306,11 @@ class Roboragi:
             self.logger.warning(str(e))
             resp = None
 
+        id_ = str(resp['id']) if resp else None
         try:
-            return resp
+            return resp, id_
         finally:
-            if resp:
-                id_ = str(resp['id'])
-                for syn in get_synonyms(resp, Site.ANILIST):
-                    await self.db_controller.set_identifier(
-                        syn, medium, Site.ANILIST, id_
-                    )
+            if resp and id_:
                 await self.db_controller.set_medium_data(
                     id_, medium, Site.ANILIST, resp
                 )
@@ -306,13 +333,13 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: the MAL data if found.
+        :return: the MAL data and id in a tuple  if found.
         """
         if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
-            return
+            return None, None
         cached_mal = cached_data.get(Site.MAL)
         if cached_mal:
-            return cached_mal
+            return cached_mal, str(cached_mal['id'])
         mal_id = cached_ids.get(Site.MAL) if cached_ids else None
         if mal_id:
             cached_title = await self.db_controller.get_mal_title(
@@ -327,18 +354,14 @@ class Roboragi:
             self.logger.warning(str(e))
             resp = None
 
+        id_ = str(resp['id']) if resp else None
         try:
-            return resp
+            return resp, id_
         finally:
-            if resp:
-                id_ = str(resp['id'])
+            if resp and id_:
                 await self.db_controller.set_mal_title(
                     id_, medium, resp['title']
                 )
-                for syn in get_synonyms(resp, Site.MAL):
-                    await self.db_controller.set_identifier(
-                        syn, medium, Site.MAL, id_
-                    )
                 await self.db_controller.set_medium_data(
                     id_, medium, Site.MAL, resp
                 )
@@ -356,28 +379,23 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: The url if found.
+        :return: The data and id in a tuple  if found.
         """
         if medium != Medium.ANIME:
-            return
+            return None, None
         cached_id = cached_ids.get(Site.ANIDB) if cached_ids else None
         base_url = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid='
         if cached_id:
-            return f'{base_url}/{cached_id}'
+            return {'url': f'{base_url}/{cached_id}'}, cached_id
         await self.__fetch_anidb()
         res = await self.loop.run_in_executor(
             None, ani_db.get_anime, query, self.__anidb_list
         )
-
-        if res:
-            id_ = res['id']
-            try:
-                return f'{base_url}/{id_}'
-            finally:
-                for title in res['titles']:
-                    await self.db_controller.set_identifier(
-                        title, Medium.ANIME, Site.ANIDB, id_
-                    )
+        if not res:
+            return None, None
+        id_ = res['id']
+        res['url'] = f'{base_url}/{id_}'
+        return res, id_
 
     async def __find_ani_planet(self, medium: Medium, query: str):
         """
@@ -387,20 +405,21 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: the ani planet url if found.
+        :return: the ani planet data and id in a tuple  if found.
         """
         try:
             if medium == Medium.ANIME:
-                return await anime_planet.get_anime_url(
+                return {'url': await anime_planet.get_anime_url(
                     self.session_manager, query
-                )
+                )}, None
 
             if medium == Medium.MANGA:
-                return await anime_planet.get_manga_url(
+                return {'url': await anime_planet.get_manga_url(
                     self.session_manager, query
-                )
+                )}, None
         except Exception as e:
             self.logger.warning(str(e))
+        return None, None
 
     async def __find_kitsu(self, medium: Medium, query: str):
         pass
@@ -413,15 +432,16 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: the url if found.
+        :return: the data and id in a tuple if found.
         """
         if medium == Medium.MANGA:
             try:
-                return await mu.get_manga_url(
+                return {'url': await mu.get_manga_url(
                     self.session_manager, query
-                )
+                )}, None
             except Exception as e:
                 self.logger.warning(str(e))
+        return None, None
 
     async def __find_lndb(self, medium, query):
         """
@@ -431,15 +451,16 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: the lndb url if found.
+        :return: the lndb data and id in a tuple if found.
         """
         if medium == Medium.LN:
             try:
-                return await lndb.get_light_novel_url(
+                return {'url': await lndb.get_light_novel_url(
                     self.session_manager, query
-                )
+                )}, None
             except Exception as e:
                 self.logger.warning(str(e))
+        return None, None
 
     async def __find_novel_updates(self, medium, query):
         """
@@ -449,15 +470,16 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: the url if found.
+        :return: the data and id in a tuple if found.
         """
         if medium == Medium.LN:
             try:
-                return await nu.get_light_novel_url(
+                return {'url': await nu.get_light_novel_url(
                     self.session_manager, query
-                )
+                )}, None
             except Exception as e:
                 self.logger.warning(str(e))
+        return None, None
 
     async def __find_vndb(self, medium, query):
         pass
@@ -481,39 +503,48 @@ class Roboragi:
 
         return entry_resp, identifiers
 
-    async def __get_results(self, query, medium: Medium) -> Dict[Site, Any]:
+    async def __get_result(self, cached_data, cached_id, query,
+                           site: Site, medium: Medium) -> tuple:
         """
-        Get results from all sites.
+        Get results from a site.
+
+        :param cached_data: the cached data.
+
+        :param cached_id: the cached id.
+
+        :param site: the site.
 
         :param query: the search query.
 
         :param medium: the medium type.
 
-        :return: Search results from all sites if found.
+        :return: Search results data and id in a tuple for that site.
         """
-        res = {}
-        cached_data, cached_id = await self.__get_cached(query, medium)
+        if site == Site.ANILIST:
+            return await self.__find_anilist(
+                cached_data, cached_id, medium, query
+            )
 
-        res[Site.ANILIST] = await self.__find_anilist(
-            cached_data, cached_id, medium, query
-        )
+        if site == site.MAL:
+            return await self.__find_mal(cached_data, cached_id, medium, query)
 
-        res[Site.MAL] = await self.__find_mal(
-            cached_data, cached_id, medium, query
-        )
+        if site == Site.ANIDB:
+            return await self.__find_anidb(cached_id, medium, query)
 
-        res[Site.ANIDB] = await self.__find_anidb(cached_id, medium, query)
+        if site == Site.ANIMEPLANET:
+            return await self.__find_ani_planet(medium, query)
 
-        res[Site.ANIMEPLANET] = await self.__find_ani_planet(medium, query)
+        if site == Site.KITSU:
+            return None, None
 
-        res[Site.KITSU] = None
+        if site == Site.MANGAUPDATES:
+            return await self.__find_manga_updates(medium, query)
 
-        res[Site.MANGAUPDATES] = await self.__find_manga_updates(medium, query)
+        if site == Site.LNDB:
+            return await self.__find_lndb(medium, query)
 
-        res[Site.LNDB] = await self.__find_lndb(medium, query)
+        if site == Site.NOVELUPDATES:
+            return await self.__find_novel_updates(medium, query)
 
-        res[Site.NOVELUPDATES] = await self.__find_novel_updates(medium, query)
-
-        res[Site.VNDB] = None
-
-        return {k: v for k, v in res.items() if v}
+        if site == Site.VNDB:
+            return None, None
