@@ -9,6 +9,7 @@ from roboragi.data import data_path
 from roboragi.data_controller import DataController, PostgresController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
+from roboragi.utils.helpers import get_synonyms
 from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu
 from .logger import get_default_logger
 from .utils.pre_cache import cache_top_40, cache_top_pages
@@ -159,6 +160,11 @@ class Roboragi:
 
         :param cache_pages: the number of pages to cache.
         """
+        self.logger.info('Populating lookup...')
+        await self.db_controller.pre_cache()
+        self.logger.info('Lookup populated.')
+
+        self.logger.info('Populating data...')
         for med in (Medium.ANIME, Medium.MANGA):
             await cache_top_40(
                 med, self.session_manager, self.db_controller,
@@ -169,6 +175,7 @@ class Roboragi:
                     med, self.session_manager, self.db_controller,
                     self.anilist, self.mal_headers, cache_pages
                 )
+        self.logger.info('Data populated.')
 
     async def find_anime(self, query: str) -> dict:
         """
@@ -178,7 +185,6 @@ class Roboragi:
 
         :return: dict with anime info.
         """
-        await self.__fetch_anidb()
         return await self.__get_results(query, Medium.ANIME)
 
     async def find_manga(self, query: str) -> dict:
@@ -274,7 +280,7 @@ class Roboragi:
         finally:
             if resp:
                 id_ = str(resp['id'])
-                for syn in ani_list.get_synonyms(resp):
+                for syn in get_synonyms(resp, Site.ANILIST):
                     await self.db_controller.set_identifier(
                         syn, medium, Site.ANILIST, id_
                     )
@@ -329,7 +335,7 @@ class Roboragi:
                 await self.db_controller.set_mal_title(
                     id_, medium, resp['title']
                 )
-                for syn in mal.get_synonyms(resp):
+                for syn in get_synonyms(resp, Site.MAL):
                     await self.db_controller.set_identifier(
                         syn, medium, Site.MAL, id_
                     )
@@ -358,6 +364,7 @@ class Roboragi:
         base_url = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid='
         if cached_id:
             return f'{base_url}/{cached_id}'
+        await self.__fetch_anidb()
         res = await self.loop.run_in_executor(
             None, ani_db.get_anime, query, self.__anidb_list
         )

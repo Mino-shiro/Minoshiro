@@ -1,10 +1,18 @@
-from abc import abstractmethod
+from abc import ABCMeta, abstractmethod
+from json import loads
 from typing import Dict, Optional
 
+from .data_utils import get_all_synonyms
 from .enums import Medium, Site
 
+_convert_medium = {
+    'Anime': Medium.ANIME,
+    'Manga': Medium.MANGA,
+    'LN': Medium.LN
+}
 
-class DataController:
+
+class DataController(metaclass=ABCMeta):
     """
     An ABC for all classes that deals with database read write.
     """
@@ -115,3 +123,26 @@ class DataController:
             site: await self.medium_data_by_id(id_, medium, site)
             for site, id_ in id_dict.items()
         }.items() if data}
+
+    async def pre_cache(self):
+        """
+        Populate the lookup with synonyms.
+        """
+        rows = get_all_synonyms()
+        for name, type_, db_links in rows:
+            dict_ = loads(db_links)
+            mal_name, mal_id = dict_.get('mal', ('', ''))
+            anilist = dict_.get('ani')
+            ap = dict_.get('ap')
+            anidb = dict_.get('adb')
+            medium = _convert_medium[type_]
+            if mal_name and mal_id:
+                await self.set_mal_title(str(mal_id), medium, str(mal_name))
+            await self.__precache_one(name, medium, Site.MAL, mal_id)
+            await self.__precache_one(name, medium, Site.ANILIST, anilist)
+            await self.__precache_one(name, medium, Site.ANIMEPLANET, ap)
+            await self.__precache_one(name, medium, Site.ANIDB, anidb)
+
+    async def __precache_one(self, name, medium, site, id_):
+        if name and (id_ or isinstance(id_, int)):
+            await self.set_identifier(str(name), medium, site, str(id_))

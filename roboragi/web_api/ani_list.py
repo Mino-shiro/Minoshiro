@@ -1,5 +1,4 @@
 from difflib import SequenceMatcher
-from itertools import chain
 from typing import List, Optional
 from urllib.parse import quote
 
@@ -24,19 +23,6 @@ def escape(text: str) -> str:
     :return: the escaped text.
     """
     return ''.join(__escape_table.get(c, c) for c in text)
-
-
-def get_synonyms(request: dict):
-    """
-    Get all synonyms from a request.
-    :param request: the request data.
-    :return: all synonyms form the request.
-    """
-    iterator = chain(
-        (request.get('title_english'), request.get('title_romaji')),
-        request.get('synonyms', ())
-    )
-    return [s for s in iterator if s]
 
 
 class AniList:
