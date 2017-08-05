@@ -33,6 +33,6 @@ def get_synonyms(entry: dict, site: Site):
         if val:
             yield val
     lst = entry.get(lst_key, ())
-    if not isinstance(lst, str):
+    if lst and not isinstance(lst, str):
         for syn in lst:
             yield syn
