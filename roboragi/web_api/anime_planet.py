@@ -161,7 +161,6 @@ def __match_max(anime: dict, matcher: SequenceMatcher) -> float:
     :return: the max matched ratio.
     """
     max_ratio = 0
-    print(anime)
     for title in anime['titles']:
         matcher.set_seq1(title['title'].lower())
         ratio = matcher.ratio()

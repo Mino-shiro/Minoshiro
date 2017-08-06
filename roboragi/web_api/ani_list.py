@@ -142,7 +142,6 @@ class AniList:
             self.access_token = await self.get_token()
         url = f'{self.base_url}/genre_list'
         params = {'access_token': self.access_token}
-        print(url, params)
         return await session_manager.get_json(url, params)
 
     async def get_top_40_by_genre(
@@ -166,7 +165,6 @@ class AniList:
             'genres': genre,
             'sort': 'popularity-desc'
         }
-        print(url, params)
         return await session_manager.get_json(url, params)
 
     async def get_page_by_popularity(
