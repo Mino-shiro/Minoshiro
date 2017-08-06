@@ -3,11 +3,27 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-Welcome to Roboragi's documentation!
-====================================
-Insert intro here.
+.. image:: https://travis-ci.org/MaT1g3R/Roboragi.svg?branch=master
+    :target: https://travis-ci.org/MaT1g3R/Roboragi
 
-Documentation Contents
+Roboragi
+===========
+Inspired by the `original Reddit bot <https://github.com/Nihilate/Roboragi>`_,
+Roboragi is an async Python library that brings various web APIs for anime,
+manga, and light novel into one place.
+
+Requirements
+--------------
+Requires Python3.6+
+
+Features
+------------
+* Simple and modern Pythonic API using ``async/await`` syntax
+* Fetches search results from up to 9 different websites
+* Cached search results for faster access
+* Integrates with existing databases
+
+Contents
 -----------------------
 
 .. toctree::
@@ -18,3 +34,9 @@ Documentation Contents
    logging
    database
    api
+
+License
+---------------
+Roboragi is released under the MIT License.
+See `LICENSE file <https://github.com/MaT1g3R/Roboragi/blob/master/LICENSE>`_
+for details.
