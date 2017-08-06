@@ -16,17 +16,6 @@ from .logger import get_default_logger
 from .utils.pre_cache import cache_top_40, cache_top_pages
 
 
-def timer(func):
-    async def wrap(*args, **kwargs):
-        start = time()
-        res = await func(*args, **kwargs)
-        end = time()
-        print(func.__name__, end - start)
-        return res
-
-    return wrap
-
-
 class Roboragi:
     def __init__(self, session_manager: SessionManager,
                  db_controller: DataController, mal_config: dict,
@@ -224,15 +213,11 @@ class Roboragi:
             if id_:
                 to_be_cached[site] = id_
 
-        start = time()
         for site, id_ in to_be_cached.items():
             for name in chain(*names):
-                print(name, site, id_)
                 await self.db_controller.set_identifier(
                     name, medium, site, id_
                 )
-        end = time()
-        print(start - end)
 
     async def get_data(self, query: str, medium: Medium,
                        sites: Iterable[Site] = None) -> Dict[Site, dict]:
