@@ -3,6 +3,8 @@ __pycache__/
 *.directory
 .cache/
 \.idea/
+/docs/_build/
+
 
 # File ignores
 /roboragi/data/anime-titles.xml
