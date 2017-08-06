@@ -11,6 +11,7 @@ from roboragi.data_controller import DataController, PostgresController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
+from roboragi.utils.pre_cache import cache_top_pages
 from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu
 from .logger import get_default_logger
 
@@ -174,11 +175,7 @@ class Roboragi:
         self.logger.info('Lookup populated.')
 
         self.logger.info('Populating data...')
-<<<<<<< HEAD
-        """
-=======
-        start = time()
->>>>>>> 78d735299c1d83170e5ae9514f761a6e67906e5d
+
         for med in (Medium.ANIME, Medium.MANGA):
             if cache_pages:
                 await cache_top_pages(
@@ -186,12 +183,7 @@ class Roboragi:
                     self.anilist, self.mal_headers, cache_pages,
                     cache_mal_entries
                 )
-<<<<<<< HEAD
-                """
-=======
-        end = time()
-        print(end - start)
->>>>>>> 78d735299c1d83170e5ae9514f761a6e67906e5d
+
         self.logger.info('Data populated.')
         self.logger.info('Fetching anidb datadump...')
         await self.__fetch_anidb()
