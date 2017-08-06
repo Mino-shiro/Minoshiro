@@ -108,7 +108,7 @@ class PostgresController(DataController):
         """
 
         sql = """
-        SELECT site, identifier FROM {}.lookup 
+        SELECT site, identifier FROM {}.lookup
         WHERE syname=$1 AND medium=$2;
         """.format(self.schema)
 
@@ -133,12 +133,12 @@ class PostgresController(DataController):
         """
 
         sql = """
-        INSERT INTO {}.lookup VALUES ($1, $2, $3, $4) 
-        ON CONFLICT (syname, medium, site) 
+        INSERT INTO {}.lookup VALUES ($1, $2, $3, $4)
+        ON CONFLICT (syname, medium, site)
         DO UPDATE SET identifier=$4;
         """.format(self.schema)
 
-        await self.pool.execute(sql, name.strip(), medium.value,
+        await self.pool.execute(sql, name, medium.value,
                                 site.value, identifier)
 
     async def get_mal_title(self, id_: str, medium: Medium) -> Optional[str]:
@@ -152,7 +152,7 @@ class PostgresController(DataController):
         :return: The MAL title if it's found.
         """
         sql = """
-        SELECT title FROM {}.mal 
+        SELECT title FROM {}.mal
         WHERE id=$1 AND medium=$2;
         """.format(self.schema)
         return await self.pool.fetchval(sql, id_, medium.value)
@@ -169,7 +169,7 @@ class PostgresController(DataController):
         """
 
         sql = """
-        INSERT INTO {}.mal VALUES ($1, $2, $3) 
+        INSERT INTO {}.mal VALUES ($1, $2, $3)
         ON CONFLICT (id, medium) DO UPDATE
         SET title=$3;
         """.format(self.schema)
@@ -218,8 +218,8 @@ class PostgresController(DataController):
         :param data: the data for the id.
         """
         sql = """
-        INSERT INTO {} VALUES ($1, $2, $3, $4) 
-        ON CONFLICT (id, site) DO UPDATE 
+        INSERT INTO {} VALUES ($1, $2, $3, $4)
+        ON CONFLICT (id, site) DO UPDATE
         SET dict=$3, cachetime=$4;
         """.format(self.__get_table(medium))
 
