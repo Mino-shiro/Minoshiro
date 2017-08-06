@@ -106,7 +106,7 @@ async def __top_40_anilist(medium: Medium, session_manager: SessionManager,
              for each genre in Anilist.
     """
     try:
-        genres = await anilist.get_genres(session_manager, medium)
+        genres = await anilist.get_genres(session_manager)
     except Exception as e:
         session_manager.logger.warning(f'Error raised by Anilist: {e}')
         genres = None
@@ -195,7 +195,7 @@ async def __cache_mal_entry(db, name, medium, mal_headers, session_manager):
             session_manager, mal_headers, medium, name, mal_id
         )
     except Exception as e:
-        session_manager.logger.warning(f'Error raised by MAL: {e}')
+        session_manager.logger.warning(f'Error raised by MAL: {e} on item {name}')
         mal_entry = None
     if not mal_entry:
         return

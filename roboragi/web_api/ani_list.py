@@ -131,19 +131,18 @@ class AniList:
 
     async def get_genres(
             self,
-            session_manager: SessionManager,
-            medium: Medium) -> Optional[list]:
+            session_manager: SessionManager) -> Optional[list]:
         """
         Gets a list of genres for a specified medium.
         :param session_manager: the session manager.
         :param medium:medium to get genres for 'manga' or 'anime'.
         :return: list of genres
         """
-        med_str = filter_anime_manga(medium)
         if not self.access_token:
             self.access_token = await self.get_token()
-        url = f'{self.base_url}/genre_list/{med_str}'
+        url = f'{self.base_url}/genre_list'
         params = {'access_token': self.access_token}
+        print(url, params)
         return await session_manager.get_json(url, params)
 
     async def get_top_40_by_genre(
@@ -167,6 +166,7 @@ class AniList:
             'genres': genre,
             'sort': 'popularity-desc'
         }
+        print(url, params)
         return await session_manager.get_json(url, params)
 
     async def get_page_by_popularity(
