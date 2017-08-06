@@ -8,12 +8,14 @@ from typing import Dict, Iterable, Union
 from aiohttp import ClientSession
 
 from roboragi.data import data_path
-from roboragi.data_controller import DataController, PostgresController
+from roboragi.data_controller import DataController, PostgresController, \
+    SqliteController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.utils.pre_cache import cache_top_pages
-from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu, kitsu
+from roboragi.web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, \
+    mu, nu
 from .logger import get_default_logger
 
 
@@ -98,23 +100,13 @@ class Roboragi:
         self.__anidb_time = None
 
     @classmethod
-    async def from_postgres(cls, db_config: dict, mal_config: dict,
-                            anilist_config: dict, *,
-                            cache_pages: int = 0, cache_mal_entries: int = 0,
-                            logger=None, loop=None):
+    async def from_postgres(cls, mal_config: dict, anilist_config: dict,
+                            db_config: dict = None, pool=None, *,
+                            schema='roboragi', cache_pages: int = 0,
+                            cache_mal_entries: int = 0, logger=None, loop=None):
         """
         Get an instance of `Roboragi` with class `PostgresController` as the
         database controller.
-
-        :param db_config:
-            A dict of database config for the connection.
-
-            It should contain the keys in  keyword arguments for the :func:
-            `asyncpg.connection.connect` function.
-
-            It may contain an extra key "schema" for the name of the databse
-            schema.
-            If this key is not present, the schema defaults to "roboragi"
 
         :param mal_config:
             A dict for MAL authorization.
@@ -132,6 +124,18 @@ class Roboragi:
             A dict for Anilist authorization. It must contain the keys:
                 id: Your Anilist client id
                 secret: Your Anilist client secret.
+
+        :param db_config:
+            A dict of database config for the connection.
+
+            It should contain the keys in  keyword arguments for the :func:
+            `asyncpg.connection.connect` function.
+
+        :param pool: an existing connection pool.
+
+        One of `pool` or `db_config` must not be None.
+
+        :param schema: the schema name used. Defaults to `roboragi`
 
         :param cache_pages:
             The number of pages of anime and manga from Anilist to cache
@@ -152,13 +156,15 @@ class Roboragi:
             Instance of `Roboragi` with class `PostgresController`
             as the database controller.
         """
-        db_config = dict(db_config)
-        logger = logger or get_default_logger()
-        schema = db_config.pop('schema', 'roboragi')
-        db_controller = await PostgresController.get_instance(
-            logger, db_config, schema=schema
+        assert db_config or pool, (
+            'Please either provide a connection pool or '
+            'a dict of connection data for creating a new '
+            'connection pool.'
         )
-
+        logger = logger or get_default_logger()
+        db_controller = await PostgresController.get_instance(
+            logger, db_config, pool, schema=schema
+        )
         session_manager = SessionManager(ClientSession(), logger)
         instance = cls(session_manager, db_controller, mal_config,
                        anilist_config, logger=logger, loop=loop)
@@ -174,6 +180,10 @@ class Roboragi:
         Get an instance of `Roboragi` with class `SqliteController` as the
         database controller.
 
+        :param path:
+            The path to the Sqlite3 database, can either be a string or a
+            Pathlib Path object.
+
         :param mal_config:
             A dict for MAL authorization.
             It must contain the keys:
@@ -211,7 +221,7 @@ class Roboragi:
             as the database controller.
         """
         logger = logger or get_default_logger()
-        db_controller = None
+        db_controller = await SqliteController.get_instance(path, logger, loop)
         session_manager = SessionManager(ClientSession(), logger)
         instance = cls(session_manager, db_controller, mal_config,
                        anilist_config, logger=logger, loop=loop)
@@ -223,6 +233,7 @@ class Roboragi:
         Pre cache the data base with some anime and managa data.
 
         :param cache_pages: the number of pages to cache.
+
         :param cache_mal_entries: The number of MAL entries you wish to cache.
         """
         assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
@@ -304,22 +315,35 @@ class Roboragi:
     async def __cache(self, to_be_cached, names, medium):
         """
         Cache search results into the db.
+
         :param to_be_cached: items to be cached.
+
         :param names: all names for the item.
+
         :param medium: the medium type.
         """
-        it = []
-        for gen in names:
-            it = list(set(it+list(gen)))
-
-        async def cache_one(_site, _id):
-            for name in it:
-                if name:
-                    await self.db_controller.set_identifier(
-                        name, medium, _site, _id
-                    )
+        itere = set(chain(*names))
         for site, id_ in to_be_cached.items():
-            await cache_one(site, id_)
+            await self.__cache_one(site, id_, medium, itere)
+
+    async def __cache_one(self, site, id_, medium, iterator):
+        """
+        Cache one id.
+
+        :param site: the site.
+
+        :param id_: the id.
+
+        :param medium: the medium type.
+
+        :param iterator: an iterator for all names.
+        """
+        for name in iterator:
+            if not name:
+                continue
+            await self.db_controller.set_identifier(
+                name, medium, site, id_
+            )
 
     async def __fetch_anidb(self):
         """
@@ -581,7 +605,7 @@ class Roboragi:
         if medium == Medium.LN:
             try:
                 return {'url': await lndb.get_light_novel_url(
-                    self.session_manager, query
+                    self.session_manager, query, names
                 )}, None
             except Exception as e:
                 self.logger.warning(f'Error raised by LNDB: {e}')
@@ -666,8 +690,6 @@ class Roboragi:
 
         if site == Site.ANIMEPLANET:
             return await self.__find_ani_planet(medium, query, names)
-
-        
 
         if site == Site.MANGAUPDATES:
             return await self.__find_manga_updates(medium, query, names)

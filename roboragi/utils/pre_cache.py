@@ -152,8 +152,8 @@ async def __cache_mal_entry(db, name, medium, mal_headers, session_manager):
             session_manager, mal_headers, medium, name, mal_id
         )
     except Exception as e:
-        session_manager.logger.warning(f'Error raised by MAL: {e} '
-                                       f'on item {name}')
+        session_manager.logger.debug(f'Error raised by MAL: {e} '
+                                     f'on item {name}')
         mal_entry = None
     if not mal_entry:
         return
