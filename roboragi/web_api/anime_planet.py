@@ -26,9 +26,13 @@ async def get_anime_url(
         names: list) -> Optional[str]:
     """
     Get anime url by search query.
+
     :param session_manager: the `SessionManager` instance.
+
     :param query: a search query.
+
     :param names: a list of synonyms
+
     :return: the anime url if it's found.
     """
     query = sanitize_search_text(query)
@@ -61,8 +65,15 @@ async def get_manga_url(
         author_name: str=None) -> Optional[str]:
     """
     Get manga url by search query.
+
     :param session_manager: the `SessionManager` instance.
+
     :param query: a search query.
+
+    :param names: a list of known names
+    
+    :author_name: name to search for manga
+
     :return: the anime url if it's found.
     """
     params = {
@@ -118,7 +129,9 @@ async def get_manga_url(
 def get_anime_url_by_id(anime_id: str) -> str:
     """
     Returns anime url by id.
+
     :param anime_id: an anime id.
+
     :return: the anime url.
     """
     return 'http://www.anime-planet.com/anime/' + str(anime_id)
@@ -127,7 +140,9 @@ def get_anime_url_by_id(anime_id: str) -> str:
 def get_manga_url_by_id(manga_id: str) -> str:
     """
     Returns manga url by id.
+
     :param manga_id: a manga id.
+
     :return: the manga url.
     """
     return 'http://www.anime-planet.com/manga/' + str(manga_id)
@@ -136,8 +151,12 @@ def get_manga_url_by_id(manga_id: str) -> str:
 def __get_closest(query: str, anime_list: List[dict], names) -> dict:
     """
     Get the closest matching anime by search query.
+
     :param query: the search term.
+
     :param anime_list: a list of anime.
+
+    :param names: a list of known names
 
     :return:
         Closest matching anime by search query if found else an empty dict.
