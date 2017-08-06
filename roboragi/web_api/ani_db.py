@@ -36,6 +36,8 @@ def get_anime(query: str, anime_list: List[dict]) -> Optional[dict]:
         if ratio > max_ratio and ratio >= 0.85:
             max_ratio = ratio
             match = anime
+        if max_ratio > 0.99:
+            break
     if match:
         return match
 

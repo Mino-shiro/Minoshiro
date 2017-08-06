@@ -417,7 +417,7 @@ class Roboragi:
         cached_id = cached_ids.get(Site.ANIDB) if cached_ids else None
         base_url = 'https://anidb.net/perl-bin/animedb.pl?show=anime&aid='
         if cached_id:
-            return {'url': f'{base_url}/{cached_id}'}, cached_id
+            return {'url': f'{base_url}{cached_id}'}, cached_id
         await self.__fetch_anidb()
         res = await self.loop.run_in_executor(
             None, ani_db.get_anime, query, self.__anidb_list
@@ -425,7 +425,7 @@ class Roboragi:
         if not res:
             return None, None
         id_ = res['id']
-        res['url'] = f'{base_url}/{id_}'
+        res['url'] = f'{base_url}{id_}'
         return res, id_
 
     @timer
