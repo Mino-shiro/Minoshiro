@@ -12,7 +12,9 @@ from roboragi.session_manager import SessionManager
 
 
 async def get_manga_url(
-        session_manager: SessionManager, query: str) -> Optional[str]:
+        session_manager: SessionManager,
+        query: str,
+        names: list) -> Optional[str]:
     """
     Get manga url by search query.
     :param session_manager: the `SessionManager` instance.
@@ -39,7 +41,7 @@ async def get_manga_url(
                 'rating': PyQuery(thing).find('.col4').text()
             }
             manga_list.append(data)
-    return __get_closest(query, manga_list)
+    return __get_closest(query, manga_list, names)
 
 
 def get_manga_url_by_id(manga_id) -> str:
@@ -51,21 +53,27 @@ def get_manga_url_by_id(manga_id) -> str:
     return 'https://www.mangaupdates.com/series.html?id=' + str(manga_id)
 
 
-def __get_closest(query: str, manga_list: List[dict]) -> dict:
-    """s
-    Get the closest matching light novel by search query.
+def __get_closest(query: str, manga_list: List[dict], names) -> dict:
+    """
+    Get the closest matching manga by search query.
     :param query: the search term.
-    :param manga_list: a list of light novels.
+    :param manga_list: a list of mangas.
+
     :return:
         Closest matching manga by search query if found else an empty dict.
     """
-    max_ratio, match = 0, None
-    matcher = SequenceMatcher(b=query.lower().strip())
-    for ln in manga_list:
-        title = ln['title'].lower()
-        matcher.set_seq1(title)
-        ratio = matcher.ratio()
-        if ratio > max_ratio and ratio >= 0.85:
-            max_ratio = ratio
-            match = ln
+    synonyms_list = list(names[0])
+    synonyms_list.insert(0, query)
+    match = None
+    for name in synonyms_list:
+        max_ratio = 0
+        matcher = SequenceMatcher(b=name.lower())
+        for manga in manga_list:
+            matcher.set_seq1(manga['title'].lower())
+            ratio = matcher.ratio()
+            if ratio > max_ratio and ratio >= 0.85:
+                max_ratio = ratio
+                match = manga
+        if match:
+            break
     return match or {}

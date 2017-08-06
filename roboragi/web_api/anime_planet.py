@@ -21,11 +21,14 @@ def sanitize_search_text(text: str) -> str:
 
 
 async def get_anime_url(
-        session_manager: SessionManager, query: str) -> Optional[str]:
+        session_manager: SessionManager,
+        query: str,
+        names: list) -> Optional[str]:
     """
     Get anime url by search query.
     :param session_manager: the `SessionManager` instance.
     :param query: a search query.
+    :param names: a list of synonyms
     :return: the anime url if it's found.
     """
     query = sanitize_search_text(query)
@@ -46,7 +49,7 @@ async def get_anime_url(
                 'url': f'''http://www.anime-planet.com{PyQuery(entry).find("a").attr("href")}'''
             }
             anime_list.append(anime)
-        return __get_closest(query, anime_list).get('url')
+        return __get_closest(query, anime_list, names).get('url')
     else:
         return ap.find("meta[property='og:url']").attr('content')
 
@@ -54,6 +57,7 @@ async def get_anime_url(
 async def get_manga_url(
         session_manager: SessionManager,
         query: str,
+        names: list,
         author_name: str=None) -> Optional[str]:
     """
     Get manga url by search query.
@@ -86,7 +90,6 @@ async def get_manga_url(
                 params=params) as resp:
             html = await resp.text()
     ap = PyQuery(html)
-
 
     if ap.find('.cardDeck.pure-g.cd-narrow[data-type="manga"]'):
         manga_list = []
@@ -130,40 +133,27 @@ def get_manga_url_by_id(manga_id: str) -> str:
     return 'http://www.anime-planet.com/manga/' + str(manga_id)
 
 
-def __get_closest(query: str, anime_list: List[dict]) -> dict:
+def __get_closest(query: str, anime_list: List[dict], names) -> dict:
     """
     Get the closest matching anime by search query.
     :param query: the search term.
-    :param anime_list: a list of animes.
+    :param anime_list: a list of anime.
 
     :return:
         Closest matching anime by search query if found else an empty dict.
     """
-    max_ratio, match = 0, None
-    matcher = SequenceMatcher(b=query.lower())
-    for anime in anime_list:
-        matcher.set_seq1(anime['title'].lower())
-        ratio = matcher.ratio()
-        if ratio > max_ratio and ratio >= 0.85:
-            max_ratio = ratio
-            match = anime
+    synonyms_list = list(names[0])
+    synonyms_list.insert(0, query)
+    match = None
+    for name in synonyms_list:
+        max_ratio = 0
+        matcher = SequenceMatcher(b=name.lower())
+        for anime in anime_list:
+            matcher.set_seq1(anime['title'].lower())
+            ratio = matcher.ratio()
+            if ratio > max_ratio and ratio >= 0.85:
+                max_ratio = ratio
+                match = anime
+        if match:
+            break
     return match or {}
-
-
-def __match_max(anime: dict, matcher: SequenceMatcher) -> float:
-    """
-    Get the max matched ratio for a given anime.
-
-    :param anime: the anime.
-
-    :param matcher: the `SequenceMatcher` with the search query as seq2.
-
-    :return: the max matched ratio.
-    """
-    max_ratio = 0
-    for title in anime['titles']:
-        matcher.set_seq1(title['title'].lower())
-        ratio = matcher.ratio()
-        if ratio > max_ratio:
-            max_ratio = ratio
-    return max_ratio
