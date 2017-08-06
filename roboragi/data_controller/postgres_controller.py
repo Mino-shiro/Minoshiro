@@ -132,7 +132,8 @@ class PostgresController(DataController):
         DO UPDATE SET identifier=$4;
         """.format(self.schema)
 
-        await self.pool.execute(sql, name, medium.value, site.value, identifier)
+        await self.pool.execute(sql, name.strip(), medium.value,
+                                site.value, identifier)
 
     async def get_mal_title(self, id_: str, medium: Medium) -> Optional[str]:
         """

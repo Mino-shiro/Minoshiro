@@ -212,12 +212,7 @@ class Roboragi:
                 names.append(get_synonyms(res, site))
             if id_:
                 to_be_cached[site] = id_
-
-        for site, id_ in to_be_cached.items():
-            for name in chain(*names):
-                await self.db_controller.set_identifier(
-                    name, medium, site, id_
-                )
+        await self.__cache(to_be_cached, names, medium)
 
     async def get_data(self, query: str, medium: Medium,
                        sites: Iterable[Site] = None) -> Dict[Site, dict]:
@@ -237,6 +232,25 @@ class Roboragi:
         return {site: val async for site, val in self.yield_data(
             query, medium, sites
         )}
+
+    async def __cache(self, to_be_cached, names, medium):
+        """
+        Cache search results into the db.
+        :param to_be_cached: items to be cached.
+        :param names: all names for the item.
+        :param medium: the medium type.
+        """
+        it = chain(*names)
+
+        async def cache_one(_site, _id):
+            for name in it:
+                if name:
+                    await self.db_controller.set_identifier(
+                        name, medium, _site, _id
+                    )
+
+        for site, id_ in to_be_cached.items():
+            await cache_one(site, id_)
 
     async def __fetch_anidb(self):
         """
