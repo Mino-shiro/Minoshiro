@@ -10,29 +10,7 @@ from roboragi.utils.helpers import get_synonyms
 from roboragi.web_api import AniList
 from roboragi.web_api.mal import get_entry_details
 
-__all__ = ['cache_top_40', 'cache_top_pages']
-
-
-async def cache_top_40(medium: Medium, session_manager: SessionManager,
-                       db: DataController, anilist: AniList, mal_headers: dict):
-    """
-    Cache the top 40 entries for all genres from Anilist, and try to cache
-    each entry for MAL as well.
-
-    :param medium: The medium type.
-
-    :param session_manager: the `SessionManager` instance.
-
-    :param db: the `DataController` instance.
-
-    :param anilist: the `AniList` instance.
-
-    :param mal_headers: dict of mal auth headers.
-    """
-    await __cache(
-        __top_40_anilist(medium, session_manager, anilist),
-        db, medium, mal_headers, session_manager
-    )
+__all__ = ['cache_top_pages']
 
 
 async def cache_top_pages(medium: Medium, session_manager: SessionManager,
@@ -89,45 +67,6 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager):
         await __cache_mal_entry(
             db, anime_name, medium, mal_headers, session_manager
         )
-
-
-async def __top_40_anilist(medium: Medium, session_manager: SessionManager,
-                           anilist: AniList):
-    """
-    Yields top 40 anime/manga for each genre in Anilist.
-
-    :param medium: The medium type, only Anime and Manga are supported.
-
-    :param session_manager: the `SessionManager` instance.
-
-    :param anilist: the `Anilist` instance.
-
-    :return: an asynchronous generator that yields top 40 anime/manga
-             for each genre in Anilist.
-    """
-    try:
-        genres = await anilist.get_genres(session_manager)
-    except Exception as e:
-        session_manager.logger.warning(f'Error raised by Anilist: {e}')
-        genres = None
-    if not genres:
-        return
-    for entry in genres:
-        genre = entry.get('genre')
-        if not genre:
-            continue
-        try:
-            res = await anilist.get_top_40_by_genre(
-                session_manager, medium, genre
-            )
-        except Exception as e:
-            session_manager.logger.warning(f'Error raised by Anilist: {e}')
-            res = None
-        if res:
-            for data in res:
-                id_ = data.get('id')
-                if id_ or isinstance(id_, int):
-                    yield data
 
 
 async def __n_popular_anilist(
@@ -195,7 +134,8 @@ async def __cache_mal_entry(db, name, medium, mal_headers, session_manager):
             session_manager, mal_headers, medium, name, mal_id
         )
     except Exception as e:
-        session_manager.logger.warning(f'Error raised by MAL: {e} on item {name}')
+        session_manager.logger.warning(f'Error raised by MAL: {e} '
+                                       f'on item {name}')
         mal_entry = None
     if not mal_entry:
         return

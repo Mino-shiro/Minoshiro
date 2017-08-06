@@ -13,7 +13,7 @@ from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu
 from .logger import get_default_logger
-from .utils.pre_cache import cache_top_40, cache_top_pages
+from .utils.pre_cache import cache_top_pages
 
 
 class Roboragi:
@@ -167,16 +167,15 @@ class Roboragi:
         self.logger.info('Lookup populated.')
 
         self.logger.info('Populating data...')
+        start = time()
         for med in (Medium.ANIME, Medium.MANGA):
-            await cache_top_40(
-                med, self.session_manager, self.db_controller,
-                self.anilist, self.mal_headers
-            )
             if cache_pages:
                 await cache_top_pages(
                     med, self.session_manager, self.db_controller,
                     self.anilist, self.mal_headers, cache_pages
                 )
+        end = time()
+        print(end - start)
         self.logger.info('Data populated.')
         self.logger.info('Fetching anidb datadump...')
         await self.__fetch_anidb()
