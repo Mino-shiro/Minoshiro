@@ -10,7 +10,9 @@ from xmltodict import parse
 def process_xml(xml_string: str) -> Dict[str, dict]:
     """
     Process the xml string from the anidb data dump.
+
     :param xml_string: the xml string.
+    
     :return: A list of dict with keys "id" and "titles".
     """
     parsed = parse(xml_string)
@@ -25,8 +27,11 @@ def process_xml(xml_string: str) -> Dict[str, dict]:
 def get_anime(query: str, anime_list: dict) -> Optional[dict]:
     """
     Get an anime url from a list of animes.
+
     :param query: the search query.
+
     :param anime_list: the list of animes.
+
     :return: the anime id if found, else None.
     """
     anime = anime_list.get(query.lower())
@@ -49,7 +54,9 @@ def get_anime(query: str, anime_list: dict) -> Optional[dict]:
 def __format_anime(anime_dict: dict) -> Optional[dict]:
     """
     Format an anime entry from the parsed xml string to a dict.
+
     :param anime_dict: the input anime dict.
+
     :return: a dict {"id": the anime id, "titles": the list of titles}
     """
     id_ = anime_dict.get('@aid')

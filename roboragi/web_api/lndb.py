@@ -15,8 +15,13 @@ async def get_light_novel_url(
         names: list) -> Optional[dict]:
     """
     Get ln url by search query.
+
     :param session_manager: the `SessionManager` instance.
+
     :param query: a search query.
+
+    :param names: a list of known names
+
     :return: the ln url if it's found.
     """
     query = query.replace(' ', '+')
@@ -46,7 +51,9 @@ async def get_light_novel_url(
 def get_light_novel_by_id(ln_id: str) -> str:
     """
     Returns ln url by id.
+
     :param ln_id: a ln id.
+
     :return: the ln url.
     """
     return 'http://lndb.info/light_novel/' + str(ln_id)
@@ -55,8 +62,12 @@ def get_light_novel_by_id(ln_id: str) -> str:
 def __get_closest(query: str, ln_list: List[dict], names) -> dict:
     """
     Get the closest matching light novel by search query.
+
     :param query: the search term.
+
     :param ln_list: a list of light novels.
+
+    :param names: a list of known names
 
     :return:
         Closest matching novel by search query if found else an empty dict.

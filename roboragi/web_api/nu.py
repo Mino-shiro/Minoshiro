@@ -17,8 +17,13 @@ async def get_light_novel_url(
         names: list) -> Optional[dict]:
     """
     Get ln url by search query.
+
     :param session_manager: the `SessionManager` instance.
+
     :param query: a search query.
+
+    :param names: a list of known names
+
     :return: the ln url if it's found.
     """
     params = {
@@ -45,8 +50,12 @@ async def get_light_novel_url(
 def __get_closest(query: str, ln_list: List[dict], names) -> dict:
     """
     Get the closest matching light novel by search query.
+
     :param query: the search term.
+
     :param ln_list: a list of light novels.
+
+    :param names: a list of known names
 
     :return:
         Closest matching novel by search query if found else an empty dict.

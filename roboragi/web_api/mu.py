@@ -17,8 +17,13 @@ async def get_manga_url(
         names: list) -> Optional[str]:
     """
     Get manga url by search query.
+
     :param session_manager: the `SessionManager` instance.
+
     :param query: a search query.
+
+    :param names: a list of known names
+
     :return: the manga url if it's found.
     """
     params = {
@@ -56,8 +61,12 @@ def get_manga_url_by_id(manga_id) -> str:
 def __get_closest(query: str, manga_list: List[dict], names) -> dict:
     """
     Get the closest matching manga by search query.
+
     :param query: the search term.
+
     :param manga_list: a list of mangas.
+
+    :param names: a list of known names
 
     :return:
         Closest matching manga by search query if found else an empty dict.

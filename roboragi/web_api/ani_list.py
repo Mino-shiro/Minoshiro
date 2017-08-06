@@ -100,10 +100,15 @@ class AniList:
             thing_id: str = None) -> Optional[dict]:
         """
         Get the details of an thing by search query.
+
         :param session_manager: session manager object
+
         :param medium: medium to search for 'anime', 'manga', 'novel'
+
         :param query: the search term.
+
         :param thing_id: thing id.
+
         :return: dict with thing info.
         """
         clean_query = escape(query)
@@ -134,8 +139,9 @@ class AniList:
             session_manager: SessionManager) -> Optional[list]:
         """
         Gets a list of genres for a specified medium.
+
         :param session_manager: the session manager.
-        :param medium:medium to get genres for 'manga' or 'anime'.
+
         :return: list of genres
         """
         if not self.access_token:
@@ -151,9 +157,13 @@ class AniList:
             genre: str) -> Optional[list]:
         """
         Gets the top 40 entries in the medium for specified genre.
+
         :param session_manager: the session manager.
+
         :param medium: medium 'manga' or 'anime'.
+
         :param genre: genre we want info from
+
         :return: list of genres
         """
         med_str = filter_anime_manga(medium)
@@ -174,9 +184,13 @@ class AniList:
             page: int) -> Optional[list]:
         """
         Gets the 40 entries in the medium from specified page.
+
         :param session_manager: the session manager.
+
         :param medium: medium 'manga' or 'anime'.
-        :param genre: genre we want info from
+
+        :param page: page we want info from
+
         :return: list of genres
         """
         med_str = filter_anime_manga(medium)
@@ -194,8 +208,11 @@ class AniList:
     def __get_closest(self, query: str, thing_list: List[dict]) -> dict:
         """
         Get the closest matching anime by search query.
+
         :param query: the search term.
+
         :param thing_list: a list of animes.
+
         :return: Closest matching anime by search query if found
                     else an empty dict.
         """
@@ -211,8 +228,11 @@ class AniList:
     def __match_max(self, thing: dict, matcher: SequenceMatcher) -> float:
         """
         Get the max matched ratio for a given thing.
+
         :param thing: the thing.
+
         :param matcher: the `SequenceMatcher` with the search query as seq2.
+        
         :return: the max matched ratio.
         """
         thing_name_list = []

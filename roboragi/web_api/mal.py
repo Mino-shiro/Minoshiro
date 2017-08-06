@@ -19,8 +19,13 @@ async def get_entry_details(
         thing_id: str = None) -> Optional[dict]:
     """
     Get the details of an thing by search query.
+
+    :param header_info: dict containing the header info
+
     :param query: the search term.
+
     :param thing_id: thing id.
+
     :return: dict with thing info.
     """
     medium_str = 'anime' if medium == Medium.ANIME else 'manga'
@@ -77,8 +82,11 @@ async def get_entry_details(
 def __get_closest(query: str, thing_list: List[dict]) -> dict:
     """
     Get the closest matching anime by search query.
+
     :param query: the search term.
-    :param thing_list: a list of animes.
+
+    :param thing_list: a list of anime.
+
     :return: Closest matching anime by search query if found
                 else an empty dict.
     """
@@ -95,8 +103,11 @@ def __get_closest(query: str, thing_list: List[dict]) -> dict:
 def __match_max(thing: dict, matcher: SequenceMatcher) -> float:
     """
     Get the max matched ratio for a given thing.
+
     :param thing: the thing.
+
     :param matcher: the `SequenceMatcher` with the search query as seq2.
+
     :return: the max matched ratio.
     """
     max_ratio = 0
@@ -117,8 +128,11 @@ def __get_thing_by_id(thing_id: str,
                       thing_list: List[dict]) -> Optional[dict]:
     """
     Get the max matched ratio for a given thing.
+
     :param thing_id: the id that we are looking for.
+
     :param thing_list: the `SequenceMatcher` with the search query as seq2.
+    
     :return: the max matched ratio.
     """
     for thing in thing_list:
