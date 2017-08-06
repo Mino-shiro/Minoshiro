@@ -23,15 +23,13 @@ class PostgresController(DataController):
     To be able to integrate with an existing database, all tables for roboragi
     will be put under the `roboragi` schema unless a different schema name is
     passed to the __init__ method.
-
-    This will only implement data caching, since keeping track of stats is not
-    in the scope of this project.
     """
     __slots__ = ('pool', 'schema')
 
     def __init__(self, pool: Pool, logger, schema: str = 'roboragi'):
         """
-        Init
+        Init method. Create the instance with the `get_instance` method to make
+        sure you have all the tables needed.
 
         :param pool: the `asyncpg` connection pool.
 
@@ -48,6 +46,8 @@ class PostgresController(DataController):
                            pool: Pool = None, schema: str = 'roboragi'):
         """
         Get a new instance of `PostgresController`
+
+        This method will create the appropriate tables needed.
 
         :param logger: the logger object.
 
@@ -106,7 +106,6 @@ class PostgresController(DataController):
             A dict of all identifiers for this search query for all sites,
             None if nothing is found.
         """
-
         sql = """
         SELECT site, identifier FROM {}.lookup
         WHERE syname=$1 AND medium=$2;
@@ -244,4 +243,4 @@ class PostgresController(DataController):
         try:
             await self.pool.execute(sql, id_, site.value)
         except Exception as e:
-            self.logger.warn(str(e))
+            self.logger.warning(str(e))

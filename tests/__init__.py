@@ -1,9 +1,10 @@
 from json import load
 from pathlib import Path
+from sqlite3 import connect
 
 from asyncpg import create_pool
 
-__all__ = ['test_data_path', 'get_pool', 'SCHEMA']
+__all__ = ['test_data_path', 'get_pool', 'SCHEMA', 'clear_sqlite']
 
 test_data_path = Path(Path(__file__).parent.joinpath('test_data'))
 SCHEMA = 'robotesting'
@@ -41,3 +42,14 @@ async def __clear(pool):
     ]
     for table in table_names:
         await pool.execute(f'TRUNCATE {SCHEMA}.{table}')
+
+
+def clear_sqlite(path):
+    with connect(path) as conn:
+        conn.execute('DROP TABLE lookup')
+        conn.execute('DROP TABLE mal')
+        conn.execute('DROP TABLE anime')
+        conn.execute('DROP TABLE manga')
+        conn.execute('DROP TABLE ln')
+        conn.execute('DROP TABLE vn')
+        conn.commit()
