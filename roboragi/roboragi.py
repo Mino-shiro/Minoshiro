@@ -1,13 +1,15 @@
 from asyncio import get_event_loop
 from base64 import b64encode
-from itertools import chain
 from pathlib import Path
 from time import time
 from typing import Dict, Iterable, Union
+from ast import literal_eval
 
 from aiohttp import ClientSession
 
 from roboragi.data import data_path
+
+from roboragi.data_controller.data_utils import get_all_synonyms
 from roboragi.data_controller import DataController, PostgresController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
@@ -94,6 +96,18 @@ class Roboragi:
         self.loop = loop or get_event_loop()
         self.logger = logger or get_default_logger()
 
+        synonyms = get_all_synonyms()
+        self.anime_synonyms = {}
+        self.manga_synonyms = {}
+        self.novel_synonyms = {}
+        for name, type_, db_links in synonyms:
+            if type_.lower() == 'anime':
+                self.anime_synonyms[name.lower()] = db_links
+            elif type_.lower() == 'manga':
+                self.manga_synonyms[name.lower()] = db_links
+            elif type_.lower() == 'ln':
+                self.novel_synonyms[name.lower()] = db_links
+
         self.__anidb_list = None
         self.__anidb_time = None
 
@@ -158,7 +172,6 @@ class Roboragi:
         db_controller = await PostgresController.get_instance(
             logger, db_config, schema=schema
         )
-
         session_manager = SessionManager(ClientSession(), logger)
         instance = cls(session_manager, db_controller, mal_config,
                        anilist_config, logger=logger, loop=loop)
@@ -267,11 +280,20 @@ class Roboragi:
             an asynchronous generator that yields the site and data
             in a tuple for all sites requested.
         """
+        cached_id = {}
+        if medium == Medium.ANIME:
+            synonym_data = self.anime_synonyms.get(query.lower())
+        elif medium == Medium.MANGA:
+            synonym_data = self.manga_synonyms.get(query.lower())
+        elif medium == Medium.LN:
+            synonym_data = self.novel_synonyms.get(query.lower())
         sites = sites if sites else list(Site)
         cached_data, cached_id = await self.__get_cached(query, medium)
         to_be_cached = {}
         names = []
         for site in sites:
+            if synonym_data:
+                cached_id = {site: str(self.__get_synonym_data(synonym_data, site))}
             res, id_ = await self.__get_result(
                 cached_data, cached_id, query, names, site, medium
             )
@@ -300,6 +322,31 @@ class Roboragi:
         return {site: val async for site, val in self.yield_data(
             query, medium, sites
         )}
+
+    def __get_synonym_data(
+            self, synonym_data: dict, site: Site) -> dict:
+        synonym_data = literal_eval(synonym_data)
+        keys = synonym_data.keys()
+        syn_ids = {}
+        if site == Site.MAL and 'mal' in keys:
+            syn_ids = str(synonym_data['mal'][1])
+        elif site == Site.ANILIST and 'ani' in keys:
+            syn_ids = synonym_data['ani']
+        elif site == Site.ANIMEPLANET and 'ap' in keys:
+            syn_ids = synonym_data['ap']
+        elif site == Site.ANIDB and 'adb' in keys:
+            syn_ids = synonym_data['adb']
+        elif site == Site.KITSU and 'kit' in keys:
+            syn_ids = synonym_data['kit']
+        elif site == Site.MANGAUPDATES and 'mu' in keys:
+            syn_ids = synonym_data['mu']
+        elif site == Site.LNDB and 'lndb' in keys:
+            syn_ids = synonym_data['lndb']
+        elif site == Site.NOVELUPDATES and 'nu' in keys:
+            syn_ids = synonym_data['nu']
+        elif site == Site.VNDB and 'vndb' in keys:
+            pass
+        return syn_ids
 
     async def __cache(self, to_be_cached, names, medium):
         """
@@ -491,7 +538,8 @@ class Roboragi:
         res['url'] = f'{base_url}{id_}'
         return res, id_
 
-    async def __find_ani_planet(self, medium: Medium, query: str, names: list):
+    async def __find_ani_planet(
+            self, cached_ids, medium: Medium, query: str, names: list):
         """
         Find a anime or manga url from ani planet.
 
@@ -501,16 +549,25 @@ class Roboragi:
 
         :return: the ani planet data and id in a tuple  if found.
         """
+        ap_id = cached_ids.get(Site.ANIMEPLANET) if cached_ids else None
         try:
             if medium == Medium.ANIME:
-                return {'url': await anime_planet.get_anime_url(
-                    self.session_manager, query, names
-                )}, None
+                if ap_id:
+                    return {'url': anime_planet.get_anime_url_by_id(
+                        cached_ids.get(Site.ANIMEPLANET))}, None
+                else:
+                    return {'url': await anime_planet.get_anime_url(
+                        self.session_manager, query, names
+                    )}, None
 
             if medium == Medium.MANGA:
-                return {'url': await anime_planet.get_manga_url(
-                    self.session_manager, query, names
-                )}, None
+                if ap_id:
+                    return {'url': anime_planet.get_manga_url_by_id(
+                        cached_ids.get(Site.ANIMEPLANET))}, None
+                else:
+                    return {'url': await anime_planet.get_manga_url(
+                        self.session_manager, query, names
+                    )}, None
         except Exception as e:
             self.logger.warning(f'Error raised by Ani-planet: {e}')
         return None, None
@@ -549,7 +606,7 @@ class Roboragi:
             if resp and id_:
                 pass
 
-    async def __find_manga_updates(self, medium, query, names):
+    async def __find_manga_updates(self, cached_ids, medium, query, names):
         """
         Find a manga updates url.
 
@@ -559,16 +616,22 @@ class Roboragi:
 
         :return: the data and id in a tuple if found.
         """
+        mu_id = cached_ids.get(Site.MANGAUPDATES) if cached_ids else None
         if medium == Medium.MANGA:
             try:
-                return {'url': await mu.get_manga_url(
-                    self.session_manager, query, names
-                )}, None
+                if mu_id:
+                    return {'url': mu.get_manga_url_by_id(
+                        mu_id
+                    )}, None
+                else:
+                    return {'url': await mu.get_manga_url(
+                        self.session_manager, query, names
+                    )}, None
             except Exception as e:
                 self.logger.warning(f'Error raised by Manga Updates: {e}')
         return None, None
 
-    async def __find_lndb(self, medium, query, names):
+    async def __find_lndb(self, cached_ids, medium, query, names):
         """
         Find an lndb url.
 
@@ -578,16 +641,22 @@ class Roboragi:
 
         :return: the lndb data and id in a tuple if found.
         """
+        lndb_id = cached_ids.get(Site.LNDB) if cached_ids else None
         if medium == Medium.LN:
             try:
-                return {'url': await lndb.get_light_novel_url(
-                    self.session_manager, query
-                )}, None
+                if lndb_id:
+                    return {'url': lndb.get_light_novel_by_id(
+                        lndb_id
+                    )}, None
+                else:
+                    return {'url': await lndb.get_light_novel_url(
+                        self.session_manager, query
+                    )}, None
             except Exception as e:
                 self.logger.warning(f'Error raised by LNDB: {e}')
         return None, None
 
-    async def __find_novel_updates(self, medium, query, names):
+    async def __find_novel_updates(self, cached_ids, medium, query, names):
         """
         Find a Novel Updates url.
 
@@ -597,8 +666,13 @@ class Roboragi:
 
         :return: the data and id in a tuple if found.
         """
+        nu_id = cached_ids.get(Site.NOVELUPDATES) if cached_ids else None
         if medium == Medium.LN:
             try:
+                if nu_id:
+                    return {'url': nu.get_light_novel_by_id(
+                        nu_id
+                    )}, None
                 return {'url': await nu.get_light_novel_url(
                     self.session_manager, query, names
                 )}, None
@@ -665,18 +739,18 @@ class Roboragi:
             return await self.__find_anidb(cached_id, medium, query)
 
         if site == Site.ANIMEPLANET:
-            return await self.__find_ani_planet(medium, query, names)
-
-        
+            return await self.__find_ani_planet(
+                    cached_id, medium, query, names
+                )
 
         if site == Site.MANGAUPDATES:
-            return await self.__find_manga_updates(medium, query, names)
+            return await self.__find_manga_updates(cached_id, medium, query, names)
 
         if site == Site.LNDB:
-            return await self.__find_lndb(medium, query, names)
+            return await self.__find_lndb(cached_id, medium, query, names)
 
         if site == Site.NOVELUPDATES:
-            return await self.__find_novel_updates(medium, query, names)
+            return await self.__find_novel_updates(cached_id, medium, query, names)
 
         if site == Site.VNDB:
             return None, None
