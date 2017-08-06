@@ -35,9 +35,9 @@ def get_synonyms(entry: dict, site: Site):
     for key in keys:
         val = entry.get(key)
         if val:
-            yield val
+            yield val.rstrip()
 
     lst = entry.get(lst_key, ())
     if lst and not isinstance(lst, str):
         for syn in lst:
-            yield syn
+            yield syn.strip()

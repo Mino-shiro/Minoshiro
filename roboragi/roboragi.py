@@ -13,7 +13,6 @@ from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu
 from .logger import get_default_logger
-from .utils.pre_cache import cache_top_40, cache_top_pages
 
 
 class Roboragi:
@@ -167,6 +166,7 @@ class Roboragi:
         self.logger.info('Lookup populated.')
 
         self.logger.info('Populating data...')
+        """
         for med in (Medium.ANIME, Medium.MANGA):
             await cache_top_40(
                 med, self.session_manager, self.db_controller,
@@ -177,6 +177,7 @@ class Roboragi:
                     med, self.session_manager, self.db_controller,
                     self.anilist, self.mal_headers, cache_pages
                 )
+                """
         self.logger.info('Data populated.')
         self.logger.info('Fetching anidb datadump...')
         await self.__fetch_anidb()
@@ -205,7 +206,7 @@ class Roboragi:
         names = []
         for site in sites:
             res, id_ = await self.__get_result(
-                cached_data, cached_id, query, site, medium
+                cached_data, cached_id, query, names, site, medium
             )
             if res:
                 yield site, res
@@ -422,7 +423,7 @@ class Roboragi:
         res['url'] = f'{base_url}{id_}'
         return res, id_
 
-    async def __find_ani_planet(self, medium: Medium, query: str):
+    async def __find_ani_planet(self, medium: Medium, query: str, names: list):
         """
         Find a anime or manga url from ani planet.
 
@@ -435,12 +436,12 @@ class Roboragi:
         try:
             if medium == Medium.ANIME:
                 return {'url': await anime_planet.get_anime_url(
-                    self.session_manager, query
+                    self.session_manager, query, names
                 )}, None
 
             if medium == Medium.MANGA:
                 return {'url': await anime_planet.get_manga_url(
-                    self.session_manager, query
+                    self.session_manager, query, names
                 )}, None
         except Exception as e:
             self.logger.warning(f'Error raised by Ani-planet: {e}')
@@ -449,7 +450,7 @@ class Roboragi:
     async def __find_kitsu(self, medium: Medium, query: str):
         pass
 
-    async def __find_manga_updates(self, medium, query):
+    async def __find_manga_updates(self, medium, query, names):
         """
         Find a manga updates url.
 
@@ -462,13 +463,13 @@ class Roboragi:
         if medium == Medium.MANGA:
             try:
                 return {'url': await mu.get_manga_url(
-                    self.session_manager, query
+                    self.session_manager, query, names
                 )}, None
             except Exception as e:
                 self.logger.warning(f'Error raised by Manga Updates: {e}')
         return None, None
 
-    async def __find_lndb(self, medium, query):
+    async def __find_lndb(self, medium, query, names):
         """
         Find an lndb url.
 
@@ -487,7 +488,7 @@ class Roboragi:
                 self.logger.warning(f'Error raised by LNDB: {e}')
         return None, None
 
-    async def __find_novel_updates(self, medium, query):
+    async def __find_novel_updates(self, medium, query, names):
         """
         Find a Novel Updates url.
 
@@ -500,7 +501,7 @@ class Roboragi:
         if medium == Medium.LN:
             try:
                 return {'url': await nu.get_light_novel_url(
-                    self.session_manager, query
+                    self.session_manager, query, names
                 )}, None
             except Exception as e:
                 self.logger.warning(f'Error raised by Novel Updates: {e}')
@@ -528,7 +529,7 @@ class Roboragi:
 
         return entry_resp, identifiers
 
-    async def __get_result(self, cached_data, cached_id, query,
+    async def __get_result(self, cached_data, cached_id, query, names,
                            site: Site, medium: Medium) -> tuple:
         """
         Get results from a site.
@@ -557,19 +558,19 @@ class Roboragi:
             return await self.__find_anidb(cached_id, medium, query)
 
         if site == Site.ANIMEPLANET:
-            return await self.__find_ani_planet(medium, query)
+            return await self.__find_ani_planet(medium, query, names)
 
         if site == Site.KITSU:
             return None, None
 
         if site == Site.MANGAUPDATES:
-            return await self.__find_manga_updates(medium, query)
+            return await self.__find_manga_updates(medium, query, names)
 
         if site == Site.LNDB:
-            return await self.__find_lndb(medium, query)
+            return await self.__find_lndb(medium, query, names)
 
         if site == Site.NOVELUPDATES:
-            return await self.__find_novel_updates(medium, query)
+            return await self.__find_novel_updates(medium, query, names)
 
         if site == Site.VNDB:
             return None, None
