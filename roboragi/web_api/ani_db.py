@@ -2,12 +2,12 @@
 Search AniDB for anime.
 """
 from difflib import SequenceMatcher
-from typing import List, Optional
+from typing import Dict, Optional
 
 from xmltodict import parse
 
 
-def process_xml(xml_string: str) -> List[dict]:
+def process_xml(xml_string: str) -> Dict[str, dict]:
     """
     Process the xml string from the anidb data dump.
     :param xml_string: the xml string.
@@ -15,29 +15,33 @@ def process_xml(xml_string: str) -> List[dict]:
     """
     parsed = parse(xml_string)
     lst = parsed['animetitles']['anime']
-    return [
-        anime for anime in
-        (__format_anime(entry) for entry in lst)
-        if anime
-    ]
+    res = {}
+    for anime in (__format_anime(entry) for entry in lst):
+        for name in anime['titles']:
+            res[name.lower()] = anime
+    return res
 
 
-def get_anime(query: str, anime_list: List[dict]) -> Optional[dict]:
+def get_anime(query: str, anime_list: dict) -> Optional[dict]:
     """
     Get an anime url from a list of animes.
     :param query: the search query.
     :param anime_list: the list of animes.
     :return: the anime id if found, else None.
     """
+    anime = anime_list.get(query.lower())
+    if anime:
+        return anime
     max_ratio, match = 0, None
     matcher = SequenceMatcher(b=query.lower())
-    for anime in anime_list:
-        ratio = __match_max(anime, matcher)
+    for name, anime in anime_list.items():
+        matcher.set_seq1(name.lower())
+        ratio = matcher.ratio()
+        if ratio > 0.99:
+            return anime
         if ratio > max_ratio and ratio >= 0.85:
             max_ratio = ratio
             match = anime
-        if max_ratio > 0.99:
-            break
     if match:
         return match
 
@@ -62,22 +66,3 @@ def __format_anime(anime_dict: dict) -> Optional[dict]:
     if not title_text:
         return
     return {'id': id_, 'titles': title_text}
-
-
-def __match_max(anime: dict, matcher: SequenceMatcher) -> float:
-    """
-    Get the max matched ratio for a given anime.
-
-    :param anime: the anime.
-
-    :param matcher: the `SequenceMatcher` with the search query as seq2.
-
-    :return: the max matched ratio.
-    """
-    max_ratio = 0
-    for title in anime['titles']:
-        matcher.set_seq1(title.lower())
-        ratio = matcher.ratio()
-        if ratio > max_ratio:
-            max_ratio = ratio
-    return max_ratio
