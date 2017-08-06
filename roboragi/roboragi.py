@@ -13,10 +13,6 @@ from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu
 from .logger import get_default_logger
-<<<<<<< HEAD
-=======
-from .utils.pre_cache import cache_top_pages
->>>>>>> 78d735299c1d83170e5ae9514f761a6e67906e5d
 
 
 class Roboragi:
