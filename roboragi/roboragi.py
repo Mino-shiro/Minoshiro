@@ -12,7 +12,7 @@ from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.utils.pre_cache import cache_top_pages
-from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu
+from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu, kitsu
 from .logger import get_default_logger
 
 
@@ -84,6 +84,10 @@ class Roboragi:
 
         self.anilist = ani_list.AniList(
             self.session_manager, anilist_id, anilist_pass
+        )
+
+        self.kitsu = kitsu.Kitsu(
+            self.session_manager, '', ''
         )
 
         self.loop = loop or get_event_loop()
@@ -453,8 +457,39 @@ class Roboragi:
             self.logger.warning(f'Error raised by Ani-planet: {e}')
         return None, None
 
-    async def __find_kitsu(self, medium: Medium, query: str):
-        pass
+    async def __find_kitsu(self, cached_data, cached_ids, medium, query):
+        """
+        Find a anime or manga url from ani planet.
+
+        :param medium: the medium type.
+
+        :param query: the search query.
+
+        :return: the ani planet data and id in a tuple  if found.
+        """
+        if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
+            return None, None
+
+        kitsu_id = cached_ids.get(Site.KITSU) if cached_ids else None
+        try:
+            if kitsu_id:
+                resp = await self.kitsu.get_entry_by_id(
+                    medium, kitsu_id
+                )
+            else:
+                resp = await self.kitsu.search_entries(
+                    medium, query
+                )
+        except Exception as e:
+            self.logger.warning(f'Error raised by Kitsu: {e}')
+            resp = None
+
+        id_ = str(resp['id']) if resp else None
+        try:
+            return resp, id_
+        finally:
+            if resp and id_:
+                pass
 
     async def __find_manga_updates(self, medium, query, names):
         """
@@ -560,6 +595,11 @@ class Roboragi:
                 cached_data, cached_id, medium, query
             )
 
+        if site == Site.KITSU:
+            return await self.__find_kitsu(
+                cached_data, cached_id, medium, query
+            )
+
         if site == site.MAL:
             return await self.__find_mal(cached_data, cached_id, medium, query)
 
@@ -569,8 +609,7 @@ class Roboragi:
         if site == Site.ANIMEPLANET:
             return await self.__find_ani_planet(medium, query, names)
 
-        if site == Site.KITSU:
-            return None, None
+        
 
         if site == Site.MANGAUPDATES:
             return await self.__find_manga_updates(medium, query, names)
