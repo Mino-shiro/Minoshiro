@@ -234,7 +234,6 @@ class Roboragi:
         end = time()
         print(start - end)
 
-    @timer
     async def get_data(self, query: str, medium: Medium,
                        sites: Iterable[Site] = None) -> Dict[Site, dict]:
         """
@@ -254,7 +253,6 @@ class Roboragi:
             query, medium, sites
         )}
 
-    @timer
     async def __fetch_anidb(self):
         """
         Fetch data dump from anidb if one of the following is True:
@@ -293,7 +291,6 @@ class Roboragi:
 
         self.__anidb_list = ani_db.process_xml(xml)
 
-    @timer
     async def __find_anilist(self, cached_data, cached_ids, medium, query):
         """
         Find Anilist data.
@@ -344,7 +341,6 @@ class Roboragi:
                     id_, medium, Site.ANILIST, resp
                 )
 
-    @timer
     async def __find_mal(self, cached_data, cached_ids, medium, query):
         """
         Find MAL data.
@@ -396,7 +392,6 @@ class Roboragi:
                     id_, medium, Site.MAL, resp
                 )
 
-    @timer
     async def __find_anidb(self, cached_ids, medium, query):
         """
         Find Anidb url.
@@ -428,7 +423,6 @@ class Roboragi:
         res['url'] = f'{base_url}{id_}'
         return res, id_
 
-    @timer
     async def __find_ani_planet(self, medium: Medium, query: str):
         """
         Find a anime or manga url from ani planet.
@@ -453,11 +447,9 @@ class Roboragi:
             self.logger.warning(f'Error raised by Ani-planet: {e}')
         return None, None
 
-    @timer
     async def __find_kitsu(self, medium: Medium, query: str):
         pass
 
-    @timer
     async def __find_manga_updates(self, medium, query):
         """
         Find a manga updates url.
@@ -477,7 +469,6 @@ class Roboragi:
                 self.logger.warning(f'Error raised by Manga Updates: {e}')
         return None, None
 
-    @timer
     async def __find_lndb(self, medium, query):
         """
         Find an lndb url.
@@ -497,7 +488,6 @@ class Roboragi:
                 self.logger.warning(f'Error raised by LNDB: {e}')
         return None, None
 
-    @timer
     async def __find_novel_updates(self, medium, query):
         """
         Find a Novel Updates url.
@@ -517,11 +507,9 @@ class Roboragi:
                 self.logger.warning(f'Error raised by Novel Updates: {e}')
         return None, None
 
-    @timer
     async def __find_vndb(self, medium, query):
         pass
 
-    @timer
     async def __get_cached(self, query: str, medium: Medium) -> tuple:
         """
         Get cached data from the database.
@@ -541,7 +529,6 @@ class Roboragi:
 
         return entry_resp, identifiers
 
-    @timer
     async def __get_result(self, cached_data, cached_id, query,
                            site: Site, medium: Medium) -> tuple:
         """
