@@ -15,7 +15,8 @@ __all__ = ['cache_top_pages']
 
 async def cache_top_pages(medium: Medium, session_manager: SessionManager,
                           db: DataController, anilist: AniList,
-                          mal_headers: dict, page_count: int):
+                          mal_headers: dict, page_count: int,
+                          cache_mal_entries: int):
     """
     Cache the top n pages of anime/manga from Anilist, and try to cache each
     entry for MAL as well.
@@ -31,15 +32,18 @@ async def cache_top_pages(medium: Medium, session_manager: SessionManager,
     :param mal_headers: dict of mal auth headers.
 
     :param page_count: the number of desired pages.
+
+    :param cache_mal_entries: The number of MAL entries to cache.
     """
     assert page_count > 0, 'Please enter a page count greater than 0.'
     await __cache(
         __n_popular_anilist(page_count, medium, session_manager, anilist),
-        db, medium, mal_headers, session_manager
+        db, medium, mal_headers, session_manager, cache_mal_entries
     )
 
 
-async def __cache(async_iter, db, medium, mal_headers, session_manager):
+async def __cache(async_iter, db, medium, mal_headers, session_manager,
+                  cache_mal_entries):
     """
     Cache entries from an `AsyncGenerator`
 
@@ -52,7 +56,10 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager):
     :param mal_headers: dict of mal auth headers.
 
     :param session_manager: the `SessionManager` instance.
+
+    :param cache_mal_entries: The number of MAL entries to cache.
     """
+    i = 0
     async for entry in async_iter:
         anilist_id = str(entry['id'])
         await db.set_medium_data(anilist_id, medium, Site.ANILIST, entry)
@@ -64,9 +71,11 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager):
             continue
         for syn in get_synonyms(entry, Site.ANILIST):
             await db.set_identifier(syn, medium, Site.ANILIST, anilist_id)
-        await __cache_mal_entry(
-            db, anime_name, medium, mal_headers, session_manager
-        )
+        if i < cache_mal_entries:
+            await __cache_mal_entry(
+                db, anime_name, medium, mal_headers, session_manager
+            )
+            i += 1
 
 
 async def __n_popular_anilist(

@@ -95,7 +95,8 @@ class Roboragi:
     @classmethod
     async def from_postgres(cls, db_config: dict, mal_config: dict,
                             anilist_config: dict, *,
-                            cache_pages: int = 0, logger=None, loop=None):
+                            cache_pages: int = 0, cache_mal_entries: int = 0,
+                            logger=None, loop=None):
         """
         Get an instance of `Roboragi` with class `PostgresController` as the
         database controller.
@@ -131,6 +132,9 @@ class Roboragi:
             The number of pages of anime and manga from Anilist to cache
             before the instance is created. Each page contains 40 entries max.
 
+        :param cache_mal_entries:
+            The number of MAL entries you wish to cache.
+
         :param logger:
             The logger object. If it's not provided, will use the
             defualt logger provided by the library.
@@ -142,7 +146,6 @@ class Roboragi:
         :return: Instance of `Roboragi` with class `PostgresController` as the
                  database controller.
         """
-        assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
         db_config = dict(db_config)
         logger = logger or get_default_logger()
         schema = db_config.pop('schema', 'roboragi')
@@ -153,15 +156,19 @@ class Roboragi:
         session_manager = SessionManager(ClientSession(), logger)
         instance = cls(session_manager, db_controller, mal_config,
                        anilist_config, logger=logger, loop=loop)
-        await instance.pre_cache(cache_pages)
+        await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
 
-    async def pre_cache(self, cache_pages: int):
+    async def pre_cache(self, cache_pages: int, cache_mal_entries: int):
         """
         Pre cache the data base with some anime and managa data.
 
         :param cache_pages: the number of pages to cache.
+        :param cache_mal_entries: The number of MAL entries you wish to cache.
         """
+        assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
+        assert cache_mal_entries >= 0, ('Param `cache_mal_entries`'
+                                        'must not be negative.')
         self.logger.info('Populating lookup...')
         await self.db_controller.pre_cache()
         self.logger.info('Lookup populated.')
@@ -172,7 +179,8 @@ class Roboragi:
             if cache_pages:
                 await cache_top_pages(
                     med, self.session_manager, self.db_controller,
-                    self.anilist, self.mal_headers, cache_pages
+                    self.anilist, self.mal_headers, cache_pages,
+                    cache_mal_entries
                 )
         end = time()
         print(end - start)
