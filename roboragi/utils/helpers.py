@@ -13,8 +13,11 @@ def filter_anime_manga(medium: Medium) -> str:
 def get_synonyms(entry: dict, site: Site):
     """
     Yield all synonyms from an entry.
+
     :param entry: the request data.
+
     :param site: The site for the entry.
+
     :return: A generator that yields all synonyms from a entry.
     """
     if not entry:

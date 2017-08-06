@@ -7,6 +7,7 @@ from logging import Formatter, INFO, StreamHandler, getLogger
 def get_default_logger():
     """
     Return a basic default logger.
+
     :return:
         A basic logger with a `StreamHandler` attatched and with level `INFO`
     """

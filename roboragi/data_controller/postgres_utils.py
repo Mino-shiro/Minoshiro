@@ -11,7 +11,9 @@ from asyncpg.pool import Pool
 def parse_record(record: Record) -> Optional[tuple]:
     """
     Parse a asyncpg Record object to a tuple of values
+
     :param record: the asyncpg Record object
+
     :return: the tuple of values if it's not None, else None
     """
     try:
@@ -23,7 +25,9 @@ def parse_record(record: Record) -> Optional[tuple]:
 async def make_tables(pool: Pool, schema: str):
     """
     Make tables used for caching if they don't exist.
+
     :param pool: the connection pool.
+
     :param schema: the schema name.
     """
     await pool.execute('CREATE SCHEMA IF NOT EXISTS {};'.format(schema))

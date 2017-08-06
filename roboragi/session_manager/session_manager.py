@@ -39,9 +39,13 @@ class SessionManager:
     def return_response(self, res, code):
         """
         Return an Aiohttp or Request response object.
+
         :param res: the response.
+
         :param code: the response code.
+
         :return: the response object.
+
         :raises: HTTPStatusError if status code isn't 200
         """
         if 200 <= code < 300:
@@ -51,9 +55,13 @@ class SessionManager:
     async def __json_async(self, url, params, **kwargs):
         """
         Return the json content from an HTTP request using Aiohttp.
+
         :param url: the url.
+
         :param params: the request params.
+
         :return: the json content in a python dict.
+
         :raises HTTPStatusError: if the status code isn't in the 200s
         """
         try:
@@ -67,9 +75,13 @@ class SessionManager:
     async def get_json(self, url: str, params: dict = None, **kwargs):
         """
         Get the json content from an HTTP request.
+
         :param url: the url.
+
         :param params: the request params.
+
         :return: the json content in a dict if success, else the error message.
+
         :raises HTTPStatusError: if the status code isn't in the 200s
         """
         return await self.__json_async(url, params, **kwargs)
@@ -81,11 +93,11 @@ class SessionManager:
 
         :param url: Request URL, str or URL
 
-        :param allow_redirects: If set to False, do not follow redirects.
-        True by default (optional).
+        :param allow_redirects:
+            If set to False, do not follow redirects. True by default.
 
-        :param kwargs: In order to modify inner request parameters,
-        provide kwargs.
+        :param kwargs:
+            In order to modify inner request parameters, provide kwargs.
 
         :return: a client response object.
 
@@ -101,11 +113,12 @@ class SessionManager:
 
         :param url: Request URL, str or URL
 
-        :param data: Dictionary, bytes, or file-like object to send in the
-        body of the request (optional)
+        :param data:
+            Dictionary, bytes, or file-like object to send in the
+            body of the request (optional)
 
-        :param kwargs: In order to modify inner request parameters,
-        provide kwargs.
+        :param kwargs:
+            In order to modify inner request parameters, provide kwargs.
 
         :return: a client response object.
 

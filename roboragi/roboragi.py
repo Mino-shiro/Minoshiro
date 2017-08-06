@@ -13,6 +13,10 @@ from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.web_api import ani_db, ani_list, anime_planet, lndb, mal, mu, nu
 from .logger import get_default_logger
+<<<<<<< HEAD
+=======
+from .utils.pre_cache import cache_top_pages
+>>>>>>> 78d735299c1d83170e5ae9514f761a6e67906e5d
 
 
 class Roboragi:
@@ -94,7 +98,8 @@ class Roboragi:
     @classmethod
     async def from_postgres(cls, db_config: dict, mal_config: dict,
                             anilist_config: dict, *,
-                            cache_pages: int = 0, logger=None, loop=None):
+                            cache_pages: int = 0, cache_mal_entries: int = 0,
+                            logger=None, loop=None):
         """
         Get an instance of `Roboragi` with class `PostgresController` as the
         database controller.
@@ -130,6 +135,9 @@ class Roboragi:
             The number of pages of anime and manga from Anilist to cache
             before the instance is created. Each page contains 40 entries max.
 
+        :param cache_mal_entries:
+            The number of MAL entries you wish to cache.
+
         :param logger:
             The logger object. If it's not provided, will use the
             defualt logger provided by the library.
@@ -138,10 +146,10 @@ class Roboragi:
             An asyncio event loop. If not provided will use the default
             event loop.
 
-        :return: Instance of `Roboragi` with class `PostgresController` as the
-                 database controller.
+        :return:
+            Instance of `Roboragi` with class `PostgresController`
+            as the database controller.
         """
-        assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
         db_config = dict(db_config)
         logger = logger or get_default_logger()
         schema = db_config.pop('schema', 'roboragi')
@@ -152,32 +160,42 @@ class Roboragi:
         session_manager = SessionManager(ClientSession(), logger)
         instance = cls(session_manager, db_controller, mal_config,
                        anilist_config, logger=logger, loop=loop)
-        await instance.pre_cache(cache_pages)
+        await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
 
-    async def pre_cache(self, cache_pages: int):
+    async def pre_cache(self, cache_pages: int, cache_mal_entries: int):
         """
         Pre cache the data base with some anime and managa data.
 
         :param cache_pages: the number of pages to cache.
+        :param cache_mal_entries: The number of MAL entries you wish to cache.
         """
+        assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
+        assert cache_mal_entries >= 0, ('Param `cache_mal_entries`'
+                                        'must not be negative.')
         self.logger.info('Populating lookup...')
         await self.db_controller.pre_cache()
         self.logger.info('Lookup populated.')
 
         self.logger.info('Populating data...')
+<<<<<<< HEAD
         """
+=======
+        start = time()
+>>>>>>> 78d735299c1d83170e5ae9514f761a6e67906e5d
         for med in (Medium.ANIME, Medium.MANGA):
-            await cache_top_40(
-                med, self.session_manager, self.db_controller,
-                self.anilist, self.mal_headers
-            )
             if cache_pages:
                 await cache_top_pages(
                     med, self.session_manager, self.db_controller,
-                    self.anilist, self.mal_headers, cache_pages
+                    self.anilist, self.mal_headers, cache_pages,
+                    cache_mal_entries
                 )
+<<<<<<< HEAD
                 """
+=======
+        end = time()
+        print(end - start)
+>>>>>>> 78d735299c1d83170e5ae9514f761a6e67906e5d
         self.logger.info('Data populated.')
         self.logger.info('Fetching anidb datadump...')
         await self.__fetch_anidb()
@@ -405,7 +423,7 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: The data and id in a tuple  if found.
+        :return: The data and id in a tuple if found.
         """
         if medium != Medium.ANIME:
             return None, None
@@ -513,8 +531,11 @@ class Roboragi:
     async def __get_cached(self, query: str, medium: Medium) -> tuple:
         """
         Get cached data from the database.
+
         :param query: the search query.
+
         :param medium: the medium type.
+
         :return: a tuple of (cached data, cached ids)
         """
         identifiers = await self.db_controller.get_identifier(query, medium)
