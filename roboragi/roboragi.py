@@ -1,8 +1,9 @@
 from asyncio import get_event_loop
 from base64 import b64encode
 from itertools import chain
+from pathlib import Path
 from time import time
-from typing import Dict, Iterable
+from typing import Dict, Iterable, Union
 
 from aiohttp import ClientSession
 
@@ -164,6 +165,59 @@ class Roboragi:
         await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
 
+    @classmethod
+    async def from_sqlite(cls, path: Union[str, Path], mal_config: dict,
+                          anilist_config: dict, *,
+                          cache_pages: int = 0, cache_mal_entries: int = 0,
+                          logger=None, loop=None):
+        """
+        Get an instance of `Roboragi` with class `SqliteController` as the
+        database controller.
+
+        :param mal_config:
+            A dict for MAL authorization.
+            It must contain the keys:
+                user: Your MAL username
+                password: Your MAL password
+
+            It may also contain a key "description" for the description you
+            wish to use in the auth header.
+
+            If this key is not present, the description defaults to:
+                "A Python library for anime search."
+
+        :param anilist_config:
+            A dict for Anilist authorization. It must contain the keys:
+                id: Your Anilist client id
+                secret: Your Anilist client secret.
+
+        :param cache_pages:
+            The number of pages of anime and manga from Anilist to cache
+            before the instance is created. Each page contains 40 entries max.
+
+        :param cache_mal_entries:
+            The number of MAL entries you wish to cache.
+
+        :param logger:
+            The logger object. If it's not provided, will use the
+            defualt logger provided by the library.
+
+        :param loop:
+            An asyncio event loop. If not provided will use the default
+            event loop.
+
+        :return:
+            Instance of `Roboragi` with class `PostgresController`
+            as the database controller.
+        """
+        logger = logger or get_default_logger()
+        db_controller = None
+        session_manager = SessionManager(ClientSession(), logger)
+        instance = cls(session_manager, db_controller, mal_config,
+                       anilist_config, logger=logger, loop=loop)
+        await instance.pre_cache(cache_pages, cache_mal_entries)
+        return instance
+
     async def pre_cache(self, cache_pages: int, cache_mal_entries: int):
         """
         Pre cache the data base with some anime and managa data.
@@ -174,6 +228,9 @@ class Roboragi:
         assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
         assert cache_mal_entries >= 0, ('Param `cache_mal_entries`'
                                         'must not be negative.')
+        if cache_mal_entries:
+            assert cache_pages > 0, ('You must have at least 1'
+                                     'cached page to cache MAL entries.')
         self.logger.info('Populating lookup...')
         await self.db_controller.pre_cache()
         self.logger.info('Lookup populated.')

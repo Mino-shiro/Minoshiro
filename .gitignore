@@ -19,3 +19,4 @@ __pycache__/
 !/roboragi/data/synonyms.db
 !/tests/test_data/.travis_postgres.json
 !/setup.py
+!/example.py
