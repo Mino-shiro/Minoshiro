@@ -34,8 +34,9 @@ class DataController(metaclass=ABCMeta):
 
         :param medium: the medium type.
 
-        :return: A dict of all identifiers for this search query for all sites,
-                 None if nothing is found.
+        :return:
+            A dict of all identifiers for this search query for all sites,
+            None if nothing is found.
         """
         raise NotImplementedError
 
@@ -59,8 +60,11 @@ class DataController(metaclass=ABCMeta):
     async def get_mal_title(self, id_: str, medium: Medium) -> Optional[str]:
         """
         Get a MAL title by its id.
+
         :param id_: th MAL id.
+
         :param medium: the medium type.
+
         :return: The MAL title if it's found.
         """
         raise NotImplementedError
@@ -69,6 +73,7 @@ class DataController(metaclass=ABCMeta):
     async def set_mal_title(self, id_: str, medium: Medium, title: str):
         """
         Set the MAL title for a given id.
+
         :param id_: the MAL id.
 
         :param medium: The medium type.
@@ -82,9 +87,13 @@ class DataController(metaclass=ABCMeta):
                                 site: Site) -> Optional[dict]:
         """
         Get data by id.
+
         :param id_: the id.
+
         :param medium: the medium type.
+
         :param site: the site.
+
         :return: the data for that id if found.
         """
         raise NotImplementedError

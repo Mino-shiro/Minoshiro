@@ -32,8 +32,11 @@ class PostgresController(DataController):
     def __init__(self, pool: Pool, logger, schema: str = 'roboragi'):
         """
         Init
+
         :param pool: the `asyncpg` connection pool.
+
         :param logger: logger object used for logging.
+
         :param schema: the schema name, default is `roboragi`
         """
         self.pool = pool
@@ -45,10 +48,12 @@ class PostgresController(DataController):
                            pool: Pool = None, schema: str = 'roboragi'):
         """
         Get a new instance of `PostgresController`
+
         :param logger: the logger object.
 
         :param connect_kwargs:
-        Keyword arguments for the :func:`asyncpg.connection.connect` function.
+            Keyword arguments for the
+            :func:`asyncpg.connection.connect` function.
 
         :param pool: an existing connection pool.
 
@@ -97,8 +102,9 @@ class PostgresController(DataController):
 
         :param medium: the medium type.
 
-        :return: A dict of all identifiers for this search query for all sites,
-                 None if nothing is found.
+        :return:
+            A dict of all identifiers for this search query for all sites,
+            None if nothing is found.
         """
 
         sql = """

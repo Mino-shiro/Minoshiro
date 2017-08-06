@@ -118,9 +118,13 @@ async def __n_popular_anilist(
 async def __cache_anilist_id(name, medium, id_, db):
     """
     Cache an anilist id to the db.
+
     :param name: the name of the id.
+
     :param medium: the medium type.
+
     :param id_: the id.
+
     :param db: the `DataController` instance.
     """
     if name:
@@ -130,10 +134,15 @@ async def __cache_anilist_id(name, medium, id_, db):
 async def __cache_mal_entry(db, name, medium, mal_headers, session_manager):
     """
     Search MAL from a name, cache the
+
     :param db: the `DataController` instance.
+
     :param name: the name of the anime/manga.
+
     :param medium: the medium type.
+
     :param mal_headers: the mal auth headers.
+
     :param session_manager: the `SessionManager` instance.
     """
     id_dict = await db.get_identifier(name, medium) or {}

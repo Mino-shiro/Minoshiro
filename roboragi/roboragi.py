@@ -143,8 +143,9 @@ class Roboragi:
             An asyncio event loop. If not provided will use the default
             event loop.
 
-        :return: Instance of `Roboragi` with class `PostgresController` as the
-                 database controller.
+        :return:
+            Instance of `Roboragi` with class `PostgresController`
+            as the database controller.
         """
         db_config = dict(db_config)
         logger = logger or get_default_logger()
@@ -411,7 +412,7 @@ class Roboragi:
 
         :param query: the search query.
 
-        :return: The data and id in a tuple  if found.
+        :return: The data and id in a tuple if found.
         """
         if medium != Medium.ANIME:
             return None, None
@@ -519,8 +520,11 @@ class Roboragi:
     async def __get_cached(self, query: str, medium: Medium) -> tuple:
         """
         Get cached data from the database.
+
         :param query: the search query.
+
         :param medium: the medium type.
+
         :return: a tuple of (cached data, cached ids)
         """
         identifiers = await self.db_controller.get_identifier(query, medium)
