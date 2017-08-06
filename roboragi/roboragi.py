@@ -308,7 +308,9 @@ class Roboragi:
         :param names: all names for the item.
         :param medium: the medium type.
         """
-        it = chain(*names)
+        it = []
+        for gen in names:
+            it = list(set(it+list(gen)))
 
         async def cache_one(_site, _id):
             for name in it:
@@ -316,7 +318,6 @@ class Roboragi:
                     await self.db_controller.set_identifier(
                         name, medium, _site, _id
                     )
-
         for site, id_ in to_be_cached.items():
             await cache_one(site, id_)
 
