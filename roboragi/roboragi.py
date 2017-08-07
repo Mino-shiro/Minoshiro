@@ -16,7 +16,7 @@ from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.utils.pre_cache import cache_top_pages
-from roboragi.web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, \
+from roboragi.web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal,\
     mu, nu
 from .logger import get_default_logger
 
@@ -312,7 +312,8 @@ class Roboragi:
             )
             if res:
                 yield site, res
-                names.append(get_synonyms(res, site))
+                for title in get_synonyms(res, site):
+                    names.append(title)
             if id_:
                 to_be_cached[site] = id_
         await self.__cache(to_be_cached, names, medium)

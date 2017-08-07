@@ -161,7 +161,7 @@ def __get_closest(query: str, anime_list: List[dict], names) -> dict:
     :return:
         Closest matching anime by search query if found else an empty dict.
     """
-    synonyms_list = list(names[0])
+    synonyms_list = names
     synonyms_list.insert(0, query)
     match = None
     for name in synonyms_list:
