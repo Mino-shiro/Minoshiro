@@ -54,8 +54,9 @@ class Kitsu:
             return
         if js:
             closest_entry = self.__get_closest(query, js['data'])
-            results = self.__parse_resp(closest_entry, medium)
-            return results[0]
+            if results:
+                results = self.__parse_resp(closest_entry, medium)
+                return results[0]
         else:
             return
 
@@ -158,7 +159,7 @@ class Kitsu:
             if ratio > max_ratio and ratio >= 0.90:
                 max_ratio = ratio
                 match = thing
-        return match or {}
+        return match
 
     def __match_max(self, thing: dict, matcher: SequenceMatcher) -> float:
         """
