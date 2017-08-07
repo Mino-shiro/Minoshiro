@@ -14,7 +14,7 @@ _convert_medium = {
 
 class DataController(metaclass=ABCMeta):
     """
-    An ABC for all classes that deals with database read write.
+    An ABC (abstract base class) that deals with database caching.
     """
     __slots__ = ('logger',)
 
@@ -31,12 +31,15 @@ class DataController(metaclass=ABCMeta):
         Get the identifier of a given search query.
 
         :param query: the search query.
+        :type query: str
 
         :param medium: the medium type.
+        :type medium: Medium
 
         :return:
             A dict of all identifiers for this search query for all sites,
             None if nothing is found.
+        :rtype: Optional[Dict[Site, str]]
         """
         raise NotImplementedError
 
@@ -47,12 +50,16 @@ class DataController(metaclass=ABCMeta):
         Set the identifier for a given name.
 
         :param name: the name.
+        :type name: str
 
         :param medium: the medium type.
+        :type medium: Medium
 
         :param site: the site.
+        :type site: Site
 
         :param identifier: the identifier.
+        :type identifier: str
         """
         raise NotImplementedError
 
@@ -62,10 +69,13 @@ class DataController(metaclass=ABCMeta):
         Get a MAL title by its id.
 
         :param id_: th MAL id.
+        :type id_: str
 
         :param medium: the medium type.
+        :type medium: Medium
 
         :return: The MAL title if it's found.
+        :rtype: Optional[str]
         """
         raise NotImplementedError
 
@@ -75,10 +85,13 @@ class DataController(metaclass=ABCMeta):
         Set the MAL title for a given id.
 
         :param id_: the MAL id.
+        :type id_: str
 
         :param medium: The medium type.
+        :type medium: Medium
 
         :param title: The MAL title for the given id.
+        :type title: str
         """
         raise NotImplementedError
 
@@ -89,12 +102,16 @@ class DataController(metaclass=ABCMeta):
         Get data by id.
 
         :param id_: the id.
+        :type id_: str
 
         :param medium: the medium type.
+        :type medium: Medium
 
         :param site: the site.
+        :type site: Site
 
         :return: the data for that id if found.
+        :rtype: Optional[dict]
         """
         raise NotImplementedError
 
@@ -105,12 +122,16 @@ class DataController(metaclass=ABCMeta):
         Set the data for a given id.
 
         :param id_: the id.
+        :type id_: str
 
         :param medium: the medium type.
+        :type medium: Medium
 
         :param site: the site.
+        :type site: Site
 
         :param data: the data for the id.
+        :type data: dict
         """
         raise NotImplementedError
 
@@ -120,10 +141,13 @@ class DataController(metaclass=ABCMeta):
         Get the cached data for the given search query.
 
         :param query: the search query.
+        :type query: str
 
         :param medium: the medium type.
+        :type medium: Medium
 
         :return: the cached data, for all sites that has the data.
+        :rtype: Optional[dict]
         """
         id_dict = await self.get_identifier(query, medium)
         if not id_dict:
