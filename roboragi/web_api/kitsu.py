@@ -54,7 +54,8 @@ class Kitsu:
             return
         if js:
             closest_entry = self.__get_closest(query, js['data'])
-            if results:
+            if closest_entry:
+                
                 results = self.__parse_resp(closest_entry, medium)
                 return results[0]
         else:
