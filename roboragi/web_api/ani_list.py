@@ -84,6 +84,7 @@ class AniList:
         :param medium: medium to search for
 
         :param entry_id: thing id.
+
         :return: dict with thing info.
         """
         if not self.access_token:
@@ -265,10 +266,4 @@ class AniList:
                 ratio = ratio - .05
             if ratio > max_ratio:
                 max_ratio = ratio
-            if thing['synonyms']:
-                for synonym in thing['synonyms']:
-                    matcher.set_seq1(synonym.lower())
-                    ratio = matcher.ratio()
-                    if ratio > max_ratio:
-                        max_ratio = ratio
         return max_ratio
