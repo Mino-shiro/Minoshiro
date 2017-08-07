@@ -1,4 +1,3 @@
-.. currentmodule:: roboragi
 .. _database:
 
 Database
@@ -83,19 +82,115 @@ You will need to initialize the super class with a logger object.
 Next, you will need to implement ALL of the following methods. The methods
 MUST be defined with ``async def``.
 
+.. code-block:: python3
 
-.. autoclass:: DataController
+    @abstractmethod
+    async def get_identifier(self, query: str,
+                             medium: Medium) -> Optional[Dict[Site, str]]:
+        """
+        Get the identifier of a given search query.
 
-    .. automethod:: get_identifier(query, medium)
+        :param query: the search query.
+        :type query: str
 
-    .. automethod:: set_identifier(name, medium, site, identifier)
+        :param medium: the medium type.
+        :type medium: Medium
 
-    .. automethod:: get_mal_title(id_, medium)
+        :return:
+            A dict of all identifiers for this search query for all sites,
+            None if nothing is found.
+        :rtype: Optional[Dict[Site, str]]
+        """
+        raise NotImplementedError
 
-    .. automethod:: set_mal_title(id_, medium, title)
+    @abstractmethod
+    async def set_identifier(self, name: str, medium: Medium,
+                             site: Site, identifier: str):
+        """
+        Set the identifier for a given name.
 
-    .. automethod:: medium_data_by_id(id_, medium, site)
+        :param name: the name.
+        :type name: str
 
-    .. automethod:: set_medium_data(id_, medium, site, data)
+        :param medium: the medium type.
+        :type medium: Medium
 
+        :param site: the site.
+        :type site: Site
 
+        :param identifier: the identifier.
+        :type identifier: str
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def get_mal_title(self, id_: str, medium: Medium) -> Optional[str]:
+        """
+        Get a MAL title by its id.
+
+        :param id_: th MAL id.
+        :type id_: str
+
+        :param medium: the medium type.
+        :type medium: Medium
+
+        :return: The MAL title if it's found.
+        :rtype: Optional[str]
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def set_mal_title(self, id_: str, medium: Medium, title: str):
+        """
+        Set the MAL title for a given id.
+
+        :param id_: the MAL id.
+        :type id_: str
+
+        :param medium: The medium type.
+        :type medium: Medium
+
+        :param title: The MAL title for the given id.
+        :type title: str
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def medium_data_by_id(self, id_: str, medium: Medium,
+                                site: Site) -> Optional[dict]:
+        """
+        Get data by id.
+
+        :param id_: the id.
+        :type id_: str
+
+        :param medium: the medium type.
+        :type medium: Medium
+
+        :param site: the site.
+        :type site: Site
+
+        :return: the data for that id if found.
+        :rtype: Optional[dict]
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    async def set_medium_data(self, id_: str, medium: Medium,
+                              site: Site, data: dict):
+        """
+        Set the data for a given id.
+
+        :param id_: the id.
+        :type id_: str
+
+        :param medium: the medium type.
+        :type medium: Medium
+
+        :param site: the site.
+        :type site: Site
+
+        :param data: the data for the id.
+        :type data: dict
+        """
+        raise NotImplementedError
