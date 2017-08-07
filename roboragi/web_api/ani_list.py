@@ -19,7 +19,9 @@ __escape_table = {
 def escape(text: str) -> str:
     """
     Escape text for ani list use.
+
     :param text: the text to be escaped.
+
     :return: the escaped text.
     """
     return ''.join(__escape_table.get(c, c) for c in text)
@@ -35,7 +37,9 @@ class AniList:
                  client_secret: str):
         """
         Init the class.
+
         :param client_id: the Anilist client id.
+
         :param client_secret: the Anilist client secret.
         """
         self.access_token = None
@@ -47,6 +51,7 @@ class AniList:
     async def get_token(self) -> Optional[str]:
         """
         Get an access token from Anilist.
+
         :return: the access token if success.
         """
         params = {
@@ -73,9 +78,12 @@ class AniList:
             entry_id: str) -> dict:
         """
         Get the full details of an thing by id
+
         :param session_manager: session manager object
-        :param medium: medium to search for 'anime', 'manga', 'novel'
-        :param thing_id: thing id.
+
+        :param medium: medium to search for
+
+        :param entry_id: thing id.
         :return: dict with thing info.
         """
         if not self.access_token:
