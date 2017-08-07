@@ -1,4 +1,3 @@
-import re
 from datetime import datetime
 from json import dumps, loads
 from typing import Dict, Optional
@@ -68,9 +67,6 @@ class PostgresController(DataController):
             'a dict of connection data for creating a new '
             'connection pool.'
         )
-        if not re.fullmatch('[a-zA-Z]+', schema):
-            raise ValueError('Please only use upper and lower case'
-                             'letters in the schema name.')
         if not pool:
             try:
                 pool = await create_pool(**connect_kwargs)
