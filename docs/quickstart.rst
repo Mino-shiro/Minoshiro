@@ -37,7 +37,7 @@ PostgreSQL and Sqlite3.
         # and how many entries from MAL
         # to cache at the instance creation.
         robo = await Roboragi.from_postgres(
-            postgres_config, mal_config, anilist_config,
+            mal_config, anilist_config, postgres_config,
             cache_pages=1, cache_mal_entries=30
         )
 
