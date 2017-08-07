@@ -1,23 +1,22 @@
+from ast import literal_eval
 from asyncio import get_event_loop
 from base64 import b64encode
 from itertools import chain
 from pathlib import Path
 from time import time
 from typing import Dict, Iterable, Union
-from ast import literal_eval
 
 from aiohttp import ClientSession
 
 from roboragi.data import data_path
-
+from roboragi.data_controller import DataController, PostgresController, \
+    SqliteController
 from roboragi.data_controller.data_utils import get_all_synonyms
-from roboragi.data_controller import DataController, PostgresController,\
-        SqliteController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.utils.pre_cache import cache_top_pages
-from roboragi.web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal,\
+from roboragi.web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, \
     mu, nu
 from .logger import get_default_logger
 
@@ -187,8 +186,8 @@ class Roboragi:
         return instance
 
     @classmethod
-    async def from_sqlite(cls, path: Union[str, Path], mal_config: dict,
-                          anilist_config: dict, *,
+    async def from_sqlite(cls, mal_config: dict, anilist_config: dict,
+                          path: Union[str, Path], *,
                           cache_pages: int = 0, cache_mal_entries: int = 0,
                           logger=None, loop=None):
         """

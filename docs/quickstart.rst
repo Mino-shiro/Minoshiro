@@ -62,7 +62,7 @@ PostgreSQL and Sqlite3.
         another_path = Path('another/sqlite/path')
 
         robo = await Roboragi.from_sqlite(
-            sqlite_path, mal_config, anilist_config
+            mal_config, anilist_config, sqlite_path
         )
 
         # We only want the results from those 2 sites.
@@ -72,7 +72,7 @@ PostgreSQL and Sqlite3.
             print(site, data)
 
         another_robo = await Roboragi.from_sqlite(
-            another_path, mal_config, anilist_config
+            mal_config, anilist_config, another_path
         )
         print(await another_robo.get_data(
             'Love Live Sunshine!', Medium.ANIME

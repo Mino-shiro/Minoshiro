@@ -21,7 +21,7 @@ async def postgres():
     }
 
     robo = await Roboragi.from_postgres(
-        postgres_config, mal_config, anilist_config,
+        mal_config, anilist_config, postgres_config,
         cache_pages=1, cache_mal_entries=30
     )
 
@@ -41,7 +41,7 @@ async def sqlite():
     another_path = Path('another/sqlite/path')
 
     robo = await Roboragi.from_sqlite(
-        sqlite_path, mal_config, anilist_config
+        mal_config, anilist_config, sqlite_path
     )
 
     # We only want the results from those 2 sites.
@@ -50,6 +50,6 @@ async def sqlite():
         print(site, data)
 
     another_robo = await Roboragi.from_sqlite(
-        another_path, mal_config, anilist_config
+        mal_config, anilist_config, another_path
     )
     print(await another_robo.get_data('Love Live Sunshine!', Medium.ANIME))
