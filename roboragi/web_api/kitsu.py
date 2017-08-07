@@ -1,7 +1,8 @@
 """
 Handles all Kitsu api calls
 """
-from typing import Optional
+from difflib import SequenceMatcher
+from typing import List, Optional
 from urllib.parse import quote
 from roboragi.data_controller.enums import Medium
 from roboragi.session_manager import HTTPStatusError, SessionManager
@@ -51,9 +52,9 @@ class Kitsu:
         except HTTPStatusError as e:
             self.session_manager.logger.warn(str(e))
             return
-
-        results = self.__parse_resp(js['data'], medium)
-        return results[0]
+        closest_entry = self.__get_closest(query, js['data'])
+        results = self.__parse_resp(closest_entry, medium)
+        return results
 
     async def get_entry_by_id(
             self, medium: Medium, _id: str) -> Optional[dict]:
@@ -134,3 +135,57 @@ class Kitsu:
             else:
                 return_list.append(entry)
         return anime_list
+
+    def __get_closest(self, query: str, thing_list: List[dict]) -> dict:
+        """
+        Get the closest matching anime by search query.
+
+        :param query: the search term.
+
+        :param thing_list: a list of animes.
+
+        :return: Closest matching anime by search query if found
+                    else an empty dict.
+        """
+        max_ratio, match = 0, None
+        matcher = SequenceMatcher(b=query.lower().strip())
+        for thing in thing_list:
+            ratio = self.__match_max(thing, matcher)
+            if ratio > max_ratio and ratio >= 0.90:
+                max_ratio = ratio
+                match = thing
+        return match or {}
+
+    def __match_max(self, thing: dict, matcher: SequenceMatcher) -> float:
+        """
+        Get the max matched ratio for a given thing.
+
+        :param thing: the thing.
+
+        :param matcher: the `SequenceMatcher` with the search query as seq2.
+        
+        :return: the max matched ratio.
+        """
+        thing_name_list = []
+        thing_name_list_no_syn = []
+        max_ratio = 0
+        if 'title_english' in thing:
+            thing_name_list.append(thing['title_english'].lower())
+            thing_name_list_no_syn.append(thing['title_english'].lower())
+
+        if 'title_romaji' in thing:
+            thing_name_list.append(thing['title_romaji'].lower())
+            thing_name_list_no_syn.append(thing['title_romaji'].lower())
+
+        if 'synonyms' in thing:
+            for synonym in thing['synonyms']:
+                thing_name_list.append(synonym.lower())
+
+        for name in thing_name_list:
+            matcher.set_seq1(name.lower())
+            ratio = matcher.ratio()
+            if ('one shot' in thing['type'].lower()):
+                ratio = ratio - .05
+            if ratio > max_ratio:
+                max_ratio = ratio
+        return max_ratio
