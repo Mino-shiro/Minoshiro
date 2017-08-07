@@ -45,7 +45,7 @@ async def get_light_novel_url(
                 'url': PyQuery(thing).find('a').attr('href')
             }
             ln_list.append(data)
-    return __get_closest(query, ln_list)
+    return __get_closest(query, ln_list, names)
 
 
 def get_light_novel_by_id(ln_id: str) -> str:

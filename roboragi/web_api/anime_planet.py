@@ -71,7 +71,7 @@ async def get_manga_url(
     :param query: a search query.
 
     :param names: a list of known names
-    
+
     :author_name: name to search for manga
 
     :return: the anime url if it's found.
