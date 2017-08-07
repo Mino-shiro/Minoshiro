@@ -7,7 +7,7 @@ It assumes you have the library installed,
 if you don’t check the :ref:`install` portion.
 
 The code block below showcases the basic usage using the built in support for
-PostgreSQL and Sqlite3.
+PostgreSQL and SQLite3.
 
 .. code-block:: python3
 

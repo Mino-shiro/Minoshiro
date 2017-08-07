@@ -195,7 +195,7 @@ class Roboragi:
         database controller.
 
         :param path:
-            The path to the Sqlite3 database, can either be a string or a
+            The path to the SQLite3 database, can either be a string or a
             Pathlib Path object.
 
         :param mal_config:

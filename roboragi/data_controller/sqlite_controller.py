@@ -20,7 +20,7 @@ _tables = {
 
 class SqliteController(DataController):
     """
-    A Sqlite3 data controller.
+    A SQLite3 data controller.
     """
     __slots__ = ('path', '_loop')
 
