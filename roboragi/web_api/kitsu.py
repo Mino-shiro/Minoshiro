@@ -153,6 +153,8 @@ class Kitsu:
         matcher = SequenceMatcher(b=query.lower().strip())
         for thing in thing_list:
             ratio = self.__match_max(thing, matcher)
+            if ratio == 1.0:
+                return thing
             if ratio > max_ratio and ratio >= 0.90:
                 max_ratio = ratio
                 match = thing
@@ -165,16 +167,23 @@ class Kitsu:
         :param thing: the thing.
 
         :param matcher: the `SequenceMatcher` with the search query as seq2.
-        
+
         :return: the max matched ratio.
         """
+        attributes = thing['attributes']
         thing_name_list = []
         max_ratio = 0
-        if 'canonicalTitle' in thing['attributes']:
-            thing_name_list.append(thing['attributes']['canonicalTitle'].lower())
+        if 'canonicalTitle' in attributes:
+            thing_name_list.append(attributes['canonicalTitle'].lower())
 
-        if 'abbreviatedTitles' in thing['attributes']:
-            for title in thing['attributes']['abbreviatedTitles']:
+        if 'titles' in attributes and \
+                attributes['titles'] is not None:
+            for title in attributes['titles']:
+                thing_name_list.append(attributes['titles'][title].lower())
+
+        if 'abbreviatedTitles' in attributes and \
+                attributes['abbreviatedTitles'] is not None:
+            for title in attributes['abbreviatedTitles']:
                 thing_name_list.append(title.lower())
         for name in thing_name_list:
             matcher.set_seq1(name.lower())
