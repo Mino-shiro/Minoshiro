@@ -610,7 +610,6 @@ class Roboragi:
         """
         if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
             return None, None
-
         kitsu_id = cached_ids.get(Site.KITSU) if cached_ids else None
         try:
             if kitsu_id:
@@ -624,7 +623,6 @@ class Roboragi:
         except Exception as e:
             self.logger.warning(f'Error raised by Kitsu: {e}')
             resp = None
-
         id_ = str(resp['id']) if resp else None
         try:
             return resp, id_

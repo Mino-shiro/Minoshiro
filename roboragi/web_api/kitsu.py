@@ -52,9 +52,12 @@ class Kitsu:
         except HTTPStatusError as e:
             self.session_manager.logger.warn(str(e))
             return
-        closest_entry = self.__get_closest(query, js['data'])
-        results = self.__parse_resp(closest_entry, medium)
-        return results
+        if js:
+            closest_entry = self.__get_closest(query, js['data'])
+            results = self.__parse_resp(closest_entry, medium)
+            return results[0]
+        else:
+            return
 
     async def get_entry_by_id(
             self, medium: Medium, _id: str) -> Optional[dict]:
@@ -84,45 +87,44 @@ class Kitsu:
         except HTTPStatusError as e:
             self.session_manager.logger.warn(str(e))
             return
-
-        results = self.__parse_resp(js['data'], medium)
+        first = js['data']
+        results = self.__parse_resp(first.pop(), medium)
         return results[0]
 
-    def __parse_resp(self, response, medium):
+    def __parse_resp(self, entry, medium):
         anime_list = []
         medium_str = 'anime' if medium == Medium.ANIME else 'manga'
-        for entry in response:
-            try:
-                anime_list.append(dict(
-                    id=entry['id'],
-                    url=f'https://kitsu.io/{medium_str}/{entry["attributes"]["slug"]}',
-                    title_romaji=entry['attributes']['titles']['en_jp']
-                        if 'en_jp' in entry['attributes']['titles'] else None,
-                    title_english=entry['attributes']['titles']['en']
-                        if 'en' in entry['attributes']['titles'] else None,
-                    title_japanese=entry['attributes']['titles']['ja_jp']
-                        if 'ja_jp' in entry['attributes']['titles'] else None,
-                    synonyms=set(entry['attributes']['abbreviatedTitles'])
-                        if entry['attributes']['abbreviatedTitles'] else set(),
-                    description=entry['attributes']['synopsis']))
+        try:
+            anime_list.append(dict(
+                id=entry['id'],
+                url=f'https://kitsu.io/{medium_str}/{entry["attributes"]["slug"]}',
+                title_romaji=entry['attributes']['titles']['en_jp']
+                    if 'en_jp' in entry['attributes']['titles'] else None,
+                title_english=entry['attributes']['titles']['en']
+                    if 'en' in entry['attributes']['titles'] else None,
+                title_japanese=entry['attributes']['titles']['ja_jp']
+                    if 'ja_jp' in entry['attributes']['titles'] else None,
+                synonyms=set(entry['attributes']['abbreviatedTitles'])
+                    if entry['attributes']['abbreviatedTitles'] else set(),
+                description=entry['attributes']['synopsis']))
 
-                if medium == Medium.ANIME:
-                    anime_list[-1]['episode_count'] = \
-                        int(entry['attributes']['episodeCount'])\
-                        if int(entry['attributes']['episodeCount']) > 0 else None
-                    anime_list[-1]['nsfw'] = entry['attributes']['nsfw']
-                    anime_list[-1]['type'] = entry['attributes']['showType']
+            if medium == Medium.ANIME:
+                anime_list[-1]['episode_count'] = \
+                    int(entry['attributes']['episodeCount'])\
+                    if int(entry['attributes']['episodeCount']) > 0 else None
+                anime_list[-1]['nsfw'] = entry['attributes']['nsfw']
+                anime_list[-1]['type'] = entry['attributes']['showType']
 
-                elif medium in [Medium.MANGA, Medium.LN]:
-                    anime_list[-1]['volume_count'] = \
-                        int(entry['attributes']['volumeCount'])\
-                        if entry['attributes']['volumeCount'] else None
-                    anime_list[-1]['chapter_count'] = \
-                        int(entry['attributes']['chapterCount']) \
-                        if entry['attributes']['chapterCount'] else None
-                    anime_list[-1]['type'] = entry['attributes']['mangaType']
-            except AttributeError:
-                pass
+            elif medium in [Medium.MANGA, Medium.LN]:
+                anime_list[-1]['volume_count'] = \
+                    int(entry['attributes']['volumeCount'])\
+                    if entry['attributes']['volumeCount'] else None
+                anime_list[-1]['chapter_count'] = \
+                    int(entry['attributes']['chapterCount']) \
+                    if entry['attributes']['chapterCount'] else None
+                anime_list[-1]['type'] = entry['attributes']['mangaType']
+        except AttributeError:
+            pass
 
         return_list = []
         for entry in anime_list:
@@ -167,20 +169,13 @@ class Kitsu:
         :return: the max matched ratio.
         """
         thing_name_list = []
-        thing_name_list_no_syn = []
         max_ratio = 0
-        if 'title_english' in thing:
-            thing_name_list.append(thing['title_english'].lower())
-            thing_name_list_no_syn.append(thing['title_english'].lower())
+        if 'canonicalTitle' in thing['attributes']:
+            thing_name_list.append(thing['attributes']['canonicalTitle'].lower())
 
-        if 'title_romaji' in thing:
-            thing_name_list.append(thing['title_romaji'].lower())
-            thing_name_list_no_syn.append(thing['title_romaji'].lower())
-
-        if 'synonyms' in thing:
-            for synonym in thing['synonyms']:
-                thing_name_list.append(synonym.lower())
-
+        if 'abbreviatedTitles' in thing['attributes']:
+            for title in thing['attributes']['abbreviatedTitles']:
+                thing_name_list.append(title.lower())
         for name in thing_name_list:
             matcher.set_seq1(name.lower())
             ratio = matcher.ratio()
