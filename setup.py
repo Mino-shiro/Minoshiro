@@ -1,10 +1,13 @@
 from setuptools import setup
 
-with open('README.md') as f:
-    readme = f.read()
+with open('.version') as v:
+    version = v.read()
 
-with open('requirements.txt') as r:
-    requirements = r.read().splitlines()
+with open('README.md') as r:
+    readme = r.read()
+
+with open('requirements.txt') as req:
+    requirements = req.read().splitlines()
 
 extras_require = {
     'postgres': ['asyncpg>=0.12.0']
@@ -12,7 +15,7 @@ extras_require = {
 
 setup(
     name='roboragi',
-    version='0.1.0',
+    version=version,
     description=('An async Python3.6 library to search for anime, manga and'
                  'light novel using various web apis.'),
     long_description=readme,

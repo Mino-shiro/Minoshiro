@@ -26,36 +26,39 @@ class Roboragi:
                  db_controller: DataController, mal_config: dict,
                  anilist_config: dict, *, logger=None, loop=None):
         """
+        Represents the search instance.
+
         It is suggested to use one of the class methods to create the instance
         if you wish to use one of the data controllers provided by the library.
 
-        Make sure you run the `pre_cache` method if you initializeed the class
-        directly from the `__init__` method.
+        Make sure you run the ``pre_cache`` method if you initialized the class
+        directly from the ``__init__`` method.
 
         :param session_manager:
-            The `SessionManager` instance.
-            See class `roboragi.session_manager.SessionManager` for details.
+            The ``SessionManager`` instance.
+            See class ``roboragi.session_manager.SessionManager`` for details.
 
         :param db_controller:
-            Any sub class of `roboragi.data_controller.abc.DataController`
+            Any sub class of ``roboragi.data_controller.abc.DataController``
             will work here.
 
         :param mal_config:
             A dict for MAL authorization.
             It must contain the keys:
-                user: Your MAL username
-                password: Your MAL password
+                ``user``: Your MAL username
+                ``password``: Your MAL password
 
             It may also contain a key "description" for the description you
             wish to use in the auth header.
 
             If this key is not present, the description defaults to:
-                "A Python library for anime search."
+            ``A Python library for anime search.``
 
         :param anilist_config:
-            A dict for Anilist authorization. It must contain the keys:
-                id: Your Anilist client id
-                secret: Your Anilist client secret.
+            A dict for Anilist authorization.
+            It must contain the keys:
+                ``id``: Your Anilist client id
+                ``secret``: Your Anilist client secret.
 
         :param logger:
             The logger object. If it's not provided, will use the
@@ -147,7 +150,7 @@ class Roboragi:
 
         :param pool: an existing connection pool.
 
-        One of `pool` or `db_config` must not be None.
+        One of ``db_config`` or ``pool`` must not be None.
 
         :param schema: the schema name used. Defaults to `roboragi`
 

@@ -19,8 +19,9 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('..'))
+from pathlib import Path
 
+sys.path.insert(0, os.path.abspath('..'))
 
 # -- General configuration ------------------------------------------------
 
@@ -32,9 +33,9 @@ sys.path.insert(0, os.path.abspath('..'))
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = ['sphinx.ext.autodoc',
-    'sphinx.ext.doctest',
-    'sphinx.ext.intersphinx',
-    'sphinx.ext.viewcode']
+              'sphinx.ext.doctest',
+              'sphinx.ext.intersphinx',
+              'sphinx.ext.viewcode']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -58,7 +59,8 @@ author = 'MaT1g3R dashwav Nihilate'
 # built documents.
 #
 # The short X.Y version.
-version = '0.1.0'
+with Path(Path(__file__).parent.parent.joinpath('.version')).open() as v:
+    version = v.read()
 # The full version, including alpha/beta/rc tags.
 release = version
 
@@ -79,7 +81,6 @@ pygments_style = 'friendly'
 
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = False
-
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -114,12 +115,10 @@ html_sidebars = {
     ]
 }
 
-
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
 htmlhelp_basename = 'Roboragidoc'
-
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -149,7 +148,6 @@ latex_documents = [
      'MaT1g3R dashwav Nihilate', 'manual'),
 ]
 
-
 # -- Options for manual page output ---------------------------------------
 
 # One entry per manual page. List of tuples
@@ -158,7 +156,6 @@ man_pages = [
     (master_doc, 'roboragi', 'Roboragi Documentation',
      [author], 1)
 ]
-
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -170,9 +167,6 @@ texinfo_documents = [
      author, 'Roboragi', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-
 
 # Example configuration for intersphinx: refer to the Python standard library.
 intersphinx_mapping = {'https://docs.python.org/': None}
