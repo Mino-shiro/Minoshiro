@@ -5,7 +5,7 @@ from typing import Dict, Optional
 from asyncpg import InterfaceError, create_pool
 from asyncpg.pool import Pool
 
-from roboragi import get_default_logger
+from roboragi.logger import get_default_logger
 from .abc import DataController
 from .enums import Medium, Site
 from .postgres_utils import make_tables, parse_record
