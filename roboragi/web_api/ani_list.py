@@ -27,11 +27,69 @@ def escape(text: str) -> str:
     return ''.join(__escape_table.get(c, c) for c in text)
 
 
+def get_closest(query: str, thing_list: List[dict]) -> dict:
+    """
+    Get the closest matching anime by search query.
+
+    :param query: the search term.
+
+    :param thing_list: a list of animes.
+
+    :return: Closest matching anime by search query if found
+                else an empty dict.
+    """
+    max_ratio, match = 0, None
+    matcher = SequenceMatcher(b=query.lower().strip())
+    for thing in thing_list:
+        ratio = match_max(thing, matcher)
+        if ratio > max_ratio and ratio >= 0.90:
+            max_ratio = ratio
+            match = thing
+    return match or {}
+
+
+def match_max(thing: dict, matcher: SequenceMatcher) -> float:
+    """
+    Get the max matched ratio for a given thing.
+
+    :param thing: the thing.
+
+    :param matcher: the `SequenceMatcher` with the search query as seq2.
+
+    :return: the max matched ratio.
+    """
+    thing_name_list = []
+    thing_name_list_no_syn = []
+    max_ratio = 0
+    if 'title_english' in thing:
+        thing_name_list.append(thing['title_english'].lower())
+        thing_name_list_no_syn.append(thing['title_english'].lower())
+
+    if 'title_romaji' in thing:
+        thing_name_list.append(thing['title_romaji'].lower())
+        thing_name_list_no_syn.append(thing['title_romaji'].lower())
+
+    if 'synonyms' in thing:
+        for synonym in thing['synonyms']:
+            thing_name_list.append(synonym.lower())
+
+    for name in thing_name_list:
+        matcher.set_seq1(name.lower())
+        ratio = matcher.ratio()
+        if 'one shot' in thing['type'].lower():
+            ratio = ratio - .05
+        if ratio > max_ratio:
+            max_ratio = ratio
+    return max_ratio
+
+
 class AniList:
     """
     Since we need a new access token from Anilist every hour, a class is more
     appropriate to handle ani list searches.
     """
+    __slots__ = ('access_token', 'client_id', 'client_secret',
+                 'session_manager', 'base_url')
 
     def __init__(self, session_manager: SessionManager, client_id: str,
                  client_secret: str):
@@ -71,11 +129,8 @@ class AniList:
             js = await resp.json()
             return js.get('access_token')
 
-    async def get_entry_by_id(
-            self,
-            session_manager: SessionManager,
-            medium: Medium,
-            entry_id: str) -> dict:
+    async def get_entry_by_id(self, session_manager: SessionManager,
+                              medium: Medium, entry_id: str) -> dict:
         """
         Get the full details of an thing by id
 
@@ -101,12 +156,8 @@ class AniList:
 
         return js
 
-    async def get_entry_details(
-            self,
-            session_manager: SessionManager,
-            medium: Medium,
-            query: str,
-            thing_id: str = None) -> Optional[dict]:
+    async def get_entry_details(self, session_manager: SessionManager,
+                                medium: Medium, query: str) -> Optional[dict]:
         """
         Get the details of an thing by search query.
 
@@ -115,8 +166,6 @@ class AniList:
         :param medium: medium to search for 'anime', 'manga', 'novel'
 
         :param query: the search term.
-
-        :param thing_id: thing id.
 
         :return: dict with thing info.
         """
@@ -139,58 +188,12 @@ class AniList:
                 thing.remove(entry)
             elif medium == 'novel' and 'novel' not in entry['type'].lower():
                 thing.remove(entry)
-        closest_entry = self.__get_closest(query, thing)
+        closest_entry = get_closest(query, thing)
         return await self.get_entry_by_id(
             session_manager, medium, closest_entry['id'])
 
-    async def get_genres(
-            self,
-            session_manager: SessionManager) -> Optional[list]:
-        """
-        Gets a list of genres for a specified medium.
-
-        :param session_manager: the session manager.
-
-        :return: list of genres
-        """
-        if not self.access_token:
-            self.access_token = await self.get_token()
-        url = f'{self.base_url}/genre_list'
-        params = {'access_token': self.access_token}
-        return await session_manager.get_json(url, params)
-
-    async def get_top_40_by_genre(
-            self,
-            session_manager: SessionManager,
-            medium: Medium,
-            genre: str) -> Optional[list]:
-        """
-        Gets the top 40 entries in the medium for specified genre.
-
-        :param session_manager: the session manager.
-
-        :param medium: medium 'manga' or 'anime'.
-
-        :param genre: genre we want info from
-
-        :return: list of genres
-        """
-        med_str = filter_anime_manga(medium)
-        if not self.access_token:
-            self.access_token = await self.get_token()
-        url = f'{self.base_url}/browse/{med_str}'
-        params = {
-            'access_token': self.access_token,
-            'genres': genre,
-            'sort': 'popularity-desc'
-        }
-        return await session_manager.get_json(url, params)
-
-    async def get_page_by_popularity(
-            self,
-            session_manager: SessionManager,
-            medium: Medium,
-            page: int) -> Optional[list]:
+    async def get_page_by_popularity(self, session_manager, medium: Medium,
+                                     page: int) -> Optional[list]:
         """
         Gets the 40 entries in the medium from specified page.
 
@@ -211,59 +214,4 @@ class AniList:
             'page': page,
             'sort': 'popularity-desc'
         }
-
         return await session_manager.get_json(url, params)
-
-    def __get_closest(self, query: str, thing_list: List[dict]) -> dict:
-        """
-        Get the closest matching anime by search query.
-
-        :param query: the search term.
-
-        :param thing_list: a list of animes.
-
-        :return: Closest matching anime by search query if found
-                    else an empty dict.
-        """
-        max_ratio, match = 0, None
-        matcher = SequenceMatcher(b=query.lower().strip())
-        for thing in thing_list:
-            ratio = self.__match_max(thing, matcher)
-            if ratio > max_ratio and ratio >= 0.90:
-                max_ratio = ratio
-                match = thing
-        return match or {}
-
-    def __match_max(self, thing: dict, matcher: SequenceMatcher) -> float:
-        """
-        Get the max matched ratio for a given thing.
-
-        :param thing: the thing.
-
-        :param matcher: the `SequenceMatcher` with the search query as seq2.
-        
-        :return: the max matched ratio.
-        """
-        thing_name_list = []
-        thing_name_list_no_syn = []
-        max_ratio = 0
-        if 'title_english' in thing:
-            thing_name_list.append(thing['title_english'].lower())
-            thing_name_list_no_syn.append(thing['title_english'].lower())
-
-        if 'title_romaji' in thing:
-            thing_name_list.append(thing['title_romaji'].lower())
-            thing_name_list_no_syn.append(thing['title_romaji'].lower())
-
-        if 'synonyms' in thing:
-            for synonym in thing['synonyms']:
-                thing_name_list.append(synonym.lower())
-
-        for name in thing_name_list:
-            matcher.set_seq1(name.lower())
-            ratio = matcher.ratio()
-            if ('one shot' in thing['type'].lower()):
-                ratio = ratio - .05
-            if ratio > max_ratio:
-                max_ratio = ratio
-        return max_ratio

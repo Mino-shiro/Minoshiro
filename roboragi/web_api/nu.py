@@ -8,13 +8,8 @@ from urllib.parse import quote
 
 from pyquery import PyQuery
 
-from roboragi.session_manager import SessionManager
 
-
-async def get_light_novel_url(
-        session_manager: SessionManager,
-        query: str,
-        names: list) -> Optional[dict]:
+async def get_light_novel_url(session_manager, query, names) -> Optional[dict]:
     """
     Get ln url by search query.
 
@@ -45,17 +40,6 @@ async def get_light_novel_url(
             }
             ln_list.append(data)
     return __get_closest(query, ln_list, names)
-
-
-def get_light_novel_by_id(ln_id: str) -> str:
-    """
-    Returns ln url by id.
-
-    :param ln_id: a ln id.
-
-    :return: the ln url.
-    """
-    return 'http://novelupdates.com/series/' + str(ln_id)
 
 
 def __get_closest(query: str, ln_list: List[dict], names) -> dict:

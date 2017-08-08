@@ -1,7 +1,9 @@
 from enum import EnumMeta
+from inspect import iscoroutinefunction
 
-from roboragi import DataController, Medium, PostgresController, Roboragi, Site, \
-    SqliteController
+from roboragi import DataController, Medium, PostgresController, Roboragi, \
+    Site, SqliteController
+from roboragi.utils.pre_cache import cache_top_pages
 
 
 def test_imports():
@@ -13,3 +15,4 @@ def test_imports():
     assert SqliteController in DataController.__subclasses__()
     assert isinstance(Site, EnumMeta)
     assert isinstance(Medium, EnumMeta)
+    assert iscoroutinefunction(cache_top_pages)

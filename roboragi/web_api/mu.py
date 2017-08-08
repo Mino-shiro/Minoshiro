@@ -3,18 +3,13 @@ MU.py
 Handles all MangaUpdates information
 """
 from difflib import SequenceMatcher
-from typing import List, Optional
+from typing import List
 from urllib.parse import quote
 
 from pyquery import PyQuery
 
-from roboragi.session_manager import SessionManager
 
-
-async def get_manga_url(
-        session_manager: SessionManager,
-        query: str,
-        names: list) -> Optional[str]:
+async def get_manga_url(session_manager, query, names: list) -> dict:
     """
     Get manga url by search query.
 
@@ -47,15 +42,6 @@ async def get_manga_url(
             }
             manga_list.append(data)
     return __get_closest(query, manga_list, names)
-
-
-def get_manga_url_by_id(manga_id) -> str:
-    """
-    Returns manga url by id.
-    :param manga_id: a manga id.
-    :return: the manga url.
-    """
-    return 'https://www.mangaupdates.com/series.html?id=' + str(manga_id)
 
 
 def __get_closest(query: str, manga_list: List[dict], names) -> dict:

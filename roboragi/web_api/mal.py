@@ -8,17 +8,16 @@ from typing import List, Optional
 from urllib.parse import quote
 
 from roboragi.data_controller.enums import Medium
-from roboragi.session_manager import SessionManager
 
 
-async def get_entry_details(
-        session_manager: SessionManager,
-        header_info: dict,
-        medium: Medium,
-        query: str,
-        thing_id: str = None) -> Optional[dict]:
+async def get_entry_details(session_manager, header_info: dict, medium: Medium,
+                            query: str, thing_id: str = None) -> Optional[dict]:
     """
     Get the details of an thing by search query.
+
+    :param session_manager: `SessionManager` instance
+
+    :param medium: the medium type.
 
     :param header_info: dict containing the header info
 

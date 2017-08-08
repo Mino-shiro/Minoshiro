@@ -3,12 +3,11 @@ Retrieve anime info from AnimePlanet.
 """
 from collections import deque
 from difflib import SequenceMatcher
+from itertools import chain
 from typing import List, Optional
 from urllib.parse import quote
 
 from pyquery import PyQuery
-
-from roboragi.session_manager import SessionManager
 
 
 def sanitize_search_text(text: str) -> str:
@@ -20,10 +19,7 @@ def sanitize_search_text(text: str) -> str:
     return text.replace('(TV)', 'TV')
 
 
-async def get_anime_url(
-        session_manager: SessionManager,
-        query: str,
-        names: list) -> Optional[str]:
+async def get_anime_url(session_manager, query, names: list) -> Optional[str]:
     """
     Get anime url by search query.
 
@@ -44,25 +40,21 @@ async def get_anime_url(
             params=params) as resp:
         html = await resp.text()
     ap = PyQuery(html)
-
     if ap.find('.cardDeck.pure-g.cd-narrow[data-type="anime"]'):
         anime_list = []
         for entry in ap.find('.card.pure-1-6'):
             anime = {
                 'title': PyQuery(entry).find('h4').text(),
-                'url': f'''http://www.anime-planet.com{PyQuery(entry).find("a").attr("href")}'''
+                'url': (f'http://www.anime-planet.com'
+                        f'{PyQuery(entry).find("a").attr("href")}')
             }
             anime_list.append(anime)
         return __get_closest(query, anime_list, names).get('url')
-    else:
-        return ap.find("meta[property='og:url']").attr('content')
+    return ap.find("meta[property='og:url']").attr('content')
 
 
-async def get_manga_url(
-        session_manager: SessionManager,
-        query: str,
-        names: list,
-        author_name: str=None) -> Optional[str]:
+async def get_manga_url(session_manager, query,
+                        names: list, author_name=None) -> Optional[str]:
     """
     Get manga url by search query.
 
@@ -72,13 +64,13 @@ async def get_manga_url(
 
     :param names: a list of known names
 
-    :author_name: name to search for manga
+    :param author_name: name for the manga author name
 
     :return: the anime url if it's found.
     """
     params = {
-            'name': quote(query)
-        }
+        'name': quote(query)
+    }
     if author_name:
         params['author'] = quote(author_name)
         async with await session_manager.get(
@@ -107,7 +99,8 @@ async def get_manga_url(
         for entry in ap.find('.card.pure-1-6'):
             anime = {
                 'title': PyQuery(entry).find('h4').text(),
-                'url': f'''http://www.anime-planet.com{PyQuery(entry).find("a").attr("href")}'''
+                'url': (f'http://www.anime-planet.com'
+                        f'{PyQuery(entry).find("a").attr("href")}')
             }
             manga_list.append(anime)
 
@@ -120,32 +113,9 @@ async def get_manga_url(
                     manga['title'] = manga['title'].replace('(', '')
                     manga['title'] = manga['title'].replace(')', '').strip()
 
-        return __get_closest(query, manga_list).get('url')
+        return __get_closest(query, manga_list, names).get('url')
     else:
         return ap.find("meta[property='og:url']").attr('content')
-    pass
-
-
-def get_anime_url_by_id(anime_id: str) -> str:
-    """
-    Returns anime url by id.
-
-    :param anime_id: an anime id.
-
-    :return: the anime url.
-    """
-    return 'http://www.anime-planet.com/anime/' + str(anime_id)
-
-
-def get_manga_url_by_id(manga_id: str) -> str:
-    """
-    Returns manga url by id.
-
-    :param manga_id: a manga id.
-
-    :return: the manga url.
-    """
-    return 'http://www.anime-planet.com/manga/' + str(manga_id)
 
 
 def __get_closest(query: str, anime_list: List[dict], names) -> dict:
@@ -161,18 +131,11 @@ def __get_closest(query: str, anime_list: List[dict], names) -> dict:
     :return:
         Closest matching anime by search query if found else an empty dict.
     """
-    synonyms_list = names
-    synonyms_list.insert(0, query)
-    match = None
-    for name in synonyms_list:
-        max_ratio = 0
+    for name in chain((query,), names):
         matcher = SequenceMatcher(b=name.lower())
         for anime in anime_list:
             matcher.set_seq1(anime['title'].lower())
             ratio = matcher.ratio()
-            if ratio > max_ratio and ratio >= 0.85:
-                max_ratio = ratio
-                match = anime
-        if match:
-            break
-    return match or {}
+            if ratio >= 0.85:
+                return anime
+    return {}
