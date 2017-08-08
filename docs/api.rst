@@ -17,7 +17,7 @@ Default Logger
 
 Roboragi
 --------------------
-.. py:class:: Roboragi(session_manager, db_controller, mal_config, anilist_config, \*, logger=None, loop=None)
+.. py:class:: Roboragi(db_controller, mal_config, anilist_config, \*, logger=None, loop=None)
 
     Represents the search instance.
 
@@ -28,9 +28,6 @@ Roboragi
     class directly from the ``__init__`` method.
 
     **Parameters**
-
-    * session_manager(:py:class:`SessionManager`) -
-      The :py:class:`SessionManager` instance.
 
     * db_controller(:py:class:`DataController`) -
       Any sub class of :py:class:`DataController` will work here.
@@ -388,19 +385,3 @@ Database Controllers
         **Returns**
 
         A new instance of :py:class:`SqliteController`
-
-Session Manager
------------------
-.. py:class:: SessionManager(session, logger)
-
-    An Aiohttp ClientSession Manager.
-
-    Handles all HTTP requests made by this library.
-
-    **Parameters**
-
-    * session(`ClientSession <https://aiohttp.readthedocs.io/en/stable
-      /client_reference.html#client-session>`_) -
-      An ``Aiohttp`` ``ClientSession``
-
-    * logger(:py:class:`logging.Logger`) - A logger object

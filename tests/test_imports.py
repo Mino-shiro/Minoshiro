@@ -1,11 +1,10 @@
 from enum import EnumMeta
 
-from roboragi import DataController, Medium, PostgresController, Roboragi, \
-    SessionManager, Site, SqliteController
+from roboragi import DataController, Medium, PostgresController, Roboragi, Site, \
+    SqliteController
 
 
 def test_imports():
-    assert isinstance(SessionManager, type)
     assert isinstance(Roboragi, type)
     assert isinstance(DataController, type)
     assert isinstance(PostgresController, type)

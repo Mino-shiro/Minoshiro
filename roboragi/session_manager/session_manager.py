@@ -20,13 +20,13 @@ class SessionManager:
     """
     An aiohttp client session manager.
     """
-    __slots__ = ('session', 'logger', 'codes')
+    __slots__ = ('_session', 'logger', 'codes')
 
-    def __init__(self, session: ClientSession, logger):
+    def __init__(self, logger):
         """
         Initialize the instance of this class.
         """
-        self.session = session
+        self._session = None
         self.logger = logger
         self.codes = {l.value: l.description for l in list(HTTPStatus)}
 
@@ -34,7 +34,12 @@ class SessionManager:
         """
         Class destructor, close the client session.
         """
-        self.session.close()
+        self._session.close()
+
+    async def __session(self):
+        if not self._session:
+            self._session = ClientSession()
+        return self._session
 
     def return_response(self, res, code):
         """
@@ -103,7 +108,8 @@ class SessionManager:
 
         :raises: HTTPStatusError if status code isn't between 200-299
         """
-        r = await self.session.get(
+        session = await self.__session()
+        r = await session.get(
             url, allow_redirects=allow_redirects, **kwargs)
         return self.return_response(r, r.status)
 
@@ -124,5 +130,6 @@ class SessionManager:
 
         :raises: HTTPStatusError if status code isn't between 200-299
         """
-        resp = await self.session.post(url, data=data, **kwargs)
+        session = await self.__session()
+        resp = await session.post(url, data=data, **kwargs)
         return self.return_response(resp, resp.status)

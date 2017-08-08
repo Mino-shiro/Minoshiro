@@ -6,8 +6,6 @@ from pathlib import Path
 from time import time
 from typing import Dict, Iterable, Union
 
-from aiohttp import ClientSession
-
 from roboragi.data import data_path
 from roboragi.data_controller import DataController, PostgresController, \
     SqliteController
@@ -22,8 +20,7 @@ from .logger import get_default_logger
 
 
 class Roboragi:
-    def __init__(self, session_manager: SessionManager,
-                 db_controller: DataController, mal_config: dict,
+    def __init__(self, db_controller: DataController, mal_config: dict,
                  anilist_config: dict, *, logger=None, loop=None):
         """
         Represents the search instance.
@@ -33,10 +30,6 @@ class Roboragi:
 
         Make sure you run the ``pre_cache`` method if you initialized the class
         directly from the ``__init__`` method.
-
-        :param session_manager:
-            The ``SessionManager`` instance.
-            See class ``roboragi.session_manager.SessionManager`` for details.
 
         :param db_controller:
             Any sub class of ``roboragi.data_controller.abc.DataController``
@@ -68,6 +61,7 @@ class Roboragi:
             An asyncio event loop. If not provided will use the default
             event loop.
         """
+        self.session_manager = SessionManager(logger)
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
         assert mal_user and mal_pass, ('Please provide MAL user'
                                        'name and password.')
@@ -77,7 +71,6 @@ class Roboragi:
         assert anilist_id and anilist_pass, ('Please provide Anilist client'
                                              'id and client secret.')
 
-        self.session_manager = session_manager
         self.db_controller = db_controller
 
         mal_agent = mal_config.get(
@@ -182,9 +175,8 @@ class Roboragi:
         db_controller = await PostgresController.get_instance(
             logger, db_config, pool, schema=schema
         )
-        session_manager = SessionManager(ClientSession(), logger)
-        instance = cls(session_manager, db_controller, mal_config,
-                       anilist_config, logger=logger, loop=loop)
+        instance = cls(db_controller, mal_config, anilist_config,
+                       logger=logger, loop=loop)
         await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
 
@@ -239,9 +231,8 @@ class Roboragi:
         """
         logger = logger or get_default_logger()
         db_controller = await SqliteController.get_instance(path, logger, loop)
-        session_manager = SessionManager(ClientSession(), logger)
-        instance = cls(session_manager, db_controller, mal_config,
-                       anilist_config, logger=logger, loop=loop)
+        instance = cls(db_controller, mal_config, anilist_config,
+                       logger=logger, loop=loop)
         await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
 
