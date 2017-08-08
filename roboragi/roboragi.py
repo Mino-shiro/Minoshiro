@@ -16,7 +16,7 @@ from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
 from roboragi.utils.pre_cache import cache_top_pages
-from roboragi.web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal,\
+from roboragi.web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, \
     mu, nu
 from .logger import get_default_logger
 
@@ -197,10 +197,6 @@ class Roboragi:
         Get an instance of `Roboragi` with class `SqliteController` as the
         database controller.
 
-        :param path:
-            The path to the SQLite3 database, can either be a string or a
-            Pathlib Path object.
-
         :param mal_config:
             A dict for MAL authorization.
             It must contain the keys:
@@ -217,6 +213,10 @@ class Roboragi:
             A dict for Anilist authorization. It must contain the keys:
                 id: Your Anilist client id
                 secret: Your Anilist client secret.
+
+        :param path:
+            The path to the SQLite3 database, can either be a string or a
+            Pathlib Path object.
 
         :param cache_pages:
             The number of pages of anime and manga from Anilist to cache
@@ -247,11 +247,12 @@ class Roboragi:
 
     async def pre_cache(self, cache_pages: int, cache_mal_entries: int):
         """
-        Pre cache the data base with some anime and managa data.
+        Pre cache the database with anime and managa data.
 
-        :param cache_pages: the number of pages to cache.
+        :param cache_pages:
+            Number of Anilist pages to cache. There are 40 entries per page.
 
-        :param cache_mal_entries: The number of MAL entries you wish to cache.
+        :param cache_mal_entries: Number of MAL entries you wish to cache.
         """
         assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
         assert cache_mal_entries >= 0, ('Param `cache_mal_entries`'
@@ -281,7 +282,7 @@ class Roboragi:
     async def yield_data(self, query: str, medium: Medium,
                          sites: Iterable[Site] = None):
         """
-        Yield the data for the search query for all sites.
+        Yield the data for the search query from all sites.
 
         :param query: the search query.
 

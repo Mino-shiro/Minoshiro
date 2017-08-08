@@ -62,6 +62,7 @@ Then, use the ``from_postgres`` method as such:
             mal_config, anilist_config, db_config, schema='my_schema'
         )
 
+.. _Extending DatabaseController:
 
 Extending DatabaseController
 ----------------------------------------------

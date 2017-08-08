@@ -5,6 +5,7 @@ from typing import Dict, Optional
 from asyncpg import InterfaceError, create_pool
 from asyncpg.pool import Pool
 
+from roboragi import get_default_logger
 from .abc import DataController
 from .enums import Medium, Site
 from .postgres_utils import make_tables, parse_record
@@ -41,7 +42,7 @@ class PostgresController(DataController):
         super().__init__(logger)
 
     @classmethod
-    async def get_instance(cls, logger, connect_kwargs: dict = None,
+    async def get_instance(cls, logger=None, connect_kwargs: dict = None,
                            pool: Pool = None, schema: str = 'roboragi'):
         """
         Get a new instance of `PostgresController`
@@ -62,6 +63,7 @@ class PostgresController(DataController):
 
         :return: a new instance of `PostgresController`
         """
+        logger = logger or get_default_logger()
         assert connect_kwargs or pool, (
             'Please either provide a connection pool or '
             'a dict of connection data for creating a new '
