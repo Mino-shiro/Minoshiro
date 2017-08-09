@@ -6,16 +6,15 @@ from time import time
 from traceback import format_exc
 from typing import Dict, Iterable, Union
 
-from roboragi.data import data_path
-from roboragi.data_controller import DataController, PostgresController, \
-    SqliteController
-from roboragi.data_controller.enums import Medium, Site
-from roboragi.session_manager import SessionManager
-from roboragi.utils.helpers import get_synonyms
-from roboragi.utils.pre_cache import cache_top_pages
-from roboragi.web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, \
-    mu, nu
+from .data import data_path
+from .data_controller import (DataController, PostgresController,
+                              SqliteController)
+from .data_controller.enums import Medium, Site
 from .logger import get_default_logger
+from .session_manager import SessionManager
+from .utils.helpers import get_synonyms
+from .utils.pre_cache import cache_top_pages
+from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
 
 
 class Roboragi:
