@@ -48,6 +48,17 @@ async def get_light_novel_url(
     return __get_closest(query, ln_list, names)
 
 
+def get_light_novel_by_id(ln_id) -> str:
+    """
+    Returns a light novel url by id.
+
+    :param ln_id: a ln id.
+
+    :return: the ln url
+    """
+    return 'http://lndb.info/light_novel/' + str(ln_id)
+
+
 def __get_closest(query: str, ln_list: List[dict], names) -> dict:
     """
     Get the closest matching light novel by search query.

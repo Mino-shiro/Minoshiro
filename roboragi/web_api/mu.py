@@ -44,6 +44,17 @@ async def get_manga_url(session_manager, query, names: list) -> dict:
     return __get_closest(query, manga_list, names)
 
 
+def get_manga_url_by_id(manga_id) -> str:
+    """
+    Returns manga url by id.
+
+    :param manga_id: a manga id.
+
+    :return: the manga url.
+    """
+    return 'https://www.mangaupdates.com/series.html?id=' + str(manga_id)
+
+
 def __get_closest(query: str, manga_list: List[dict], names) -> dict:
     """
     Get the closest matching manga by search query.
