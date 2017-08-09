@@ -3,7 +3,7 @@
 Inspired by the original [Reddit bot](https://github.com/Nihilate/Roboragi), Roboragi is an async Python library that brings various web APIs for anime, manga, and light novel into one place.
 
 ## Features
-* Simple and modern Pythonic API using async/await syntax
+* Simple and modern Pythonic API using `async/await` syntax
 * Fetches search results from up to 9 different websites
 * Cached search results for faster access
 * Integrates with existing databases
@@ -30,3 +30,6 @@ This installs [asyncpg](https://github.com/MagicStack/asyncpg) alongside of the 
 Documentation can be found at https://roboragi.readthedocs.io/en/latest/
 
 You can also find some quick examples in this [file](https://github.com/MaT1g3R/Roboragi/blob/master/example.py).
+
+## License
+Roboragi is released under the MIT license. See the license [file](https://github.com/MaT1g3R/Roboragi/blob/master/LICENSE) for more details.
