@@ -30,3 +30,6 @@ This installs [asyncpg](https://github.com/MagicStack/asyncpg) alongside of the 
 Documentation can be found at https://roboragi.readthedocs.io/en/latest/
 
 You can also find some quick examples in this [file](https://github.com/MaT1g3R/Roboragi/blob/master/example.py).
+
+## License
+Roboragi is released under the MIT license. See the license [file](https://github.com/MaT1g3R/Roboragi/blob/master/LICENSE) for more details.
