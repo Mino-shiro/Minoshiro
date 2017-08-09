@@ -118,6 +118,28 @@ async def get_manga_url(session_manager, query,
         return ap.find("meta[property='og:url']").attr('content')
 
 
+def get_anime_url_by_id(anime_id) -> str:
+    """
+    Returns anime url by id.
+
+    :param anime_id: an anime id.
+
+    :return: the anime url.
+    """
+    return 'http://www.anime-planet.com/anime/' + str(anime_id)
+
+
+def get_manga_url_by_id(manga_id) -> str:
+    """
+    Returns manga url by id.
+
+    :param manga_id: a manga id.
+
+    :return: the manga url.
+    """
+    return 'http://www.anime-planet.com/manga/' + str(manga_id)
+
+
 def __get_closest(query: str, anime_list: List[dict], names) -> dict:
     """
     Get the closest matching anime by search query.

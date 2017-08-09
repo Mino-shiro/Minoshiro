@@ -9,60 +9,6 @@ from roboragi.data_controller.enums import Medium
 from roboragi.session_manager import SessionManager
 
 
-def parse_resp(entry, medium):
-    anime_list = []
-
-    medium_str = 'anime' if medium == Medium.ANIME else 'manga'
-    attributes = entry.get('attributes', {})
-    titles = attributes.get('titles', {})
-    slug = attributes.get('slug')
-
-    anime_list.append(
-        {
-            'id': entry.get('id'),
-            'url': (
-                f'https://kitsu.io/{medium_str}/{slug}' if slug else None
-            ),
-            'title_romaji': titles.get('en_jp'),
-            'title_english': titles.get('en'),
-            'title_japanese': titles.get('ja_jp'),
-            'synonyms': set(attributes.get('abbreviatedTitles', [])),
-            'description': attributes.get('synopsis')
-        }
-    )
-
-    if medium == Medium.ANIME:
-        anime_list[-1]['episode_count'] = (
-            int(attributes.get('episodeCount', 0))
-        )
-        anime_list[-1]['nsfw'] = attributes.get('nsfw')
-
-        anime_list[-1]['type'] = attributes.get('showType')
-
-    elif medium in [Medium.MANGA, Medium.LN]:
-        anime_list[-1]['volume_count'] = (
-            int(attributes.get('volumeCount', 0))
-        )
-        anime_list[-1]['chapter_count'] = (
-            int(entry['attributes']['chapterCount'])
-            if entry['attributes']['chapterCount'] else None
-        )
-        anime_list[-1]['type'] = entry['attributes']['mangaType']
-
-
-    return_list = []
-    for entry in anime_list:
-        if medium == Medium.MANGA:
-            if entry['type'].lower() != 'novel':
-                return_list.append(entry)
-        if medium == Medium.LN:
-            if entry['type'].lower() == 'novel':
-                return_list.append(entry)
-        else:
-            return_list.append(entry)
-    return anime_list
-
-
 def get_closest(query: str, thing_list: List[dict]) -> dict:
     """
     Get the closest matching anime by search query.
@@ -155,19 +101,17 @@ class Kitsu:
         }
 
         js = await self.session_manager.get_json(
-            url, headers=headers, content_type='application/vnd.api+json'
+            url, headers=headers
         )
         if js:
             closest_entry = get_closest(query, js['data'])
-            if closest_entry:
-                results = parse_resp(closest_entry, medium)
-                return results[0]
+            return closest_entry
 
-    async def get_entry_by_id(self, medium: Medium, id_: str) -> Optional[dict]:
+    async def get_entry_by_id(self, medium, id_) -> Optional[dict]:
         """
         Get the details of a thing by id.
 
-        :param medium: medium to search for 'anime', 'manga', 'novel'
+        :param medium: medium to search
 
         :param id_: the id.
 
@@ -181,9 +125,8 @@ class Kitsu:
         }
 
         js = await self.session_manager.get_json(
-            url, headers=headers, content_type='application/vnd.api+json'
+            url, headers=headers
         )
 
         first = js['data']
-        results = parse_resp(first.pop(), medium)
-        return results[0]
+        return first.pop()
