@@ -1,6 +1,7 @@
 from difflib import SequenceMatcher
 from typing import List, Optional
 from urllib.parse import quote
+import json
 
 from roboragi.data_controller.enums import Medium
 from roboragi.session_manager import HTTPStatusError, SessionManager
@@ -106,29 +107,6 @@ class AniList:
         self.session_manager = session_manager
         self.base_url = 'https://graphql.anilist.co'
 
-    async def get_token(self) -> Optional[str]:
-        """
-        Get an access token from Anilist.
-
-        :return: the access token if success.
-        """
-        params = {
-            'grant_type': 'client_credentials',
-            'client_id': self.client_id,
-            'client_secret': self.client_secret
-        }
-        try:
-            resp = await self.session_manager.post(
-                f'https://anilist.co/api/v2/oauth/token',
-                params=params
-            )
-        except HTTPStatusError as e:
-            self.session_manager.logger.warn(str(e))
-            return
-        async with resp:
-            js = await resp.json()
-            return js.get('access_token')
-
     async def get_entry_by_id(self, session_manager: SessionManager,
                               medium: Medium, entry_id: str) -> dict:
         """
@@ -147,13 +125,13 @@ class AniList:
             'Accept': 'application/json',
         }
         data = {
-            'query': self.__get_query_string(medium, entry_id)
+            'query': (self.__get_query_string(medium, entry_id)).replace('\n', '')
         }
         async with await session_manager.post(
-                self.base_url, headers=headers, data=data) as resp:
+                self.base_url, headers=headers, json=data) as resp:
             js = await resp.json()
 
-        return js
+        return js['data']['Media']
 
     async def get_entry_details(self, session_manager: SessionManager,
                                 medium: Medium, query: str) -> Optional[dict]:
@@ -178,9 +156,10 @@ class AniList:
             'query': f'{self.__get_query_string(medium, query, True)} }}'
         }
         async with await session_manager.post(
-                self.base_url, headers=headers, data=data) as resp:
+                self.base_url, headers=headers, json=data) as resp:
+
             thing = await resp.json()
-        closest_entry = get_closest(query, thing)
+        closest_entry = get_closest(query, thing['data']['media'])
         return await self.get_entry_by_id(
             session_manager, medium, closest_entry['id'])
 
