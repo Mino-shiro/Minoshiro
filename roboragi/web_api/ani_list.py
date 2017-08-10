@@ -104,7 +104,7 @@ class AniList:
         self.client_id = client_id
         self.client_secret = client_secret
         self.session_manager = session_manager
-        self.base_url = 'https://anilist.co/api'
+        self.base_url = 'https://graphql.anilist.co'
 
     async def get_token(self) -> Optional[str]:
         """
@@ -119,7 +119,7 @@ class AniList:
         }
         try:
             resp = await self.session_manager.post(
-                f'{self.base_url}/auth/access_token',
+                f'https://anilist.co/api/v2/oauth/token',
                 params=params
             )
         except HTTPStatusError as e:
@@ -142,16 +142,15 @@ class AniList:
 
         :return: dict with thing info.
         """
-        if not self.access_token:
-            self.access_token = await self.get_token()
-        params = {
-            'access_token': self.access_token
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
         }
-
-        medium_str = 'anime' if medium == Medium.ANIME else 'manga'
-        url = f'{self.base_url}/{medium_str}/{entry_id}'
-
-        async with await session_manager.get(url, params=params) as resp:
+        data = {
+            'query': self.__get_query_string(medium, entry_id)
+        }
+        async with await session_manager.post(
+                self.base_url, headers=headers, data=data) as resp:
             js = await resp.json()
 
         return js
@@ -169,25 +168,18 @@ class AniList:
 
         :return: dict with thing info.
         """
-        clean_query = escape(query)
-        if not self.access_token:
-            self.access_token = await self.get_token()
-        params = {
-            'access_token': self.access_token
-        }
-
         if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
             raise ValueError('Only Anime, Manga and LN are supported.')
-        medium_str = 'anime' if medium == Medium.ANIME else 'manga'
-        url = f'{self.base_url}/{medium_str}/search/{quote(clean_query)}'
-        async with await session_manager.get(url, params=params) as resp:
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+        }
+        data = {
+            'query': f'{self.__get_query_string(medium, query, True)} }}'
+        }
+        async with await session_manager.post(
+                self.base_url, headers=headers, data=data) as resp:
             thing = await resp.json()
-
-        for entry in thing:
-            if medium == 'manga' and 'novel' in entry['type'].lower():
-                thing.remove(entry)
-            elif medium == 'novel' and 'novel' not in entry['type'].lower():
-                thing.remove(entry)
         closest_entry = get_closest(query, thing)
         return await self.get_entry_by_id(
             session_manager, medium, closest_entry['id'])
@@ -215,3 +207,61 @@ class AniList:
             'sort': 'popularity-desc'
         }
         return await session_manager.get_json(url, params)
+
+    def __get_query_string(self, medium, query, search=False) -> str:
+        if medium == Medium.ANIME:
+            med_str = 'ANIME'
+        else:
+            med_str = 'MANGA'
+        if search:
+            full_str = f'''Page (page: 1, perPage: 40) {{
+                    media (search: "{query}" type: {med_str})'''
+            if medium == Medium.LN:
+                full_str = f'''Page (page: 1, perPage: 40) {{
+                    media (search: "{query}" type: {med_str} format: NOVEL)'''
+        else:
+            full_str = f'Media (id: {query}, type: {med_str})'
+        query = f'''
+        query {{
+            {full_str} {{
+                id
+                title {{
+                romaji
+                english
+                native
+                }}
+                startDate {{
+                year
+                month
+                day
+                }}
+                endDate {{
+                year
+                month
+                day
+                }}
+                coverImage {{
+                large
+                medium
+                }}
+                bannerImage
+                format
+                type
+                status
+                episodes
+                chapters
+                volumes
+                season
+                description
+                averageScore
+                meanScore
+                genres
+                synonyms
+                nextAiringEpisode {{
+                airingAt
+                timeUntilAiring
+                episode
+                }}
+            }}
+        }}'''
+        return query
