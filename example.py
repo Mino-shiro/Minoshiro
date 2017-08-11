@@ -1,16 +1,11 @@
 from pathlib import Path
 
-from roboragi import Medium, Roboragi, Site
+from minoshiro import Medium, Minoshiro, Site
 
 mal_config = {
     'user': 'MAL User name',
     'password': 'MAL password'
 }
-anilist_config = {
-    'id': 'Anilist client id',
-    'secret': 'Anilist client secret'
-}
-
 
 async def postgres():
     postgres_config = {
@@ -20,8 +15,8 @@ async def postgres():
         "database": "postgres"
     }
 
-    robo = await Roboragi.from_postgres(
-        mal_config, anilist_config, postgres_config,
+    robo = await Minoshiro.from_postgres(
+        mal_config, postgres_config,
         cache_pages=1, cache_mal_entries=30
     )
 
@@ -40,8 +35,8 @@ async def sqlite():
     sqlite_path = 'path/to/sqlite/database'
     another_path = Path('another/sqlite/path')
 
-    robo = await Roboragi.from_sqlite(
-        mal_config, anilist_config, sqlite_path
+    robo = await Minoshiro.from_sqlite(
+        mal_config, sqlite_path
     )
 
     # We only want the results from those 2 sites.
@@ -49,7 +44,7 @@ async def sqlite():
     async for site, data in robo.get_data('overlord', Medium.LN, sites):
         print(site, data)
 
-    another_robo = await Roboragi.from_sqlite(
-        mal_config, anilist_config, another_path
+    another_robo = await Minoshiro.from_sqlite(
+        mal_config, another_path
     )
     print(await another_robo.get_data('Love Live Sunshine!', Medium.ANIME))

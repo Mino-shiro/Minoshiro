@@ -6,7 +6,7 @@ from typing import List, Optional
 
 from pyquery import PyQuery
 
-from roboragi.session_manager import SessionManager
+from minoshiro.session_manager import SessionManager
 
 
 async def get_light_novel_url(

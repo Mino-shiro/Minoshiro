@@ -5,7 +5,7 @@ from sqlite3 import connect
 from time import time
 from typing import Dict, Optional, Union
 
-from roboragi.logger import get_default_logger
+from minoshiro.logger import get_default_logger
 from .abc import DataController
 from .enums import Medium, Site
 from .sqlite_utils import make_tables

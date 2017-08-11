@@ -5,8 +5,8 @@ from difflib import SequenceMatcher
 from typing import List, Optional
 from urllib.parse import quote
 
-from roboragi.data_controller.enums import Medium
-from roboragi.session_manager import SessionManager
+from minoshiro.data_controller.enums import Medium
+from minoshiro.session_manager import SessionManager
 
 
 def get_closest(query: str, thing_list: List[dict]) -> dict:

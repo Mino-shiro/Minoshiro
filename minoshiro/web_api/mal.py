@@ -7,7 +7,7 @@ from difflib import SequenceMatcher
 from typing import List, Optional
 from urllib.parse import quote
 
-from roboragi.data_controller.enums import Medium
+from minoshiro.data_controller.enums import Medium
 
 
 async def get_entry_details(session_manager, header_info: dict, medium: Medium,

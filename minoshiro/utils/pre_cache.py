@@ -3,12 +3,12 @@ Populate the database with some data
 before the main search class is initialized.
 """
 
-from roboragi.data_controller import DataController
-from roboragi.data_controller.enums import Medium, Site
-from roboragi.session_manager import SessionManager
-from roboragi.utils.helpers import get_synonyms
-from roboragi.web_api.ani_list import get_page_by_popularity
-from roboragi.web_api.mal import get_entry_details
+from minoshiro.data_controller import DataController
+from minoshiro.data_controller.enums import Medium, Site
+from minoshiro.session_manager import SessionManager
+from minoshiro.utils.helpers import get_synonyms
+from minoshiro.web_api.ani_list import get_page_by_popularity
+from minoshiro.web_api.mal import get_entry_details
 
 __all__ = ['cache_top_pages']
 

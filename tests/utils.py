@@ -3,7 +3,7 @@ from random import choice, randint, sample
 from string import printable
 from typing import Dict, List
 
-from roboragi.data_controller.enums import Medium, Site
+from minoshiro.data_controller.enums import Medium, Site
 
 __all__ = ['random_sites', 'random_mediums', 'random_str',
            'random_dict', 'random_lookup_entries']

@@ -11,7 +11,7 @@ def get_default_logger():
     :return:
         A basic logger with a `StreamHandler` attatched and with level `INFO`
     """
-    logger = getLogger('roboragi')
+    logger = getLogger('minoshiro')
     console_handler = StreamHandler()
     console_handler.setFormatter(Formatter(
         '%(asctime)s %(levelname)s %(name)s: %(message)s')

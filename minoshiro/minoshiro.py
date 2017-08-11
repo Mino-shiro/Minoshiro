@@ -17,7 +17,7 @@ from .utils.pre_cache import cache_top_pages
 from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
 
 
-class Roboragi:
+class Minoshiro:
     def __init__(self, db_controller: DataController, mal_config: dict,
                  *, logger=None, loop=None):
         """
@@ -30,7 +30,7 @@ class Roboragi:
         directly from the ``__init__`` method.
 
         :param db_controller:
-            Any sub class of ``roboragi.data_controller.abc.DataController``
+            Any sub class of ``minoshiro.data_controller.abc.DataController``
             will work here.
 
         :param mal_config:
@@ -88,11 +88,11 @@ class Roboragi:
 
     @classmethod
     async def from_postgres(cls, mal_config: dict, db_config: dict = None, 
-                            pool=None, *, schema='roboragi', 
+                            pool=None, *, schema='minoshiro', 
                             cache_pages: int = 0, cache_mal_entries: int = 0,
                             logger=None, loop=None):
         """
-        Get an instance of `Roboragi` with class `PostgresController` as the
+        Get an instance of `minoshiro` with class `PostgresController` as the
         database controller.
 
         :param mal_config:
@@ -117,7 +117,7 @@ class Roboragi:
 
         One of ``db_config`` or ``pool`` must not be None.
 
-        :param schema: the schema name used. Defaults to `roboragi`
+        :param schema: the schema name used. Defaults to `minoshiro`
 
         :param cache_pages:
             The number of pages of anime and manga from Anilist to cache
@@ -135,7 +135,7 @@ class Roboragi:
             event loop.
 
         :return:
-            Instance of `Roboragi` with class `PostgresController`
+            Instance of `minoshiro` with class `PostgresController`
             as the database controller.
         """
         assert db_config or pool, (
@@ -158,7 +158,7 @@ class Roboragi:
                           cache_pages: int = 0, cache_mal_entries: int = 0,
                           logger=None, loop=None):
         """
-        Get an instance of `Roboragi` with class `SqliteController` as the
+        Get an instance of `minoshiro` with class `SqliteController` as the
         database controller.
 
         :param mal_config:
@@ -193,7 +193,7 @@ class Roboragi:
             event loop.
 
         :return:
-            Instance of `Roboragi` with class `PostgresController`
+            Instance of `minoshiro` with class `PostgresController`
             as the database controller.
         """
         logger = logger or get_default_logger()

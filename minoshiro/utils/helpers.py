@@ -1,4 +1,4 @@
-from roboragi.data_controller.enums import Medium, Site
+from minoshiro.data_controller.enums import Medium, Site
 
 
 def filter_anime_manga(medium: Medium) -> str:

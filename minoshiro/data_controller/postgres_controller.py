@@ -5,7 +5,7 @@ from typing import Dict, Optional
 from asyncpg import InterfaceError, create_pool
 from asyncpg.pool import Pool
 
-from roboragi.logger import get_default_logger
+from minoshiro.logger import get_default_logger
 from .abc import DataController
 from .enums import Medium, Site
 from .postgres_utils import make_tables, parse_record
@@ -20,13 +20,13 @@ _tables = {
 
 class PostgresController(DataController):
     """
-    To be able to integrate with an existing database, all tables for roboragi
-    will be put under the `roboragi` schema unless a different schema name is
+    To be able to integrate with an existing database, all tables for minoshiro
+    will be put under the `minoshiro` schema unless a different schema name is
     passed to the __init__ method.
     """
     __slots__ = ('pool', 'schema')
 
-    def __init__(self, pool: Pool, logger, schema: str = 'roboragi'):
+    def __init__(self, pool: Pool, logger, schema: str = 'minoshiro'):
         """
         Init method. Create the instance with the `get_instance` method to make
         sure you have all the tables needed.
@@ -35,7 +35,7 @@ class PostgresController(DataController):
 
         :param logger: logger object used for logging.
 
-        :param schema: the schema name, default is `roboragi`
+        :param schema: the schema name, default is `minoshiro`
         """
         self.pool = pool
         self.schema = schema
@@ -43,7 +43,7 @@ class PostgresController(DataController):
 
     @classmethod
     async def get_instance(cls, logger=None, connect_kwargs: dict = None,
-                           pool: Pool = None, schema: str = 'roboragi'):
+                           pool: Pool = None, schema: str = 'minoshiro'):
         """
         Get a new instance of `PostgresController`
 
@@ -59,7 +59,7 @@ class PostgresController(DataController):
 
         One of `pool` or `connect_kwargs` must not be None.
 
-        :param schema: the schema name used. Defaults to `roboragi`
+        :param schema: the schema name used. Defaults to `minoshiro`
 
         :return: a new instance of `PostgresController`
         """

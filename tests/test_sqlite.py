@@ -3,8 +3,8 @@ from time import time
 
 import pytest
 
-from roboragi.data_controller import SqliteController
-from roboragi.data_controller.enums import Medium
+from minoshiro.data_controller import SqliteController
+from minoshiro.data_controller.enums import Medium
 from tests import clear_sqlite, test_data_path
 from tests.utils import *
 

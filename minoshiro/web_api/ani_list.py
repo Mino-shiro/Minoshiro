@@ -1,9 +1,9 @@
 from difflib import SequenceMatcher
 from typing import List, Optional
 
-from roboragi.data_controller.enums import Medium
-from roboragi.session_manager import SessionManager
-from roboragi.utils.helpers import filter_anime_manga
+from minoshiro.data_controller.enums import Medium
+from minoshiro.session_manager import SessionManager
+from minoshiro.utils.helpers import filter_anime_manga
 
 __escape_table = {
     '&': ' ',

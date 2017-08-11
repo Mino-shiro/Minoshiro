@@ -14,7 +14,7 @@ extras_require = {
 }
 
 setup(
-    name='roboragi',
+    name='minoshiro',
     version=version,
     description=('An async Python3.6 library to search for anime, manga and'
                  'light novel using various web apis.'),
@@ -22,7 +22,7 @@ setup(
     url='https://github.com/MaT1g3R/Roboragi',
     author='MaT1g3R, dashwav, Nihilate',
     license='MIT',
-    packages=['roboragi'],
+    packages=['minoshiro'],
     include_package_data=True,
     install_requires=requirements,
     extras_require=extras_require,
