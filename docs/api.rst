@@ -17,7 +17,7 @@ Default Logger
 
 Roboragi
 --------------------
-.. py:class:: Roboragi(db_controller, mal_config, anilist_config, \*, logger=None, loop=None)
+.. py:class:: Roboragi(db_controller, mal_config, \*, logger=None, loop=None)
 
     Represents the search instance.
 
@@ -44,12 +44,6 @@ Roboragi
         If this key is not present, the description defaults to:
         ``A Python library for anime search.``
 
-    * anilist_config(:py:class:`dict`) -  A dict for Anilist authorization.
-        It must contain the keys:
-            ``id``: Your Anilist client id
-
-            ``secret``: Your Anilist client secret.
-
     * logger(Optional[:py:class:`logging.Logger`]) -  The logger object.
       If it's not provided, will use the defualt logger provided by the library.
 
@@ -57,7 +51,7 @@ Roboragi
       3/library/asyncio-eventloops.html>`_]) -
       An asyncio event loop. If not provided will use the default event loop.
 
-    .. py:classmethod:: from_postgres(mal_config, anilist_config, db_config = None, pool=None, \*, schema='roboragi', cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
+    .. py:classmethod:: from_postgres(mal_config, db_config = None, pool=None, \*, schema='roboragi', cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
 
         This method is a *coroutine*
 
@@ -77,13 +71,6 @@ Roboragi
 
             If this key is not present, the description defaults to:
             ``A Python library for anime search.``
-
-        * anilist_config(:py:class:`dict`) -  A dict for Anilist authorization.
-            It must contain the keys:
-                ``id``: Your Anilist client id
-
-                ``secret``: Your Anilist client secret.
-
 
         * db_config(:py:class:`dict`) -
           A dict of database config for the connection.
@@ -132,7 +119,7 @@ Roboragi
         Instance of :py:class:`Roboragi` with
         :py:class:`PostgresController` as the database controller.
 
-    .. py:classmethod:: from_sqlite(mal_config, anilist_config, path, \*, cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
+    .. py:classmethod:: from_sqlite(mal_config, path, \*, cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
 
         This method is a *coroutine*
 
@@ -152,12 +139,6 @@ Roboragi
 
             If this key is not present, the description defaults to:
             ``A Python library for anime search.``
-
-        * anilist_config(:py:class:`dict`) -  A dict for Anilist authorization.
-            It must contain the keys:
-                ``id``: Your Anilist client id
-
-                ``secret``: Your Anilist client secret.
 
         * path(Union[:py:class:`str`, :py:class:`pathlib.Path`]) -
           The path to the SQLite3 database,
