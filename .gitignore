@@ -7,8 +7,8 @@ __pycache__/
 
 
 # File ignores
-/roboragi/data/anime-titles.xml
-/roboragi/data/.anidb_time
+/minoshiro/data/anime-titles.xml
+/minoshiro/data/.anidb_time
 /*.py
 *.json
 *.db
