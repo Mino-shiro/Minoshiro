@@ -164,7 +164,7 @@ class AniList:
             session_manager, medium, closest_entry['id'])
 
     async def get_page_by_popularity(self, session_manager, medium: Medium,
-                                     page: int) -> Optional[list]:
+                                     page: int) -> Optional[dict]:
         """
         Gets the 40 entries in the medium from specified page.
 
@@ -174,18 +174,39 @@ class AniList:
 
         :param page: page we want info from
 
-        :return: list of genres
+        :return: dict of page
         """
         med_str = filter_anime_manga(medium)
-        if not self.access_token:
-            self.access_token = await self.get_token()
-        url = f'{self.base_url}/browse/{med_str}'
-        params = {
-            'access_token': self.access_token,
-            'page': page,
-            'sort': 'popularity-desc'
+        headers = {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
         }
-        return await session_manager.get_json(url, params)
+        data = {
+            'query': (f'''
+                query {{
+                    Page (page: {page}, perPage: 40) {{
+                        media (type: {med_str.upper()} sort: POPULARITY_DESC ) {{
+                            title {{
+                            romaji
+                            english
+                            native
+                            userPreferred
+                            }}
+                        synonyms
+                        id
+                        type
+                        format
+                        }}
+                    }}
+                    }}''').replace('\n', '')
+        }
+        print(data)
+        async with await session_manager.post(
+                self.base_url, headers=headers, json=data) as resp:
+            thing = await resp.json()
+            print(thing)
+        print(thing['data']['Page']['media'])
+        return thing['data']['Page']['media']
 
     def __get_query_string(self, medium, query, search=False) -> str:
         if medium == Medium.ANIME:
