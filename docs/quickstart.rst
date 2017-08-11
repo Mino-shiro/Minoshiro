@@ -19,11 +19,6 @@ PostgreSQL and SQLite3.
         'user': 'MAL User name',
         'password': 'MAL password'
     }
-    anilist_config = {
-        'id': 'Anilist client id',
-        'secret': 'Anilist client secret'
-    }
-
 
     async def postgres():
         postgres_config = {
@@ -37,7 +32,7 @@ PostgreSQL and SQLite3.
         # and how many entries from MAL
         # to cache at the instance creation.
         robo = await Roboragi.from_postgres(
-            mal_config, anilist_config, postgres_config,
+            mal_config, postgres_config,
             cache_pages=1, cache_mal_entries=30
         )
 
@@ -62,7 +57,7 @@ PostgreSQL and SQLite3.
         another_path = Path('another/sqlite/path')
 
         robo = await Roboragi.from_sqlite(
-            mal_config, anilist_config, sqlite_path
+            mal_config, sqlite_path
         )
 
         # We only want the results from those 2 sites.
@@ -72,7 +67,7 @@ PostgreSQL and SQLite3.
             print(site, data)
 
         another_robo = await Roboragi.from_sqlite(
-            mal_config, anilist_config, another_path
+            mal_config, another_path
         )
         print(await another_robo.get_data(
             'Love Live Sunshine!', Medium.ANIME
