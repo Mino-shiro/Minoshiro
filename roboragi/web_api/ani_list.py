@@ -138,7 +138,6 @@ async def get_entry_details(session_manager: SessionManager,
 
         thing = await resp.json()
     closest_entry = get_closest(query, thing['data']['Page']['media'])
-    print(closest_entry)
     return closest_entry
 
 

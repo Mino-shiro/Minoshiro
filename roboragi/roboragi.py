@@ -87,10 +87,10 @@ class Roboragi:
         self.__anidb_time = None
 
     @classmethod
-    async def from_postgres(cls, mal_config: dict, anilist_config: dict,
-                            db_config: dict = None, pool=None, *,
-                            schema='roboragi', cache_pages: int = 0,
-                            cache_mal_entries: int = 0, logger=None, loop=None):
+    async def from_postgres(cls, mal_config: dict, db_config: dict = None, 
+                            pool=None, *, schema='roboragi', 
+                            cache_pages: int = 0, cache_mal_entries: int = 0,
+                            logger=None, loop=None):
         """
         Get an instance of `Roboragi` with class `PostgresController` as the
         database controller.
@@ -106,11 +106,6 @@ class Roboragi:
 
             If this key is not present, the description defaults to:
                 "A Python library for anime search."
-
-        :param anilist_config:
-            A dict for Anilist authorization. It must contain the keys:
-                id: Your Anilist client id
-                secret: Your Anilist client secret.
 
         :param db_config:
             A dict of database config for the connection.
@@ -152,13 +147,13 @@ class Roboragi:
         db_controller = await PostgresController.get_instance(
             logger, db_config, pool, schema=schema
         )
-        instance = cls(db_controller, mal_config, anilist_config,
+        instance = cls(db_controller, mal_config,
                        logger=logger, loop=loop)
         await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
 
     @classmethod
-    async def from_sqlite(cls, mal_config: dict, anilist_config: dict,
+    async def from_sqlite(cls, mal_config: dict,
                           path: Union[str, Path], *,
                           cache_pages: int = 0, cache_mal_entries: int = 0,
                           logger=None, loop=None):
@@ -177,11 +172,6 @@ class Roboragi:
 
             If this key is not present, the description defaults to:
                 "A Python library for anime search."
-
-        :param anilist_config:
-            A dict for Anilist authorization. It must contain the keys:
-                id: Your Anilist client id
-                secret: Your Anilist client secret.
 
         :param path:
             The path to the SQLite3 database, can either be a string or a
@@ -208,7 +198,7 @@ class Roboragi:
         """
         logger = logger or get_default_logger()
         db_controller = await SqliteController.get_instance(path, logger, loop)
-        instance = cls(db_controller, mal_config, anilist_config,
+        instance = cls(db_controller, mal_config,
                        logger=logger, loop=loop)
         await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
