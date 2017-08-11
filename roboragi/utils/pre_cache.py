@@ -7,16 +7,15 @@ from roboragi.data_controller import DataController
 from roboragi.data_controller.enums import Medium, Site
 from roboragi.session_manager import SessionManager
 from roboragi.utils.helpers import get_synonyms
-from roboragi.web_api import AniList
+from roboragi.web_api.ani_list import get_page_by_popularity
 from roboragi.web_api.mal import get_entry_details
 
 __all__ = ['cache_top_pages']
 
 
 async def cache_top_pages(medium: Medium, session_manager: SessionManager,
-                          db: DataController, anilist: AniList,
-                          mal_headers: dict, page_count: int,
-                          cache_mal_entries: int):
+                          db: DataController, mal_headers: dict, 
+                          page_count: int, cache_mal_entries: int):
     """
     Cache the top n pages of anime/manga from Anilist, and try to cache each
     entry for MAL as well.
@@ -37,7 +36,7 @@ async def cache_top_pages(medium: Medium, session_manager: SessionManager,
     """
     assert page_count > 0, 'Please enter a page count greater than 0.'
     await __cache(
-        __n_popular_anilist(page_count, medium, session_manager, anilist),
+        __n_popular_anilist(page_count, medium, session_manager),
         db, medium, mal_headers, session_manager, cache_mal_entries
     )
 
@@ -79,8 +78,7 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager,
 
 
 async def __n_popular_anilist(
-        page_count: int, medium: Medium, session_manager: SessionManager,
-        anilist: AniList):
+        page_count: int, medium: Medium, session_manager: SessionManager):
     """
     Yields top n pages of anime/manga by popularity from Anilist.
 
@@ -97,7 +95,7 @@ async def __n_popular_anilist(
     """
     for i in range(page_count):
         try:
-            page_entries = await anilist.get_page_by_popularity(
+            page_entries = await get_page_by_popularity(
                 session_manager, medium, i + 1
             )
             error = False

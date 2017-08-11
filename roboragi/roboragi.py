@@ -81,10 +81,6 @@ class Roboragi:
             'User-Agent': mal_agent
         }
 
-        self.anilist = ani_list.AniList(
-            self.session_manager, anilist_id, anilist_pass
-        )
-
         self.kitsu = kitsu.Kitsu(
             self.session_manager, '', ''
         )
@@ -247,8 +243,7 @@ class Roboragi:
             if cache_pages:
                 await cache_top_pages(
                     med, self.session_manager, self.db_controller,
-                    self.anilist, self.mal_headers, cache_pages,
-                    cache_mal_entries
+                    self.mal_headers, cache_pages, cache_mal_entries
                 )
 
         self.logger.info('Data populated.')
@@ -408,11 +403,11 @@ class Roboragi:
         anilist_id = cached_ids.get(Site.ANILIST) if cached_ids else None
 
         if anilist_id:
-            resp = await self.anilist.get_entry_by_id(
+            resp = await ani_list.get_entry_by_id(
                 self.session_manager, medium, anilist_id
             )
         else:
-            resp = await self.anilist.get_entry_details(
+            resp = await ani_list.get_entry_details(
                 self.session_manager, medium, query
             )
 
