@@ -19,7 +19,7 @@ from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
 
 class Roboragi:
     def __init__(self, db_controller: DataController, mal_config: dict,
-                 anilist_config: dict, *, logger=None, loop=None):
+                 *, logger=None, loop=None):
         """
         Represents the search instance.
 
@@ -63,11 +63,6 @@ class Roboragi:
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
         assert mal_user and mal_pass, ('Please provide MAL user'
                                        'name and password.')
-
-        anilist_id = anilist_config.get('id')
-        anilist_pass = anilist_config.get('secret')
-        assert anilist_id and anilist_pass, ('Please provide Anilist client'
-                                             'id and client secret.')
 
         self.db_controller = db_controller
 
