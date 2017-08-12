@@ -214,7 +214,7 @@ class Minoshiro:
             assert cache_pages > 0, ('You must have at least 1'
                                      'cached page to cache MAL entries.')
         self.logger.info('Populating lookup...')
-        await self.db_controller.pre_cache()
+        await self.db_controller.pre_cache(self.session_manager)
         self.logger.info('Lookup populated.')
 
         self.logger.info('Populating data...')

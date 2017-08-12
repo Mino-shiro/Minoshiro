@@ -9,14 +9,12 @@ __pycache__/
 # File ignores
 /minoshiro/data/anime-titles.xml
 /minoshiro/data/.anidb_time
+/minoshiro/data/revision
+/minoshiro/data/synonyms.db
 /*.py
 *.json
-*.db
-/roboragi_old/Config.py
 
 # Unignore
-!/roboragi/roboragi.py
-!/roboragi/data/synonyms.db
 !/tests/test_data/.travis_postgres.json
 !/setup.py
 !/example.py

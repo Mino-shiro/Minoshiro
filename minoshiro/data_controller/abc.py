@@ -2,8 +2,10 @@ from abc import ABCMeta, abstractmethod
 from json import loads
 from typing import Dict, Optional
 
+from aiohttp_wrapper import SessionManager
+
 from minoshiro.enums import Medium, Site
-from .data_utils import get_all_synonyms
+from minoshiro.upstream import get_all_synonyms
 
 _convert_medium = {
     'Anime': Medium.ANIME,
@@ -157,11 +159,13 @@ class DataController(metaclass=ABCMeta):
             for site, id_ in id_dict.items()
         }.items() if data}
 
-    async def pre_cache(self):
+    async def pre_cache(self, session_manager: SessionManager):
         """
         Populate the lookup with synonyms.
+
+        :param session_manager: The Aiohttp SessionManager.
         """
-        rows = get_all_synonyms()
+        rows = await get_all_synonyms(session_manager)
         for name, type_, db_links in rows:
             dict_ = loads(db_links)
             mal_name, mal_id = dict_.get('mal', ('', ''))
