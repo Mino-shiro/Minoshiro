@@ -7,7 +7,7 @@ from urllib.parse import quote
 
 from aiohttp_wrapper import SessionManager
 
-from minoshiro.data_controller.enums import Medium
+from minoshiro.enums import Medium
 
 
 def get_closest(query: str, thing_list: List[dict]) -> dict:

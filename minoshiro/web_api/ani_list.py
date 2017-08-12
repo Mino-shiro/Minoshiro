@@ -3,8 +3,8 @@ from typing import List, Optional
 
 from aiohttp_wrapper import SessionManager
 
-from minoshiro.data_controller.enums import Medium
-from minoshiro.utils.helpers import filter_anime_manga
+from minoshiro.enums import Medium
+from minoshiro.helpers import filter_anime_manga
 
 __escape_table = {
     '&': ' ',

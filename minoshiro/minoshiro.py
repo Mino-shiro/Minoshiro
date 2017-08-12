@@ -8,13 +8,13 @@ from typing import Dict, Iterable, Union
 
 from aiohttp_wrapper import SessionManager
 
+from minoshiro.pre_cache import cache_top_pages
 from .data import data_path
 from .data_controller import (DataController, PostgresController,
                               SqliteController)
-from .data_controller.enums import Medium, Site
+from .enums import Medium, Site
+from .helpers import get_synonyms
 from .logger import get_default_logger
-from .utils.helpers import get_synonyms
-from .utils.pre_cache import cache_top_pages
 from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
 
 

@@ -4,7 +4,7 @@ from time import time
 import pytest
 
 from minoshiro.data_controller import SqliteController
-from minoshiro.data_controller.enums import Medium
+from minoshiro.enums import Medium
 from tests import clear_sqlite, test_data_path
 from tests.utils import *
 

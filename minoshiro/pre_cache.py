@@ -6,8 +6,8 @@ before the main search class is initialized.
 from aiohttp_wrapper import SessionManager
 
 from minoshiro.data_controller import DataController
-from minoshiro.data_controller.enums import Medium, Site
-from minoshiro.utils.helpers import get_synonyms
+from minoshiro.enums import Medium, Site
+from minoshiro.helpers import get_synonyms
 from minoshiro.web_api.ani_list import get_page_by_popularity
 from minoshiro.web_api.mal import get_entry_details
 

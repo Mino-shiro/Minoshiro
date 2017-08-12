@@ -2,8 +2,8 @@ from abc import ABCMeta, abstractmethod
 from json import loads
 from typing import Dict, Optional
 
+from minoshiro.enums import Medium, Site
 from .data_utils import get_all_synonyms
-from .enums import Medium, Site
 
 _convert_medium = {
     'Anime': Medium.ANIME,

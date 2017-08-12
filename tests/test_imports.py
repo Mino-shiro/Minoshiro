@@ -1,9 +1,9 @@
 from enum import EnumMeta
 from inspect import iscoroutinefunction
 
-from minoshiro import DataController, Medium, PostgresController, Minoshiro, \
+from minoshiro import DataController, Medium, Minoshiro, PostgresController, \
     Site, SqliteController
-from minoshiro.utils.pre_cache import cache_top_pages
+from minoshiro.pre_cache import cache_top_pages
 
 
 def test_imports():

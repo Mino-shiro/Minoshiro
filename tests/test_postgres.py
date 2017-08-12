@@ -6,7 +6,7 @@ import pytest
 
 from minoshiro import get_default_logger
 from minoshiro.data_controller import PostgresController
-from minoshiro.data_controller.enums import Medium
+from minoshiro.enums import Medium
 from tests import SCHEMA, get_pool
 from tests.utils import *
 
