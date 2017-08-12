@@ -10,9 +10,9 @@ __pycache__/
 /minoshiro/data/anime-titles.xml
 /minoshiro/data/.anidb_time
 /minoshiro/data/revision
-/minoshiro/data/synonyms.db
 /*.py
 *.json
+*.db
 
 # Unignore
 !/tests/test_data/.travis_postgres.json

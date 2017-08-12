@@ -2,7 +2,6 @@ from asyncio import get_event_loop
 from base64 import b64encode
 from itertools import chain
 from pathlib import Path
-from time import time
 from traceback import format_exc
 from typing import Dict, Iterable, Union
 
@@ -15,6 +14,7 @@ from .enums import Medium, Site
 from .helpers import get_synonyms
 from .logger import get_default_logger
 from .pre_cache import cache_top_pages
+from .upstream import download_anidb
 from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
 
 
@@ -227,9 +227,7 @@ class Minoshiro:
                 )
 
         self.logger.info('Data populated.')
-        self.logger.info('Fetching anidb datadump...')
         await self.__fetch_anidb()
-        self.logger.info('Anidb datadump fetched.')
 
     async def yield_data(self, query: str, medium: Medium,
                          sites: Iterable[Site] = None):
@@ -322,37 +320,27 @@ class Minoshiro:
             The data dump file is not found.
             The data dump file is more than a day old.
         """
-        now = int(time())
-
-        def __write_time(p):
-            with p.open('w+') as tfw:
-                tfw.write(str(now))
-            self.__anidb_time = now
-
-        if self.__anidb_list and now - self.__anidb_time < 86400:
-            return
-
-        time_path = data_path.joinpath('.anidb_time')
         dump_path = data_path.joinpath('anime-titles.xml')
-
-        if time_path.is_file():
-            with time_path.open() as tf:
-                self.__anidb_time = int(tf.read())
+        self.logger.info('Checking anidb conditions...')
+        good, new_time = await download_anidb(
+            self.session_manager, self.__anidb_time
+        )
+        if good:
+            self.logger.info(
+                'Anidb condition is good, no new data downloaded.'
+            )
         else:
-            __write_time(time_path)
+            self.logger.info(
+                'Anidb condition is outdated, new data downloaded.'
+            )
 
-        if not dump_path.is_file() or now - self.__anidb_time >= 86400:
-            async with await self.session_manager.get(
-                    'http://anidb.net/api/anime-titles.xml.gz'
-            ) as resp:
-                with dump_path.open('wb') as f:
-                    f.write(await resp.read())
-                __write_time(time_path)
-
-        with dump_path.open() as xml_file:
-            xml = xml_file.read()
-
-        self.__anidb_list = ani_db.process_xml(xml)
+        if not good or not self.__anidb_list:
+            self.logger.info('Reading anidb data from disk...')
+            with dump_path.open() as xml_file:
+                xml = xml_file.read()
+            self.__anidb_list = ani_db.process_xml(xml)
+            self.logger.info('Anidb data read from disk.')
+        self.__anidb_time = new_time
 
     async def __find_anilist(self, cached_data, cached_ids, medium, query):
         """
