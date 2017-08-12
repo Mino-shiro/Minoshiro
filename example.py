@@ -7,6 +7,7 @@ mal_config = {
     'password': 'MAL password'
 }
 
+
 async def postgres():
     postgres_config = {
         "host": "localhost",
@@ -25,7 +26,7 @@ async def postgres():
     for site, data in saekano.items():
         print(site, data)
 
-    # yield_data lazily evaluates the data and you can iterate over them as such
+    # yield_data lazily evaluates the data and you can iterate over them
     async for site, data in robo.yield_data('New Game!', Medium.MANGA):
         print(site, data)
 

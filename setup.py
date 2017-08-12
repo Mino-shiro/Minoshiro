@@ -19,8 +19,8 @@ setup(
     description=('An async Python3.6 library to search for anime, manga and'
                  'light novel using various web apis.'),
     long_description=readme,
-    url='https://github.com/MaT1g3R/Roboragi',
-    author='MaT1g3R, dashwav, Nihilate',
+    url='https://github.com/Mino-shiro/Minoshiro',
+    author='MaT1g3R, dashwav',
     license='MIT',
     packages=['minoshiro'],
     include_package_data=True,

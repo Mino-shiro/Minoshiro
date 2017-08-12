@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Roboragi documentation build configuration file, created by
+# Minoshiro documentation build configuration file, created by
 # sphinx-quickstart on Sun Aug  6 00:45:23 2017.
 #
 # This file is execfile()d with the current directory set to its
@@ -50,7 +50,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = 'Roboragi'
+project = 'Minoshiro'
 copyright = '2017, MaT1g3R dashwav Nihilate'
 author = 'MaT1g3R dashwav Nihilate'
 
@@ -118,7 +118,7 @@ html_sidebars = {
 # -- Options for HTMLHelp output ------------------------------------------
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Roboragidoc'
+htmlhelp_basename = 'Minoshirodoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -144,8 +144,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'Roboragi.tex', 'Roboragi Documentation',
-     'MaT1g3R dashwav Nihilate', 'manual'),
+    (master_doc, 'Minoshiro.tex', 'Minoshiro Documentation',
+     'MaT1g3R, dashwav', 'manual'),
 ]
 
 # -- Options for manual page output ---------------------------------------
@@ -153,7 +153,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'roboragi', 'Roboragi Documentation',
+    (master_doc, 'minoshiro', 'Minoshiro Documentation',
      [author], 1)
 ]
 
@@ -163,8 +163,8 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-    (master_doc, 'Roboragi', 'Roboragi Documentation',
-     author, 'Roboragi', 'One line description of project.',
+    (master_doc, 'Minoshiro', 'Minoshiro Documentation',
+     author, 'Minoshiro', 'One line description of project.',
      'Miscellaneous'),
 ]
 

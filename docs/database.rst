@@ -2,34 +2,28 @@
 
 Database
 ==========
-Roboragi uses caching to make search results faster and more accurate.
+Minoshiro uses caching to make search results faster and more accurate.
 
 Build in database support
 --------------------------
-Roboragi comes with built in support for SQLite3 and PostgreSQL databases.
+Minoshiro comes with built in support for SQLite3 and PostgreSQL databases.
 
 To use the built in SQLite3 support, simply use the ``from_sqlite`` method as
 such:
 
 .. code-block:: python3
 
-    from roboragi import Roboragi
+    from minoshiro import Minoshiro
 
     async def main():
         mal_config = {
             'user': 'MAL User name',
             'password': 'MAL password'
         }
-        anilist_config = {
-            'id': 'Anilist client id',
-            'secret': 'Anilist client secret'
-        }
 
         db_path = 'path/to/database'
 
-        robo = await Roboragi.from_sqlite(
-            mal_config, anilist_config, db_path
-        )
+        robo = await Minoshiro.from_sqlite(mal_config, db_path)
 
 
 To use the built in PostgreSQL support, you will need
@@ -39,17 +33,13 @@ Then, use the ``from_postgres`` method as such:
 
 .. code-block:: python3
 
-    from roboragi import Roboragi
+    from minoshiro import Minoshiro
 
 
     async def main():
         mal_config = {
             'user': 'MAL User name',
             'password': 'MAL password'
-        }
-        anilist_config = {
-            'id': 'Anilist client id',
-            'secret': 'Anilist client secret'
         }
         db_config = {
             "host": "localhost",
@@ -58,8 +48,8 @@ Then, use the ``from_postgres`` method as such:
             "database": "postgres"
         }
 
-        robo = await Roboragi.from_postgres(
-            mal_config, anilist_config, db_config, schema='my_schema'
+        robo = await Minoshiro.from_postgres(
+            mal_config, db_config, schema='my_schema'
         )
 
 .. _Extending DatabaseController:
@@ -71,7 +61,7 @@ wish. To get started, inherit from the ``DataController`` class as such:
 
 .. code-block:: python3
 
-    from roboragi import DataController
+    from minoshiro import DataController
 
 
     class MyDatabase(DataController):

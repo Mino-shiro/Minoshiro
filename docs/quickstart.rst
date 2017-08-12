@@ -13,7 +13,7 @@ PostgreSQL and SQLite3.
 
     from pathlib import Path
 
-    from roboragi import Medium, Roboragi, Site
+    from minoshiro import Medium, Minoshiro, Site
 
     mal_config = {
         'user': 'MAL User name',
@@ -31,7 +31,7 @@ PostgreSQL and SQLite3.
         # You can choose how many pages from Anilist
         # and how many entries from MAL
         # to cache at the instance creation.
-        robo = await Roboragi.from_postgres(
+        robo = await Minoshiro.from_postgres(
             mal_config, postgres_config,
             cache_pages=1, cache_mal_entries=30
         )
@@ -56,7 +56,7 @@ PostgreSQL and SQLite3.
         sqlite_path = 'path/to/sqlite/database'
         another_path = Path('another/sqlite/path')
 
-        robo = await Roboragi.from_sqlite(
+        robo = await Minoshiro.from_sqlite(
             mal_config, sqlite_path
         )
 
@@ -66,7 +66,7 @@ PostgreSQL and SQLite3.
             'overlord', Medium.LN, sites):
             print(site, data)
 
-        another_robo = await Roboragi.from_sqlite(
+        another_robo = await Minoshiro.from_sqlite(
             mal_config, another_path
         )
         print(await another_robo.get_data(

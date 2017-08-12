@@ -2,7 +2,7 @@
 
 Logging
 ==========
-Roboragi logs errors and debug information via the
+Minoshiro logs errors and debug information via the
 `logging <https://docs.python.org/3/library/logging.html>`_ Python module. The
 library comes with a basic logger that prints to ``STDERR``. It is strongly
 recommended you log to a log file in addition to printing to ``STDERR``.
@@ -13,7 +13,7 @@ Configuration of the logger can be as simple as:
 
     from logging import FileHandler, Formatter
 
-    from roboragi import get_default_logger
+    from minoshiro import get_default_logger
 
     logger = get_default_logger()
     file_handler = FileHandler(filename='my_log_file.log')
@@ -30,9 +30,9 @@ configure the logger to your liking as such:
 
     from logging import getLogger
 
-    import roboragi
+    import minoshiro
 
-    my_logger = getLogger('roboragi')
+    my_logger = getLogger('minoshiro')
 
     ...
 

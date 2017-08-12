@@ -1,15 +1,15 @@
-.. Roboragi documentation master file, created by
+.. Minoshiro documentation master file, created by
    sphinx-quickstart on Sun Aug  6 00:45:23 2017.
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-.. image:: https://travis-ci.org/MaT1g3R/Roboragi.svg?branch=master
-    :target: https://travis-ci.org/MaT1g3R/Roboragi
+.. image:: https://travis-ci.org/Mino-shiro/Minoshiro.svg?branch=master
+    :target: https://travis-ci.org/Mino-shiro/Minoshiro
 
-Roboragi
+Minoshiro
 ===========
 Inspired by the `original Reddit bot <https://github.com/Nihilate/Roboragi>`_,
-Roboragi is an async Python library that brings various web APIs for anime,
+Minoshiro is an async Python library that brings various web APIs for anime,
 manga, and light novel into one place.
 
 Requirements
@@ -37,6 +37,6 @@ Contents
 
 License
 ---------------
-Roboragi is released under the MIT License.
-See `LICENSE file <https://github.com/MaT1g3R/Roboragi/blob/master/LICENSE>`_
+Minoshiro is released under the MIT License. See
+`LICENSE file <https://github.com/Mino-shiro/Minoshiro/blob/master/LICENSE>`_
 for details.

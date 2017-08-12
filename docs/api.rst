@@ -2,7 +2,7 @@
 
 API
 ==========
-The following section outlines the API of Roboragi.
+The following section outlines the API of Minoshiro.
 
 Default Logger
 ---------------
@@ -15,9 +15,9 @@ Default Logger
     A basic logger with a :py:class:`logging.StreamHandler` attatched and with
     level ``INFO``
 
-Roboragi
+Minoshiro
 --------------------
-.. py:class:: Roboragi(db_controller, mal_config, \*, logger=None, loop=None)
+.. py:class:: Minoshiro(db_controller, mal_config, \*, logger=None, loop=None)
 
     Represents the search instance.
 
@@ -51,11 +51,11 @@ Roboragi
       3/library/asyncio-eventloops.html>`_]) -
       An asyncio event loop. If not provided will use the default event loop.
 
-    .. py:classmethod:: from_postgres(mal_config, db_config = None, pool=None, \*, schema='roboragi', cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
+    .. py:classmethod:: from_postgres(mal_config, db_config = None, pool=None, \*, schema='minoshiro', cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
 
         This method is a *coroutine*
 
-        Get an instance of :py:class:`Roboragi`  with
+        Get an instance of :py:class:`Minoshiro`  with
         :py:class:`PostgresController` as the database controller.
 
         **Parameters**
@@ -95,7 +95,7 @@ Roboragi
           One of ``db_config`` or ``pool`` must not be None.
 
         * schema(Optional[:py:class:`str`]) - the name for the schema used.
-          Defaults to ``roboragi``
+          Defaults to ``minoshiro``
 
         * cache_pages(Optional[:py:class:`int`]) -
           The number of pages of anime and
@@ -116,14 +116,14 @@ Roboragi
 
         **Returns**
 
-        Instance of :py:class:`Roboragi` with
+        Instance of :py:class:`Minoshiro` with
         :py:class:`PostgresController` as the database controller.
 
     .. py:classmethod:: from_sqlite(mal_config, path, \*, cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
 
         This method is a *coroutine*
 
-        Get an instance of :py:class:`Roboragi` with
+        Get an instance of :py:class:`Minoshiro` with
         :py:class:`SqliteController` as the database controller.
 
         **Parameters**
@@ -164,7 +164,7 @@ Roboragi
 
         **Returns**
 
-        Instance of :py:class:`Roboragi` with
+        Instance of :py:class:`Minoshiro` with
         :py:class:`PostgresController` as the database controller.
 
     .. py:method:: pre_cache(cache_pages, cache_mal_entries)
@@ -251,7 +251,7 @@ Roboragi
 
 Enums
 ---------
-Roboragi uses two enums to represent medium type and website.
+Minoshiro uses two enums to represent medium type and website.
 
 .. py:class:: Site
 
@@ -281,16 +281,16 @@ Database Controllers
 
     See :ref:`Extending DatabaseController` for details.
 
-.. py:class:: PostgresController(pool, logger, schema='roboragi')
+.. py:class:: PostgresController(pool, logger, schema='minoshiro')
 
-    To be able to integrate with an existing database, all tables for roboragi
-    will be put under the ``roboragi`` schema unless a different schema name is
+    To be able to integrate with an existing database, all tables for minoshiro
+    will be put under the ``minoshiro`` schema unless a different schema name is
     passed to the __init__ method.
 
     Create the instance with the :py:meth:`get_instance` method to make
     sure you have all the tables needed.
 
-    .. py:classmethod:: get_instance(logger, connect_kwargs=None, pool=None, schema='roboragi')
+    .. py:classmethod:: get_instance(logger, connect_kwargs=None, pool=None, schema='minoshiro')
 
         This method is a *coroutine*
 
@@ -327,7 +327,7 @@ Database Controllers
           One of ``db_config`` or ``pool`` must not be None.
 
         * schema(:py:class:`str`) - the name for the schema used.
-          Defaults to ``roboragi``
+          Defaults to ``minoshiro``
 
         **Returns**
 
