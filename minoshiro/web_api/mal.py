@@ -10,8 +10,9 @@ from urllib.parse import quote
 from minoshiro.enums import Medium
 
 
-async def get_entry_details(session_manager, header_info: dict, medium: Medium,
-                            query: str, thing_id: str = None) -> Optional[dict]:
+async def get_entry_details(session_manager, header_info: dict,
+                            medium: Medium, query: str,
+                            thing_id: str = None) -> Optional[dict]:
     """
     Get the details of an thing by search query.
 
@@ -131,7 +132,7 @@ def __get_thing_by_id(thing_id: str,
     :param thing_id: the id that we are looking for.
 
     :param thing_list: the `SequenceMatcher` with the search query as seq2.
-    
+
     :return: the max matched ratio.
     """
     for thing in thing_list:

@@ -12,6 +12,7 @@ addons:
 before_script:
   - "mv ./tests/test_data/.travis_postgres.json ./tests/test_data/postgres.json"
 script:
+  - flake8 minoshiro
   - pytest -v --capture=sys
 notifications:
   email: false

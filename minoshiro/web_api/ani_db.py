@@ -12,7 +12,7 @@ def process_xml(xml_string: str) -> Dict[str, dict]:
     Process the xml string from the anidb data dump.
 
     :param xml_string: the xml string.
-    
+
     :return: A list of dict with keys "id" and "titles".
     """
     parsed = parse(xml_string)
