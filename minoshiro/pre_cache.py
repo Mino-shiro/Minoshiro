@@ -16,7 +16,7 @@ __all__ = ['cache_top_pages']
 
 async def cache_top_pages(medium: Medium, session_manager: SessionManager,
                           db: DataController, mal_headers: dict,
-                          page_count: int, cache_mal_entries: int):
+                          page_count: int, cache_mal_entries: int, logger):
     """
     Cache the top n pages of anime/manga from Anilist, and try to cache each
     entry for MAL as well.
@@ -27,23 +27,23 @@ async def cache_top_pages(medium: Medium, session_manager: SessionManager,
 
     :param db: the `DataController` instance.
 
-    :param anilist: the `AniList` instance.
-
     :param mal_headers: dict of mal auth headers.
 
     :param page_count: the number of desired pages.
 
     :param cache_mal_entries: The number of MAL entries to cache.
+
+    :param logger: the logger object.
     """
     assert page_count > 0, 'Please enter a page count greater than 0.'
     await __cache(
-        __n_popular_anilist(page_count, medium, session_manager),
-        db, medium, mal_headers, session_manager, cache_mal_entries
+        __n_popular_anilist(page_count, medium, session_manager, logger),
+        db, medium, mal_headers, session_manager, cache_mal_entries, logger
     )
 
 
 async def __cache(async_iter, db, medium, mal_headers, session_manager,
-                  cache_mal_entries):
+                  cache_mal_entries, logger):
     """
     Cache entries from an `AsyncGenerator`
 
@@ -58,6 +58,8 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager,
     :param session_manager: the `SessionManager` instance.
 
     :param cache_mal_entries: The number of MAL entries to cache.
+
+    :param logger: the logger object.
     """
     i = 0
     async for entry in async_iter:
@@ -73,13 +75,13 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager,
             await db.set_identifier(syn, medium, Site.ANILIST, anilist_id)
         if i < cache_mal_entries:
             await __cache_mal_entry(
-                db, anime_name, medium, mal_headers, session_manager
+                db, anime_name, medium, mal_headers, session_manager, logger
             )
             i += 1
 
 
-async def __n_popular_anilist(
-        page_count: int, medium: Medium, session_manager: SessionManager):
+async def __n_popular_anilist(page_count: int, medium: Medium,
+                              session_manager: SessionManager, logger):
     """
     Yields top n pages of anime/manga by popularity from Anilist.
 
@@ -89,7 +91,7 @@ async def __n_popular_anilist(
 
     :param session_manager: the `SessionManager` instance.
 
-    :param anilist: the `Anilist` instance.
+    :param logger: the logger object.
 
     :return: an asynchronous generator that
              yields top n pages of anime/manga for Anilist.
@@ -101,7 +103,7 @@ async def __n_popular_anilist(
             )
             error = False
         except Exception as e:
-            session_manager.logger.warning(f'Error raised by Anilist: {e}')
+            logger.warning(f'Error raised by Anilist: {e}')
             page_entries = None
             error = True
         if not page_entries and error:
@@ -130,7 +132,8 @@ async def __cache_anilist_id(name, medium, id_, db):
         await db.set_identifier(name, medium, Site.ANILIST, id_)
 
 
-async def __cache_mal_entry(db, name, medium, mal_headers, session_manager):
+async def __cache_mal_entry(db, name, medium, mal_headers,
+                            session_manager, logger):
     """
     Search MAL from a name, cache the
 
@@ -143,6 +146,8 @@ async def __cache_mal_entry(db, name, medium, mal_headers, session_manager):
     :param mal_headers: the mal auth headers.
 
     :param session_manager: the `SessionManager` instance.
+
+    :param logger: the logger object.
     """
     id_dict = await db.get_identifier(name, medium) or {}
     mal_id = id_dict.get(Site.MAL)
@@ -151,8 +156,7 @@ async def __cache_mal_entry(db, name, medium, mal_headers, session_manager):
             session_manager, mal_headers, medium, name, mal_id
         )
     except Exception as e:
-        session_manager.logger.debug(f'Error raised by MAL: {e} '
-                                     f'on item {name}')
+        logger.debug(f'Error raised by MAL: {e} on item {name}')
         mal_entry = None
     if not mal_entry:
         return

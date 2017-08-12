@@ -6,12 +6,7 @@ from aiohttp_wrapper import SessionManager
 
 from minoshiro.enums import Medium, Site
 from minoshiro.upstream import get_all_synonyms
-
-_convert_medium = {
-    'Anime': Medium.ANIME,
-    'Manga': Medium.MANGA,
-    'LN': Medium.LN
-}
+from .constants import convert_medium
 
 
 class DataController(metaclass=ABCMeta):
@@ -172,7 +167,7 @@ class DataController(metaclass=ABCMeta):
             anilist = dict_.get('ani')
             ap = dict_.get('ap')
             anidb = dict_.get('adb')
-            medium = _convert_medium[type_]
+            medium = convert_medium[type_]
             if mal_name and mal_id:
                 await self.set_mal_title(str(mal_id), medium, str(mal_name))
             await self.__precache_one(name, medium, Site.MAL, mal_id)

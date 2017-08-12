@@ -8,14 +8,8 @@ from asyncpg.pool import Pool
 from minoshiro.enums import Medium, Site
 from minoshiro.logger import get_default_logger
 from .abc import DataController
+from .constants import tables
 from .postgres_utils import make_tables, parse_record
-
-_tables = {
-    Medium.ANIME: 'anime',
-    Medium.MANGA: 'manga',
-    Medium.LN: 'ln',
-    Medium.VN: 'vn'
-}
 
 
 class PostgresController(DataController):
@@ -89,7 +83,7 @@ class PostgresController(DataController):
 
         :return: the table name fot that medium.
         """
-        return f'{self.schema}.{_tables[medium]}'
+        return f'{self.schema}.{tables[medium]}'
 
     async def get_identifier(self, query: str,
                              medium: Medium) -> Optional[Dict[Site, str]]:

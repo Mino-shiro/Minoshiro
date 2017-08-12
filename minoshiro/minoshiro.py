@@ -223,7 +223,8 @@ class Minoshiro:
             if cache_pages:
                 await cache_top_pages(
                     med, self.session_manager, self.db_controller,
-                    self.mal_headers, cache_pages, cache_mal_entries
+                    self.mal_headers, cache_pages, cache_mal_entries,
+                    self.logger
                 )
 
         self.logger.info('Data populated.')

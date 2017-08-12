@@ -7,15 +7,10 @@ from typing import Dict, Optional, Union
 
 from minoshiro.enums import Medium, Site
 from minoshiro.logger import get_default_logger
+from minoshiro.upstream import get_all_synonyms
 from .abc import DataController
+from .constants import convert_medium, tables
 from .sqlite_utils import make_tables
-
-_tables = {
-    Medium.ANIME: 'anime',
-    Medium.MANGA: 'manga',
-    Medium.LN: 'ln',
-    Medium.VN: 'vn'
-}
 
 
 class SqliteController(DataController):
@@ -44,7 +39,8 @@ class SqliteController(DataController):
         super().__init__(logger)
 
     @classmethod
-    async def get_instance(cls, path: Union[str, Path], logger=None, loop=None):
+    async def get_instance(cls, path: Union[str, Path], logger=None,
+                           loop=None):
         """
         Get a new instance of `SqliteController`
 
@@ -148,7 +144,7 @@ class SqliteController(DataController):
 
         :return: the data for that id if found.
         """
-        sql = (f'SELECT dict, cachetime FROM {_tables[medium]} '
+        sql = (f'SELECT dict, cachetime FROM {tables[medium]} '
                f'WHERE id=? AND site=?')
         row = await self.fetchone(sql, (id_, site.value))
         if not row:
@@ -173,7 +169,7 @@ class SqliteController(DataController):
 
         :param data: the data for the id.
         """
-        sql = f'REPLACE INTO {_tables[medium]} VALUES (?, ?, ?, ?)'
+        sql = f'REPLACE INTO {tables[medium]} VALUES (?, ?, ?, ?)'
         await self.execute(sql, (id_, site.value, dumps(data), int(time())))
 
     async def delete_medium_data(self, id_: str, medium: Medium, site: Site):
@@ -186,11 +182,34 @@ class SqliteController(DataController):
 
         :param site: the site.
         """
-        sql = f'DELETE FROM {_tables[medium]} WHERE id=? AND site=?'
+        sql = f'DELETE FROM {tables[medium]} WHERE id=? AND site=?'
         try:
             await self.execute(sql, (id_, site.value))
         except Exception as e:
             self.logger.warning(str(e))
+
+    async def pre_cache(self, session_manager):
+        """
+        Populate the lookup with synonyms.
+
+        :param session_manager: The Aiohttp SessionManager.
+        """
+        rows = await get_all_synonyms(session_manager)
+        with connect(self.path) as conn:
+            for name, type_, db_links in rows:
+                dict_ = loads(db_links)
+                mal_name, mal_id = dict_.get('mal', ('', ''))
+                anilist = dict_.get('ani')
+                ap = dict_.get('ap')
+                anidb = dict_.get('adb')
+                medium = convert_medium[type_]
+                if mal_name and mal_id:
+                    _cache_mal(conn, str(mal_id), medium, str(mal_name))
+                _precache(conn, name, medium, Site.MAL, mal_id)
+                _precache(conn, name, medium, Site.ANILIST, anilist)
+                _precache(conn, name, medium, Site.ANIMEPLANET, ap)
+                _precache(conn, name, medium, Site.ANIDB, anidb)
+            conn.commit()
 
     @property
     def loop(self):
@@ -269,3 +288,22 @@ class SqliteController(DataController):
         return await self.loop.run_in_executor(
             None, self.__fetch, False, sql, params
         )
+
+
+def _precache(conn, name, medium, site, id_):
+    """
+    Cache id.
+    """
+    if name and (id_ or isinstance(id_, int)):
+        sql = 'REPLACE INTO lookup VALUES (?,?,?,?)'
+        conn.execute(
+            sql, (str(name), medium.value, site.value, str(id_))
+        )
+
+
+def _cache_mal(conn, id_: str, medium: Medium, title: str):
+    """
+    Cache mal title.
+    """
+    sql = 'REPLACE INTO mal VALUES (?, ?, ?)'
+    conn.execute(sql, (id_, medium.value, title))
