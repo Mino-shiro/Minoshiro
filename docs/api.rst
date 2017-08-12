@@ -17,7 +17,7 @@ Default Logger
 
 Minoshiro
 --------------------
-.. py:class:: Minoshiro(db_controller, mal_config, \*, logger=None, loop=None)
+.. py:class:: Minoshiro(db_controller, mal_config, \*, logger=None, loop=None, timeout=3)
 
     Represents the search instance.
 
@@ -50,8 +50,12 @@ Minoshiro
     * loop(Optional[`Event loop <https://docs.python.org/
       3/library/asyncio-eventloops.html>`_]) -
       An asyncio event loop. If not provided will use the default event loop.
+    
+    * timeout(Optional[:py:class:`int`]) -
+          The number of seconds before each api request times out.
+          If not provided timeout will default to 3 seconds
 
-    .. py:classmethod:: from_postgres(mal_config, db_config = None, pool=None, \*, schema='minoshiro', cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
+    .. py:classmethod:: from_postgres(mal_config, db_config = None, pool=None, \*, schema='minoshiro', cache_pages=0, cache_mal_entries=0, logger=None, loop=None, timeout=3)
 
         This method is a *coroutine*
 
@@ -114,12 +118,16 @@ Minoshiro
           library/asyncio-eventloops.html>`_]) - An asyncio event loop.
           If not provided will use the default event loop.
 
+        * timeout(Optional[:py:class:`int`]) -
+          The number of seconds before each api request times out.
+          If not provided timeout will default to 3 seconds
+
         **Returns**
 
         Instance of :py:class:`Minoshiro` with
         :py:class:`PostgresController` as the database controller.
 
-    .. py:classmethod:: from_sqlite(mal_config, path, \*, cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
+    .. py:classmethod:: from_sqlite(mal_config, path, \*, cache_pages=0, cache_mal_entries=0, logger=None, loop=None, timeout=3)
 
         This method is a *coroutine*
 
@@ -161,6 +169,10 @@ Minoshiro
           library/asyncio-eventloops.html>`_]) -
           An asyncio event loop. If not provided
           will use the default event loop.
+
+        * timeout(Optional[:py:class:`int`]) -
+          The number of seconds before each api request times out.
+          If not provided timeout will default to 3 seconds
 
         **Returns**
 

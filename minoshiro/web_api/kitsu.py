@@ -84,7 +84,7 @@ class Kitsu:
         self.base_url = 'https://kitsu.io/api/edge/'
 
     async def search_entries(self, medium: Medium,
-                             query: str) -> Optional[dict]:
+                             query: str, timeout: int = 3) -> Optional[dict]:
         """
         Get the details of an thing by search query.
 
@@ -102,13 +102,13 @@ class Kitsu:
         }
 
         js = await self.session_manager.get_json(
-            url, headers=headers
+            url, headers=headers, timeout=timeout
         )
         if js:
             closest_entry = get_closest(query, js['data'])
             return closest_entry
 
-    async def get_entry_by_id(self, medium, id_) -> Optional[dict]:
+    async def get_entry_by_id(self, medium, id_, timeout = 3) -> Optional[dict]:
         """
         Get the details of a thing by id.
 
@@ -126,7 +126,7 @@ class Kitsu:
         }
 
         js = await self.session_manager.get_json(
-            url, headers=headers
+            url, headers=headers, timeout=timeout
         )
 
         first = js['data']

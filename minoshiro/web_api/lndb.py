@@ -10,8 +10,7 @@ from pyquery import PyQuery
 
 async def get_light_novel_url(
         session_manager: SessionManager,
-        query: str,
-        names: list) -> Optional[dict]:
+        query, names, timeout=3) -> Optional[dict]:
     """
     Get ln url by search query.
 
@@ -28,7 +27,7 @@ async def get_light_novel_url(
 
     async with await session_manager.get(
             'http://lndb.info/search?',
-            params=params) as resp:
+            params=params, timeout=timeout) as resp:
         if 'light_novel' in str(resp.url):
             s = (str(resp.url)).rsplit('/', 1)
             title = s[-1].replace('_', ' ')

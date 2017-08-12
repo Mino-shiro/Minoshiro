@@ -9,7 +9,7 @@ from urllib.parse import quote
 from pyquery import PyQuery
 
 
-async def get_light_novel_url(session_manager, query, names) -> Optional[dict]:
+async def get_light_novel_url(session_manager, query, names, timeout=3) -> Optional[dict]:
     """
     Get ln url by search query.
 
@@ -26,7 +26,7 @@ async def get_light_novel_url(session_manager, query, names) -> Optional[dict]:
     }
 
     async with await session_manager.get(
-            'http://www.novelupdates.com/?', params=params) as resp:
+            'http://www.novelupdates.com/?', params=params, timeout=timeout) as resp:
         html = await resp.text()
 
     nu = PyQuery(html)

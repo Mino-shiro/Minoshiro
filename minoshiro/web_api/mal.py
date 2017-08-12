@@ -32,7 +32,7 @@ async def get_entry_details(session_manager, header_info: dict,
     url = (f'https://myanimelist.net/api/{medium_str}/'
            f'search.xml?q={quote(query)}')
     async with await session_manager.get(
-            url, headers=header_info) as resp:
+            url, headers=header_info, timeout=timeout) as resp:
         html = await resp.text()
         if not html:
             return

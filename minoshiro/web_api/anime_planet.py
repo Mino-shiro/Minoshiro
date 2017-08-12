@@ -19,7 +19,7 @@ def sanitize_search_text(text: str) -> str:
     return text.replace('(TV)', 'TV')
 
 
-async def get_anime_url(session_manager, query, names: list) -> Optional[str]:
+async def get_anime_url(session_manager, query, names: list, timeout= 3) -> Optional[str]:
     """
     Get anime url by search query.
 
@@ -37,7 +37,7 @@ async def get_anime_url(session_manager, query, names: list) -> Optional[str]:
     }
     async with await session_manager.get(
             "http://www.anime-planet.com/anime/all?",
-            params=params) as resp:
+            params=params, timeout=timeout) as resp:
         html = await resp.text()
     ap = PyQuery(html)
     if ap.find('.cardDeck.pure-g.cd-narrow[data-type="anime"]'):
@@ -54,7 +54,7 @@ async def get_anime_url(session_manager, query, names: list) -> Optional[str]:
 
 
 async def get_manga_url(session_manager, query,
-                        names: list, author_name=None) -> Optional[str]:
+                        names: list, author_name=None, timeout=3) -> Optional[str]:
     """
     Get manga url by search query.
 
@@ -75,7 +75,7 @@ async def get_manga_url(session_manager, query,
         params['author'] = quote(author_name)
         async with await session_manager.get(
                 "http://www.anime-planet.com/manga/all?",
-                params=params) as resp:
+                params=params, timeout=timeout) as resp:
             html = await resp.text()
         if "No results found" in html:
             rearranged_author_names = deque(
@@ -85,12 +85,12 @@ async def get_manga_url(session_manager, query,
             params['author'] = quote(rearranged_name)
             async with await session_manager.get(
                     "http://www.anime-planet.com/manga/all?",
-                    params=params) as resp:
+                    params=params, timeout=timeout) as resp:
                 html = await resp.text()
     else:
         async with await session_manager.get(
                 "http://www.anime-planet.com/manga/all?",
-                params=params) as resp:
+                params=params, timeout=timeout) as resp:
             html = await resp.text()
     ap = PyQuery(html)
 
