@@ -3,4 +3,3 @@ include LICENSE
 include COPYING
 include requirements.txt
 include .version
-include roboragi/data/synonyms.db

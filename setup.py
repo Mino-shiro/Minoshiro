@@ -13,6 +13,10 @@ extras_require = {
     'postgres': ['asyncpg>=0.12.0']
 }
 
+package_data = {
+    '': ['LICENSE', 'README.md', 'COPYING', 'requirements.txt', '.version']
+}
+
 setup(
     name='minoshiro',
     version=version,
@@ -24,6 +28,7 @@ setup(
     license='MIT',
     packages=['minoshiro'],
     include_package_data=True,
+    package_data=package_data,
     install_requires=requirements,
     extras_require=extras_require,
     classifiers=[
