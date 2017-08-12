@@ -86,7 +86,8 @@ def match_max(thing: dict, matcher: SequenceMatcher) -> float:
 
 
 async def get_entry_by_id(session_manager: SessionManager,
-                          medium: Medium, entry_id: str) -> dict:
+                          medium: Medium, entry_id: str,
+                          timeout= 3) -> dict:
     """
     Get the full details of an thing by id
 
@@ -106,14 +107,14 @@ async def get_entry_by_id(session_manager: SessionManager,
         'query': (__get_query_string(medium, entry_id)).replace('\n', '')
     }
     async with await session_manager.post(
-            __base_url, headers=headers, json=data) as resp:
+            __base_url, headers=headers, json=data, timeout=timeout) as resp:
         js = await resp.json()
 
     return js['data']['Media']
 
 
 async def get_entry_details(session_manager: SessionManager,
-                            medium: Medium, query: str) -> Optional[dict]:
+                            medium: Medium, query: str, timeout= 3) -> Optional[dict]:
     """
     Get the details of an thing by search query.
 
@@ -135,14 +136,14 @@ async def get_entry_details(session_manager: SessionManager,
         'query': f'{__get_query_string(medium, query, True)} }}'
     }
     async with await session_manager.post(
-            __base_url, headers=headers, json=data) as resp:
+            __base_url, headers=headers, json=data, timeout=timeout) as resp:
         thing = await resp.json()
     closest_entry = get_closest(query, thing['data']['Page']['media'])
     return closest_entry
 
 
 async def get_page_by_popularity(session_manager, medium: Medium,
-                                 page: int) -> Optional[dict]:
+                                 page: int, timeout = 10) -> Optional[dict]:
     """
     Gets the 40 entries in the medium from specified page.
 
@@ -179,7 +180,7 @@ async def get_page_by_popularity(session_manager, medium: Medium,
                 }}''').replace('\n', '')
     }
     async with await session_manager.post(
-            __base_url, headers=headers, json=data) as resp:
+            __base_url, headers=headers, json=data, timeout=timeout) as resp:
         thing = await resp.json()
     return thing['data']['Page']['media']
 

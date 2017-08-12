@@ -11,7 +11,7 @@ from minoshiro.enums import Medium
 
 
 async def get_entry_details(session_manager, header_info: dict, medium: Medium,
-                            query: str, thing_id: str = None) -> Optional[dict]:
+                            query: str, thing_id: str = None, timeout: int = 3) -> Optional[dict]:
     """
     Get the details of an thing by search query.
 
@@ -31,7 +31,7 @@ async def get_entry_details(session_manager, header_info: dict, medium: Medium,
     url = (f'https://myanimelist.net/api/{medium_str}/'
            f'search.xml?q={quote(query)}')
     async with await session_manager.get(
-            url, headers=header_info) as resp:
+            url, headers=header_info, timeout=timeout) as resp:
         html = await resp.text()
         if not html:
             return

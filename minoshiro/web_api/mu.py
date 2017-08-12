@@ -9,7 +9,7 @@ from urllib.parse import quote
 from pyquery import PyQuery
 
 
-async def get_manga_url(session_manager, query, names: list) -> dict:
+async def get_manga_url(session_manager, query, names: list, timeout=3) -> dict:
     """
     Get manga url by search query.
 
@@ -26,7 +26,7 @@ async def get_manga_url(session_manager, query, names: list) -> dict:
     }
 
     async with await session_manager.get(
-            'https://mangaupdates.com/series.html', params=params) as resp:
+            'https://mangaupdates.com/series.html', params=params, timeout=timeout) as resp:
         html = await resp.text()
 
     mu = PyQuery(html)

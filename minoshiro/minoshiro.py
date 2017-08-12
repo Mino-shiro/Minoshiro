@@ -20,7 +20,7 @@ from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
 
 class Minoshiro:
     def __init__(self, db_controller: DataController, mal_config: dict,
-                 *, logger=None, loop=None):
+                 *, logger=None, loop=None, timeout=3):
         """
         Represents the search instance.
 
@@ -54,6 +54,7 @@ class Minoshiro:
             An asyncio event loop. If not provided will use the default
             event loop.
         """
+        self.timeout = timeout
         self.session_manager = SessionManager()
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
         assert mal_user and mal_pass, ('Please provide MAL user'
@@ -85,7 +86,7 @@ class Minoshiro:
     async def from_postgres(cls, mal_config: dict, db_config: dict = None,
                             pool=None, *, schema='minoshiro',
                             cache_pages: int = 0, cache_mal_entries: int = 0,
-                            logger=None, loop=None):
+                            logger=None, loop=None, timeout = 3):
         """
         Get an instance of `minoshiro` with class `PostgresController` as the
         database controller.
@@ -143,7 +144,7 @@ class Minoshiro:
             logger, db_config, pool, schema=schema
         )
         instance = cls(db_controller, mal_config,
-                       logger=logger, loop=loop)
+                       logger=logger, loop=loop, timeout=timeout)
         await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
 
@@ -384,11 +385,11 @@ class Minoshiro:
 
         if anilist_id:
             resp = await ani_list.get_entry_by_id(
-                self.session_manager, medium, anilist_id
+                self.session_manager, medium, anilist_id, self.timeout
             )
         else:
             resp = await ani_list.get_entry_details(
-                self.session_manager, medium, query
+                self.session_manager, medium, query, self.timeout
             )
 
         id_ = str(resp['id']) if resp else None
@@ -433,7 +434,7 @@ class Minoshiro:
                 query = cached_title
 
         resp = await mal.get_entry_details(
-            self.session_manager, self.mal_headers, medium, query, mal_id
+            self.session_manager, self.mal_headers, medium, query, mal_id, self.timeout
         )
 
         id_ = str(resp['id']) if resp else None
@@ -498,7 +499,7 @@ class Minoshiro:
                     cached_ids.get(Site.ANIMEPLANET))}, None
             else:
                 return {'url': await anime_planet.get_anime_url(
-                    self.session_manager, query, names
+                    self.session_manager, query, names, timeout=self.timeout
                 )}, None
 
         if medium == Medium.MANGA:
@@ -507,7 +508,7 @@ class Minoshiro:
                     cached_ids.get(Site.ANIMEPLANET))}, None
             else:
                 return {'url': await anime_planet.get_manga_url(
-                    self.session_manager, query, names
+                    self.session_manager, query, names, timeout=self.timeout
                 )}, None
 
         return None, None
@@ -527,11 +528,11 @@ class Minoshiro:
         kitsu_id = cached_ids.get(Site.KITSU) if cached_ids else None
         if kitsu_id:
             resp = await self.kitsu.get_entry_by_id(
-                medium, kitsu_id
+                medium, kitsu_id, self.timeout
             )
         else:
             resp = await self.kitsu.search_entries(
-                medium, query
+                medium, query, self.timeout
             )
         id_ = str(resp['id']) if resp else None
         return resp, id_
@@ -554,7 +555,7 @@ class Minoshiro:
                 )}, None
             else:
                 return {'url': await mu.get_manga_url(
-                    self.session_manager, query, names
+                    self.session_manager, query, names, self.timeout
                 )}, None
 
         return None, None
@@ -577,7 +578,7 @@ class Minoshiro:
                 )}, None
             else:
                 return {'url': await lndb.get_light_novel_url(
-                    self.session_manager, query, names)}, None
+                    self.session_manager, query, names, self.timeout)}, None
         return None, None
 
     async def __find_novel_updates(self, cached_ids, medium, query, names):
@@ -597,7 +598,7 @@ class Minoshiro:
                     nu_id
                 )}, None
             return {'url': await nu.get_light_novel_url(
-                self.session_manager, query, names
+                self.session_manager, query, names, self.timeout
             )}, None
 
         return None, None
