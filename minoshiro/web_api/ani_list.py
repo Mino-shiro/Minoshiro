@@ -87,7 +87,7 @@ def match_max(thing: dict, matcher: SequenceMatcher) -> float:
 
 async def get_entry_by_id(session_manager: SessionManager,
                           medium: Medium, entry_id: str,
-                          timeout= 3) -> dict:
+                          timeout=3) -> dict:
     """
     Get the full details of an thing by id
 
@@ -114,7 +114,8 @@ async def get_entry_by_id(session_manager: SessionManager,
 
 
 async def get_entry_details(session_manager: SessionManager,
-                            medium: Medium, query: str, timeout= 3) -> Optional[dict]:
+                            medium: Medium, query: str,
+                            timeout=3) -> Optional[dict]:
     """
     Get the details of an thing by search query.
 
@@ -143,7 +144,7 @@ async def get_entry_details(session_manager: SessionManager,
 
 
 async def get_page_by_popularity(session_manager, medium: Medium,
-                                 page: int, timeout = 10) -> Optional[dict]:
+                                 page: int, timeout=10) -> Optional[dict]:
     """
     Gets the 40 entries in the medium from specified page.
 

@@ -19,9 +19,12 @@ def sanitize_search_text(text: str) -> str:
     return text.replace('(TV)', 'TV')
 
 
-async def get_anime_url(session_manager, query, names: list, timeout= 3) -> Optional[str]:
+async def get_anime_url(session_manager, query, names: list,
+                        timeout=3) -> Optional[str]:
     """
     Get anime url by search query.
+
+    :param timeout: Time out seconds.
 
     :param session_manager: the `SessionManager` instance.
 
@@ -54,9 +57,12 @@ async def get_anime_url(session_manager, query, names: list, timeout= 3) -> Opti
 
 
 async def get_manga_url(session_manager, query,
-                        names: list, author_name=None, timeout=3) -> Optional[str]:
+                        names: list, author_name=None,
+                        timeout=3) -> Optional[str]:
     """
     Get manga url by search query.
+
+    :param timeout: Timeout seconds.
 
     :param session_manager: the `SessionManager` instance.
 

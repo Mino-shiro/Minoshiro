@@ -12,7 +12,7 @@ from minoshiro.enums import Medium
 
 async def get_entry_details(session_manager, header_info: dict,
                             medium: Medium, query: str,
-                            thing_id: str = None) -> Optional[dict]:
+                            thing_id: str = None, timeout=3) -> Optional[dict]:
     """
     Get the details of an thing by search query.
 

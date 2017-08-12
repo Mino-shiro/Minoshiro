@@ -86,7 +86,7 @@ class Minoshiro:
     async def from_postgres(cls, mal_config: dict, db_config: dict = None,
                             pool=None, *, schema='minoshiro',
                             cache_pages: int = 0, cache_mal_entries: int = 0,
-                            logger=None, loop=None, timeout = 3):
+                            logger=None, loop=None, timeout=3):
         """
         Get an instance of `minoshiro` with class `PostgresController` as the
         database controller.
@@ -423,7 +423,8 @@ class Minoshiro:
                 query = cached_title
 
         resp = await mal.get_entry_details(
-            self.session_manager, self.mal_headers, medium, query, mal_id, self.timeout
+            self.session_manager, self.mal_headers, medium, query, mal_id,
+            self.timeout
         )
 
         id_ = str(resp['id']) if resp else None

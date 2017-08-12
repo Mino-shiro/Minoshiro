@@ -108,7 +108,7 @@ class Kitsu:
             closest_entry = get_closest(query, js['data'])
             return closest_entry
 
-    async def get_entry_by_id(self, medium, id_, timeout = 3) -> Optional[dict]:
+    async def get_entry_by_id(self, medium, id_, timeout=3) -> Optional[dict]:
         """
         Get the details of a thing by id.
 
