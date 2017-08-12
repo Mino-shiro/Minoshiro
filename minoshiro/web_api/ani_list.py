@@ -1,8 +1,9 @@
 from difflib import SequenceMatcher
 from typing import List, Optional
 
+from aiohttp_wrapper import SessionManager
+
 from minoshiro.data_controller.enums import Medium
-from minoshiro.session_manager import SessionManager
 from minoshiro.utils.helpers import filter_anime_manga
 
 __escape_table = {
@@ -135,7 +136,6 @@ async def get_entry_details(session_manager: SessionManager,
     }
     async with await session_manager.post(
             __base_url, headers=headers, json=data) as resp:
-
         thing = await resp.json()
     closest_entry = get_closest(query, thing['data']['Page']['media'])
     return closest_entry

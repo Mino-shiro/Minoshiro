@@ -6,12 +6,13 @@ from time import time
 from traceback import format_exc
 from typing import Dict, Iterable, Union
 
+from aiohttp_wrapper import SessionManager
+
 from .data import data_path
 from .data_controller import (DataController, PostgresController,
                               SqliteController)
 from .data_controller.enums import Medium, Site
 from .logger import get_default_logger
-from .session_manager import SessionManager
 from .utils.helpers import get_synonyms
 from .utils.pre_cache import cache_top_pages
 from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
@@ -45,12 +46,6 @@ class Minoshiro:
             If this key is not present, the description defaults to:
             ``A Python library for anime search.``
 
-        :param anilist_config:
-            A dict for Anilist authorization.
-            It must contain the keys:
-                ``id``: Your Anilist client id
-                ``secret``: Your Anilist client secret.
-
         :param logger:
             The logger object. If it's not provided, will use the
             defualt logger provided by the library.
@@ -59,7 +54,7 @@ class Minoshiro:
             An asyncio event loop. If not provided will use the default
             event loop.
         """
-        self.session_manager = SessionManager(logger)
+        self.session_manager = SessionManager()
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
         assert mal_user and mal_pass, ('Please provide MAL user'
                                        'name and password.')
@@ -87,8 +82,8 @@ class Minoshiro:
         self.__anidb_time = None
 
     @classmethod
-    async def from_postgres(cls, mal_config: dict, db_config: dict = None, 
-                            pool=None, *, schema='minoshiro', 
+    async def from_postgres(cls, mal_config: dict, db_config: dict = None,
+                            pool=None, *, schema='minoshiro',
                             cache_pages: int = 0, cache_mal_entries: int = 0,
                             logger=None, loop=None):
         """

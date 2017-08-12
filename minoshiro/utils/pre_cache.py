@@ -3,9 +3,10 @@ Populate the database with some data
 before the main search class is initialized.
 """
 
+from aiohttp_wrapper import SessionManager
+
 from minoshiro.data_controller import DataController
 from minoshiro.data_controller.enums import Medium, Site
-from minoshiro.session_manager import SessionManager
 from minoshiro.utils.helpers import get_synonyms
 from minoshiro.web_api.ani_list import get_page_by_popularity
 from minoshiro.web_api.mal import get_entry_details
@@ -14,7 +15,7 @@ __all__ = ['cache_top_pages']
 
 
 async def cache_top_pages(medium: Medium, session_manager: SessionManager,
-                          db: DataController, mal_headers: dict, 
+                          db: DataController, mal_headers: dict,
                           page_count: int, cache_mal_entries: int):
     """
     Cache the top n pages of anime/manga from Anilist, and try to cache each

@@ -4,9 +4,8 @@ Search LNDB for anime.
 from difflib import SequenceMatcher
 from typing import List, Optional
 
+from aiohttp_wrapper import SessionManager
 from pyquery import PyQuery
-
-from minoshiro.session_manager import SessionManager
 
 
 async def get_light_novel_url(
