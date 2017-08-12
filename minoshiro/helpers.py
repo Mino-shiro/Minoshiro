@@ -1,4 +1,4 @@
-from minoshiro.enums import Medium, Site
+from .enums import Medium, Site
 
 
 def filter_anime_manga(medium: Medium) -> str:
