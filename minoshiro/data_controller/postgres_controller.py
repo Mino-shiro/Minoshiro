@@ -2,8 +2,14 @@ from datetime import datetime
 from json import dumps, loads
 from typing import Dict, Optional
 
-from asyncpg import InterfaceError, create_pool
-from asyncpg.pool import Pool
+try:
+    from asyncpg import InterfaceError, create_pool
+    from asyncpg.pool import Pool
+except ImportError:
+    print('asyncpg not installed, PostgresSQL function not available.')
+    Pool = None
+    InterfaceError = None
+    create_pool = None
 
 from minoshiro.enums import Medium, Site
 from minoshiro.logger import get_default_logger

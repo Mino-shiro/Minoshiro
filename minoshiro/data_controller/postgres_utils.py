@@ -4,8 +4,13 @@ Database utility functions.
 
 from typing import Optional
 
-from asyncpg import Record
-from asyncpg.pool import Pool
+try:
+    from asyncpg import Record
+    from asyncpg.pool import Pool
+except ImportError:
+    Record = None
+    Pool = None
+    print('asyncpg not installed, PostgresSQL function not available.')
 
 
 def parse_record(record: Record) -> Optional[tuple]:
