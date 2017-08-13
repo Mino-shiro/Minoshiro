@@ -26,6 +26,9 @@ async def get_entry_details(session_manager, header_info: dict,
 
     :param thing_id: thing id.
 
+    :param timeout:
+        The timeout in seconds for each HTTP request. Defualt is 3.
+
     :return: dict with thing info.
     """
     medium_str = 'anime' if medium == Medium.ANIME else 'manga'

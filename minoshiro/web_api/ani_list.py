@@ -97,6 +97,9 @@ async def get_entry_by_id(session_manager: SessionManager,
 
     :param entry_id: thing id.
 
+    :param timeout:
+        The timeout in seconds for each HTTP request. Defualt is 3.
+
     :return: dict with thing info.
     """
     headers = {
@@ -124,6 +127,9 @@ async def get_entry_details(session_manager: SessionManager,
     :param medium: medium to search for 'anime', 'manga', 'novel'
 
     :param query: the search term.
+
+    :param timeout:
+        The timeout in seconds for each HTTP request. Defualt is 3.
 
     :return: dict with thing info.
     """
@@ -153,6 +159,9 @@ async def get_page_by_popularity(session_manager, medium: Medium,
     :param medium: medium 'manga' or 'anime'.
 
     :param page: page we want info from
+
+    :param timeout:
+        The timeout in seconds for each HTTP request. Defualt is 10.
 
     :return: dict of page
     """

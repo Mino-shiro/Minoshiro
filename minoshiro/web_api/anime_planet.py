@@ -24,13 +24,14 @@ async def get_anime_url(session_manager, query, names: list,
     """
     Get anime url by search query.
 
-    :param timeout: Time out seconds.
-
     :param session_manager: the `SessionManager` instance.
 
     :param query: a search query.
 
     :param names: a list of synonyms
+
+    :param timeout:
+        The timeout in seconds for each HTTP request. Defualt is 3.
 
     :return: the anime url if it's found.
     """
@@ -62,8 +63,6 @@ async def get_manga_url(session_manager, query,
     """
     Get manga url by search query.
 
-    :param timeout: Timeout seconds.
-
     :param session_manager: the `SessionManager` instance.
 
     :param query: a search query.
@@ -71,6 +70,9 @@ async def get_manga_url(session_manager, query,
     :param names: a list of known names
 
     :param author_name: name for the manga author name
+
+    :param timeout:
+        The timeout in seconds for each HTTP request. Defualt is 3.
 
     :return: the anime url if it's found.
     """

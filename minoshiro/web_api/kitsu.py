@@ -92,6 +92,9 @@ class Kitsu:
 
         :param query: the search term.
 
+        :param timeout:
+            The timeout in seconds for each HTTP request. Defualt is 3.
+
         :return: dict with thing info.
         """
         medium_str = 'anime' if medium == Medium.ANIME else 'manga'
@@ -115,6 +118,9 @@ class Kitsu:
         :param medium: medium to search
 
         :param id_: the id.
+
+        :param timeout:
+            The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: dict with thing info.
         """

@@ -52,7 +52,7 @@ class Minoshiro:
 
         :param loop:
             An asyncio event loop. If not provided will use the default
-            event loop.            
+            event loop.
         """
         self.session_manager = SessionManager()
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
@@ -128,7 +128,7 @@ class Minoshiro:
         :param loop:
             An asyncio event loop. If not provided will use the default
             event loop.
-        
+
         :return:
             Instance of `minoshiro` with class `PostgresController`
             as the database controller.
@@ -241,10 +241,10 @@ class Minoshiro:
         :param sites:
             an iterable of sites desired. If None is provided, will
             search all sites by default.
-        
-        :param timeout: 
+
+        :param timeout:
             The timeout in seconds for each HTTP request. Defualt is 3.
-        
+
         :return:
             an asynchronous generator that yields the site and data
             in a tuple for all sites requested.
@@ -278,8 +278,8 @@ class Minoshiro:
         :param sites:
             an iterable of sites desired. If None is provided, will
             search all sites by default.
-            
-        :param timeout: 
+
+        :param timeout:
             The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: Data for all sites in a dict {Site: data}
@@ -366,10 +366,10 @@ class Minoshiro:
         :param medium: the medium type.
 
         :param query: the search query.
-        
-        :param timeout: 
+
+        :param timeout:
             The timeout in seconds for each HTTP request. Defualt is 3.
-        
+
         :return: the anilist data and id in a tuple if found.
         """
         if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
@@ -661,10 +661,10 @@ class Minoshiro:
         :param query: the search query.
 
         :param medium: the medium type.
-        
-        :param timeout: 
+
+        :param timeout:
             The timeout in seconds for each HTTP request. Defualt is 3.
-                    
+
         :return: Search results data and id in a tuple for that site.
         """
         try:

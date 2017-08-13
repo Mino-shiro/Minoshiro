@@ -20,6 +20,9 @@ async def get_manga_url(session_manager, query,
 
     :param names: a list of known names
 
+    :param timeout:
+        The timeout in seconds for each HTTP request. Defualt is 3.
+
     :return: the manga url if it's found.
     """
     params = {
