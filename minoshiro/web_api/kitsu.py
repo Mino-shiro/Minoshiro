@@ -46,12 +46,14 @@ def match_max(thing: dict, matcher: SequenceMatcher) -> float:
     attributes = thing['attributes']
     thing_name_list = []
     max_ratio = 0
+    print(thing)
     if 'canonicalTitle' in attributes:
         thing_name_list.append(attributes['canonicalTitle'].lower())
 
     if 'titles' in attributes and attributes['titles'] is not None:
         for title in attributes['titles']:
-            thing_name_list.append(attributes['titles'][title].lower())
+            if attributes['titles'][title]:
+                thing_name_list.append(attributes['titles'][title].lower())
 
     if attributes.get('abbreviatedTitles'):
         for title in attributes['abbreviatedTitles']:
