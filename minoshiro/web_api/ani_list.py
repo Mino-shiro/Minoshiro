@@ -61,15 +61,11 @@ def match_max(thing: dict, matcher: SequenceMatcher) -> float:
     :return: the max matched ratio.
     """
     thing_name_list = []
-    thing_name_list_no_syn = []
     max_ratio = 0
-    if 'title_english' in thing:
-        thing_name_list.append(thing['title_english'].lower())
-        thing_name_list_no_syn.append(thing['title_english'].lower())
-
-    if 'title_romaji' in thing:
-        thing_name_list.append(thing['title_romaji'].lower())
-        thing_name_list_no_syn.append(thing['title_romaji'].lower())
+    if 'title' in thing and thing['title'] is not None:
+        for title in thing['title']:
+            if thing['title'][title]:
+                thing_name_list.append(thing['title'][title].lower())
 
     if 'synonyms' in thing:
         for synonym in thing['synonyms']:
