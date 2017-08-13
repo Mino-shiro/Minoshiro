@@ -4,7 +4,8 @@ __pycache__/
 .cache/
 \.idea/
 /docs/_build/
-
+/minoshiro.egg-info/
+/dist/
 
 # File ignores
 /minoshiro/data/anime-titles.xml
