@@ -310,11 +310,10 @@ class Minoshiro:
         :param iterator: an iterator for all names.
         """
         for name in iterator:
-            if not name:
-                continue
-            await self.db_controller.set_identifier(
-                name, medium, site, id_
-            )
+            if name:
+                await self.db_controller.set_identifier(
+                    name, medium, site, id_
+                )
 
     async def __fetch_anidb(self):
         """
