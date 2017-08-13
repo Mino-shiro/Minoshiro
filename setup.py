@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 
 with open('.version') as v:
     version = v.read()
@@ -26,7 +26,7 @@ setup(
     url='https://github.com/Mino-shiro/Minoshiro',
     author='MaT1g3R, dashwav',
     license='MIT',
-    packages=['minoshiro'],
+    packages=find_packages(exclude=['tests', 'docs']),
     include_package_data=True,
     package_data=package_data,
     install_requires=requirements,
