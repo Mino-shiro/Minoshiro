@@ -22,7 +22,9 @@ async def postgres():
     )
 
     # get_data eagerly evaluates all the data and return them in a dict
-    saekano = await robo.get_data('Saenai Heroine no Sodatekata', Medium.ANIME)
+    saekano = await robo.get_data(
+        'Saenai Heroine no Sodatekata', Medium.ANIME
+    )
     for site, data in saekano.items():
         print(site, data)
 
@@ -48,4 +50,9 @@ async def sqlite():
     another_robo = await Minoshiro.from_sqlite(
         mal_config, another_path
     )
-    print(await another_robo.get_data('Love Live Sunshine!', Medium.ANIME))
+    # Specify the seconds for HTTP request timeout.
+    print(
+        await another_robo.get_data(
+            'Love Live Sunshine!', Medium.ANIME, timeout=10
+        )
+    )

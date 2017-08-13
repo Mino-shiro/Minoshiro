@@ -20,6 +20,7 @@ PostgreSQL and SQLite3.
         'password': 'MAL password'
     }
 
+
     async def postgres():
         postgres_config = {
             "host": "localhost",
@@ -28,31 +29,25 @@ PostgreSQL and SQLite3.
             "database": "postgres"
         }
 
-        # You can choose how many pages from Anilist
-        # and how many entries from MAL
-        # to cache at the instance creation.
         robo = await Minoshiro.from_postgres(
             mal_config, postgres_config,
             cache_pages=1, cache_mal_entries=30
         )
 
-        # get_data eagerly evaluates all the data
-        # and return them in a dict
+        # get_data eagerly evaluates all the data and return them in a dict
         saekano = await robo.get_data(
             'Saenai Heroine no Sodatekata', Medium.ANIME
         )
         for site, data in saekano.items():
             print(site, data)
 
-        # yield_data lazily evaluates the data
-        # and you can iterate over them as such
-        async for site, data in robo.yield_data('New Game!',
-                                                Medium.MANGA):
+        # yield_data lazily evaluates the data and you can iterate over them
+        async for site, data in robo.yield_data('New Game!', Medium.MANGA):
             print(site, data)
 
 
     async def sqlite():
-        # from_sqlite method accepts a string or a Pathlib Path object.
+        # from_sqlite method accepts both a string or a Pathlib Path object.
         sqlite_path = 'path/to/sqlite/database'
         another_path = Path('another/sqlite/path')
 
@@ -62,13 +57,15 @@ PostgreSQL and SQLite3.
 
         # We only want the results from those 2 sites.
         sites = (Site.LNDB, Site.MAL)
-        async for site, data in robo.get_data(
-            'overlord', Medium.LN, sites):
+        async for site, data in robo.get_data('overlord', Medium.LN, sites):
             print(site, data)
 
         another_robo = await Minoshiro.from_sqlite(
             mal_config, another_path
         )
-        print(await another_robo.get_data(
-            'Love Live Sunshine!', Medium.ANIME
-        ))
+        # Specify the seconds for HTTP request timeout.
+        print(
+            await another_robo.get_data(
+                'Love Live Sunshine!', Medium.ANIME, timeout=10
+            )
+        )

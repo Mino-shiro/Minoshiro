@@ -20,7 +20,7 @@ from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
 
 class Minoshiro:
     def __init__(self, db_controller: DataController, mal_config: dict,
-                 *, logger=None, loop=None, timeout=3):
+                 *, logger=None, loop=None):
         """
         Represents the search instance.
 
@@ -52,9 +52,8 @@ class Minoshiro:
 
         :param loop:
             An asyncio event loop. If not provided will use the default
-            event loop.
+            event loop.            
         """
-        self.timeout = timeout
         self.session_manager = SessionManager()
         mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
         assert mal_user and mal_pass, ('Please provide MAL user'
@@ -86,7 +85,7 @@ class Minoshiro:
     async def from_postgres(cls, mal_config: dict, db_config: dict = None,
                             pool=None, *, schema='minoshiro',
                             cache_pages: int = 0, cache_mal_entries: int = 0,
-                            logger=None, loop=None, timeout=3):
+                            logger=None, loop=None):
         """
         Get an instance of `minoshiro` with class `PostgresController` as the
         database controller.
@@ -129,7 +128,7 @@ class Minoshiro:
         :param loop:
             An asyncio event loop. If not provided will use the default
             event loop.
-
+        
         :return:
             Instance of `minoshiro` with class `PostgresController`
             as the database controller.
@@ -143,8 +142,7 @@ class Minoshiro:
         db_controller = await PostgresController.get_instance(
             logger, db_config, pool, schema=schema
         )
-        instance = cls(db_controller, mal_config,
-                       logger=logger, loop=loop, timeout=timeout)
+        instance = cls(db_controller, mal_config, logger=logger, loop=loop)
         await instance.pre_cache(cache_pages, cache_mal_entries)
         return instance
 
@@ -232,7 +230,7 @@ class Minoshiro:
         await self.__fetch_anidb()
 
     async def yield_data(self, query: str, medium: Medium,
-                         sites: Iterable[Site] = None):
+                         sites: Iterable[Site] = None, *, timeout=3):
         """
         Yield the data for the search query from all sites.
 
@@ -243,7 +241,10 @@ class Minoshiro:
         :param sites:
             an iterable of sites desired. If None is provided, will
             search all sites by default.
-
+        
+        :param timeout: 
+            The timeout in seconds for each HTTP request. Defualt is 3.
+        
         :return:
             an asynchronous generator that yields the site and data
             in a tuple for all sites requested.
@@ -254,7 +255,7 @@ class Minoshiro:
         names = []
         for site in sites:
             res, id_ = await self.__get_result(
-                cached_data, cached_id, query, names, site, medium
+                cached_data, cached_id, query, names, site, medium, timeout
             )
             if res:
                 yield site, res
@@ -265,7 +266,8 @@ class Minoshiro:
         await self.__cache(to_be_cached, names, medium)
 
     async def get_data(self, query: str, medium: Medium,
-                       sites: Iterable[Site] = None) -> Dict[Site, dict]:
+                       sites: Iterable[Site] = None, *,
+                       timeout=3) -> Dict[Site, dict]:
         """
         Get the data for the search query in a dict.
 
@@ -276,11 +278,14 @@ class Minoshiro:
         :param sites:
             an iterable of sites desired. If None is provided, will
             search all sites by default.
+            
+        :param timeout: 
+            The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: Data for all sites in a dict {Site: data}
         """
         return {site: val async for site, val in self.yield_data(
-            query, medium, sites
+            query, medium, sites, timeout=timeout
         )}
 
     async def __cache(self, to_be_cached, names, medium):
@@ -343,7 +348,8 @@ class Minoshiro:
             self.logger.info('Anidb data read from disk.')
         self.__anidb_time = new_time
 
-    async def __find_anilist(self, cached_data, cached_ids, medium, query):
+    async def __find_anilist(self, cached_data, cached_ids,
+                             medium, query, timeout):
         """
         Find Anilist data.
 
@@ -360,7 +366,10 @@ class Minoshiro:
         :param medium: the medium type.
 
         :param query: the search query.
-
+        
+        :param timeout: 
+            The timeout in seconds for each HTTP request. Defualt is 3.
+        
         :return: the anilist data and id in a tuple if found.
         """
         if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
@@ -373,11 +382,11 @@ class Minoshiro:
 
         if anilist_id:
             resp = await ani_list.get_entry_by_id(
-                self.session_manager, medium, anilist_id, self.timeout
+                self.session_manager, medium, anilist_id, timeout
             )
         else:
             resp = await ani_list.get_entry_details(
-                self.session_manager, medium, query, self.timeout
+                self.session_manager, medium, query, timeout
             )
 
         id_ = str(resp['id']) if resp else None
@@ -389,7 +398,8 @@ class Minoshiro:
                     id_, medium, Site.ANILIST, resp
                 )
 
-    async def __find_mal(self, cached_data, cached_ids, medium, query):
+    async def __find_mal(self, cached_data, cached_ids,
+                         medium, query, timeout):
         """
         Find MAL data.
 
@@ -407,6 +417,9 @@ class Minoshiro:
 
         :param query: the search query.
 
+        :param timeout:
+            The timeout in seconds for each HTTP request. Defualt is 3.
+
         :return: the MAL data and id in a tuple  if found.
         """
         if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
@@ -423,7 +436,7 @@ class Minoshiro:
 
         resp = await mal.get_entry_details(
             self.session_manager, self.mal_headers, medium, query, mal_id,
-            self.timeout
+            timeout
         )
 
         id_ = str(resp['id']) if resp else None
@@ -469,14 +482,17 @@ class Minoshiro:
         res['url'] = f'{base_url}{id_}'
         return res, id_
 
-    async def __find_ani_planet(
-            self, cached_ids, medium: Medium, query: str, names: list):
+    async def __find_ani_planet(self, cached_ids, medium: Medium,
+                                query: str, names: list, timeout):
         """
         Find a anime or manga url from ani planet.
 
         :param medium: the medium type.
 
         :param query: the search query.
+
+        :param timeout:
+            The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: the ani planet data and id in a tuple  if found.
         """
@@ -488,7 +504,7 @@ class Minoshiro:
                     cached_ids.get(Site.ANIMEPLANET))}, None
             else:
                 return {'url': await anime_planet.get_anime_url(
-                    self.session_manager, query, names, timeout=self.timeout
+                    self.session_manager, query, names, timeout=timeout
                 )}, None
 
         if medium == Medium.MANGA:
@@ -497,18 +513,21 @@ class Minoshiro:
                     cached_ids.get(Site.ANIMEPLANET))}, None
             else:
                 return {'url': await anime_planet.get_manga_url(
-                    self.session_manager, query, names, timeout=self.timeout
+                    self.session_manager, query, names, timeout=timeout
                 )}, None
 
         return None, None
 
-    async def __find_kitsu(self, cached_ids, medium, query):
+    async def __find_kitsu(self, cached_ids, medium, query, timeout):
         """
         Find a anime or manga url from ani planet.
 
         :param medium: the medium type.
 
         :param query: the search query.
+
+        :param timeout:
+            The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: the ani planet data and id in a tuple  if found.
         """
@@ -517,22 +536,26 @@ class Minoshiro:
         kitsu_id = cached_ids.get(Site.KITSU) if cached_ids else None
         if kitsu_id:
             resp = await self.kitsu.get_entry_by_id(
-                medium, kitsu_id, self.timeout
+                medium, kitsu_id, timeout
             )
         else:
             resp = await self.kitsu.search_entries(
-                medium, query, self.timeout
+                medium, query, timeout
             )
         id_ = str(resp['id']) if resp else None
         return resp, id_
 
-    async def __find_manga_updates(self, cached_ids, medium, query, names):
+    async def __find_manga_updates(self, cached_ids, medium,
+                                   query, names, timeout):
         """
         Find a manga updates url.
 
         :param medium: the medium type.
 
         :param query: the search query.
+
+        :param timeout:
+            The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: the data and id in a tuple if found.
         """
@@ -544,18 +567,21 @@ class Minoshiro:
                 )}, None
             else:
                 return {'url': await mu.get_manga_url(
-                    self.session_manager, query, names, self.timeout
+                    self.session_manager, query, names, timeout
                 )}, None
 
         return None, None
 
-    async def __find_lndb(self, cached_ids, medium, query, names):
+    async def __find_lndb(self, cached_ids, medium, query, names, timeout):
         """
         Find an lndb url.
 
         :param medium: the medium type.
 
         :param query: the search query.
+
+        :param timeout:
+            The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: the lndb data and id in a tuple if found.
         """
@@ -567,16 +593,20 @@ class Minoshiro:
                 )}, None
             else:
                 return {'url': await lndb.get_light_novel_url(
-                    self.session_manager, query, names, self.timeout)}, None
+                    self.session_manager, query, names, timeout)}, None
         return None, None
 
-    async def __find_novel_updates(self, cached_ids, medium, query, names):
+    async def __find_novel_updates(self, cached_ids, medium,
+                                   query, names, timeout):
         """
         Find a Novel Updates url.
 
         :param medium: the medium type.
 
         :param query: the search query.
+
+        :param timeout:
+            The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: the data and id in a tuple if found.
         """
@@ -587,7 +617,7 @@ class Minoshiro:
                     nu_id
                 )}, None
             return {'url': await nu.get_light_novel_url(
-                self.session_manager, query, names, self.timeout
+                self.session_manager, query, names, timeout
             )}, None
 
         return None, None
@@ -618,7 +648,7 @@ class Minoshiro:
         return entry_resp, identifiers
 
     async def __get_result(self, cached_data, cached_id, query, names,
-                           site: Site, medium: Medium) -> tuple:
+                           site: Site, medium: Medium, timeout) -> tuple:
         """
         Get results from a site.
 
@@ -631,21 +661,26 @@ class Minoshiro:
         :param query: the search query.
 
         :param medium: the medium type.
-
+        
+        :param timeout: 
+            The timeout in seconds for each HTTP request. Defualt is 3.
+                    
         :return: Search results data and id in a tuple for that site.
         """
         try:
             if site == Site.ANILIST:
                 return await self.__find_anilist(
-                    cached_data, cached_id, medium, query
+                    cached_data, cached_id, medium, query, timeout
                 )
 
             if site == Site.KITSU:
-                return await self.__find_kitsu(cached_id, medium, query)
+                return await self.__find_kitsu(
+                    cached_id, medium, query, timeout
+                )
 
             if site == site.MAL:
                 return await self.__find_mal(
-                    cached_data, cached_id, medium, query
+                    cached_data, cached_id, medium, query, timeout
                 )
 
             if site == Site.ANIDB:
@@ -653,20 +688,22 @@ class Minoshiro:
 
             if site == Site.ANIMEPLANET:
                 return await self.__find_ani_planet(
-                    cached_id, medium, query, names
+                    cached_id, medium, query, names, timeout
                 )
 
             if site == Site.MANGAUPDATES:
                 return await self.__find_manga_updates(
-                    cached_id, medium, query, names
+                    cached_id, medium, query, names, timeout
                 )
 
             if site == Site.LNDB:
-                return await self.__find_lndb(cached_id, medium, query, names)
+                return await self.__find_lndb(
+                    cached_id, medium, query, names, timeout
+                )
 
             if site == Site.NOVELUPDATES:
                 return await self.__find_novel_updates(
-                    cached_id, medium, query, names
+                    cached_id, medium, query, names, timeout
                 )
 
             if site == Site.VNDB:
