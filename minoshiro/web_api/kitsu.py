@@ -46,7 +46,6 @@ def match_max(thing: dict, matcher: SequenceMatcher) -> float:
     attributes = thing['attributes']
     thing_name_list = []
     max_ratio = 0
-    print(thing)
     if 'canonicalTitle' in attributes:
         thing_name_list.append(attributes['canonicalTitle'].lower())
 
