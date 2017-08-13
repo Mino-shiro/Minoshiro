@@ -110,6 +110,8 @@ class Kitsu:
         )
         if js:
             closest_entry = get_closest(query, js['data'])
+            if closest_entry:
+                closest_entry['url'] = closest_entry['links']['self']
             return closest_entry
 
     async def get_entry_by_id(self, medium, id_, timeout=3) -> Optional[dict]:
@@ -137,4 +139,6 @@ class Kitsu:
         )
 
         first = js['data']
+        if first[0]:
+            first[0]['url'] = first[0]['links']['self']
         return first.pop()

@@ -48,6 +48,7 @@ async def get_entry_details(session_manager, header_info: dict,
         if medium == Medium.ANIME:
             data = {
                 'id': thing.find('id').text,
+                'url': f'https://myanimelist.net/anime/{thing.find("id").text}',
                 'title': thing.find('title').text,
                 'english': thing.find('english').text,
                 'synonyms': synonyms,
@@ -62,6 +63,7 @@ async def get_entry_details(session_manager, header_info: dict,
         else:
             data = {
                 'id': thing.find('id').text,
+                'url': f'https://myanimelist.net/manga/{thing.find("id").text}',
                 'title': thing.find('title').text,
                 'english': thing.find('english').text,
                 'synonyms': synonyms,
