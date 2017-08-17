@@ -250,11 +250,11 @@ class Minoshiro:
             in a tuple for all sites requested.
         """
         sites = sites if sites else list(Site)
-        cached_data, cached_id = await self.__get_cached(query, medium)
+        cached_data, cached_id = await self._get_cached(query, medium)
         to_be_cached = {}
         names = []
         for site in sites:
-            res, id_ = await self.__get_result(
+            res, id_ = await self._get_result(
                 cached_data, cached_id, query, names, site, medium, timeout
             )
             if res:
@@ -263,7 +263,7 @@ class Minoshiro:
                     names.append(title)
             if id_:
                 to_be_cached[site] = id_
-        await self.__cache(to_be_cached, names, medium)
+        await self._cache(to_be_cached, names, medium)
 
     async def get_data(self, query: str, medium: Medium,
                        sites: Iterable[Site] = None, *,
@@ -288,7 +288,7 @@ class Minoshiro:
             query, medium, sites, timeout=timeout
         )}
 
-    async def __cache(self, to_be_cached, names, medium):
+    async def _cache(self, to_be_cached, names, medium):
         """
         Cache search results into the db.
 
@@ -625,7 +625,7 @@ class Minoshiro:
     async def __find_vndb(self, medium, query):
         pass
 
-    async def __get_cached(self, query: str, medium: Medium) -> tuple:
+    async def _get_cached(self, query: str, medium: Medium) -> tuple:
         """
         Get cached data from the database.
 
@@ -647,8 +647,8 @@ class Minoshiro:
 
         return entry_resp, identifiers
 
-    async def __get_result(self, cached_data, cached_id, query, names,
-                           site: Site, medium: Medium, timeout) -> tuple:
+    async def _get_result(self, cached_data, cached_id, query, names,
+                          site: Site, medium: Medium, timeout) -> tuple:
         """
         Get results from a site.
 
