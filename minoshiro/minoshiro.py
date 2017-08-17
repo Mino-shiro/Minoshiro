@@ -566,9 +566,9 @@ class Minoshiro:
                     mu_id
                 )}, None
             else:
-                return {'url': await mu.get_manga_url(
+                return await mu.get_manga_url(
                     self.session_manager, query, names, timeout
-                )}, None
+                ), None
 
         return None, None
 
@@ -592,8 +592,8 @@ class Minoshiro:
                     lndb_id
                 )}, None
             else:
-                return {'url': await lndb.get_light_novel_url(
-                    self.session_manager, query, names, timeout)}, None
+                return await lndb.get_light_novel_url(
+                    self.session_manager, query, names, timeout), None
         return None, None
 
     async def __find_novel_updates(self, cached_ids, medium,
@@ -616,9 +616,9 @@ class Minoshiro:
                 return {'url': nu.get_light_novel_by_id(
                     nu_id
                 )}, None
-            return {'url': await nu.get_light_novel_url(
+            return await nu.get_light_novel_url(
                 self.session_manager, query, names, timeout
-            )}, None
+            ), None
 
         return None, None
 

@@ -179,6 +179,7 @@ async def get_page_by_popularity(session_manager, medium: Medium,
                         }}
                     synonyms
                     id
+                    url: siteUrl
                     type
                     format
                     }}
@@ -213,6 +214,7 @@ def __get_query_string(medium, query, search=False) -> str:
             english
             native
             }}
+            url: siteUrl
             startDate {{
             year
             month
