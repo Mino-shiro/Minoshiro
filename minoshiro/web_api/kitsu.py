@@ -111,7 +111,10 @@ class Kitsu:
         if js:
             closest_entry = get_closest(query, js['data'])
             if closest_entry:
-                closest_entry['url'] = closest_entry['links']['self']
+                closest_entry['url'] = (
+                    f'https://kitsu.io/{medium_str}/'
+                    f'{closest_entry["attributes"]["slug"]}'
+                )
             return closest_entry
 
     async def get_entry_by_id(self, medium, id_, timeout=3) -> Optional[dict]:
