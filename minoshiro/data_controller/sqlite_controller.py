@@ -77,7 +77,10 @@ class SqliteController(DataController):
             A dict of all identifiers for this search query for all sites,
             None if nothing is found.
         """
-        sql = 'SELECT site, identifier FROM lookup WHERE syname=? AND medium=?'
+        sql = """
+        SELECT site, identifier FROM lookup
+        WHERE LOWER(syname)=LOWER(?) AND medium=?
+        """
         rows = await self.fetchall(sql, (query, medium.value))
         if not rows:
             return

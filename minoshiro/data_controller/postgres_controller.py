@@ -106,7 +106,7 @@ class PostgresController(DataController):
         """
         sql = """
         SELECT site, identifier FROM {}.lookup
-        WHERE syname=$1 AND medium=$2;
+        WHERE LOWER(syname)=LOWER($1) AND medium=$2;
         """.format(self.schema)
 
         res = await self.pool.fetch(sql, query, medium.value)
