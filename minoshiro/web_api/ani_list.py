@@ -209,6 +209,7 @@ def __get_query_string(medium, query, search=False) -> str:
     query {{
         {full_str} {{
             id
+            idMal
             title {{
             romaji
             english
