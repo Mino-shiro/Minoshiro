@@ -16,14 +16,10 @@ such:
     from minoshiro import Minoshiro
 
     async def main():
-        mal_config = {
-            'user': 'MAL User name',
-            'password': 'MAL password'
-        }
 
         db_path = 'path/to/database'
 
-        robo = await Minoshiro.from_sqlite(mal_config, db_path)
+        robo = await Minoshiro.from_sqlite(db_path)
 
 
 To use the built in PostgreSQL support, you will need
@@ -37,10 +33,6 @@ Then, use the ``from_postgres`` method as such:
 
 
     async def main():
-        mal_config = {
-            'user': 'MAL User name',
-            'password': 'MAL password'
-        }
         db_config = {
             "host": "localhost",
             "port": "5432",
@@ -49,7 +41,7 @@ Then, use the ``from_postgres`` method as such:
         }
 
         robo = await Minoshiro.from_postgres(
-            mal_config, db_config, schema='my_schema'
+            db_config, schema='my_schema'
         )
 
 .. _Extending DatabaseController:
@@ -111,38 +103,6 @@ MUST be defined with ``async def``.
 
         :param identifier: the identifier.
         :type identifier: str
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def get_mal_title(self, id_: str, medium: Medium) -> Optional[str]:
-        """
-        Get a MAL title by its id.
-
-        :param id_: th MAL id.
-        :type id_: str
-
-        :param medium: the medium type.
-        :type medium: Medium
-
-        :return: The MAL title if it's found.
-        :rtype: Optional[str]
-        """
-        raise NotImplementedError
-
-    @abstractmethod
-    async def set_mal_title(self, id_: str, medium: Medium, title: str):
-        """
-        Set the MAL title for a given id.
-
-        :param id_: the MAL id.
-        :type id_: str
-
-        :param medium: The medium type.
-        :type medium: Medium
-
-        :param title: The MAL title for the given id.
-        :type title: str
         """
         raise NotImplementedError
 
