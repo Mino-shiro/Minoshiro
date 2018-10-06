@@ -1,5 +1,4 @@
 from asyncio import get_event_loop
-from base64 import b64encode
 from itertools import chain
 from pathlib import Path
 from traceback import format_exc
@@ -15,11 +14,13 @@ from .helpers import get_synonyms
 from .logger import get_default_logger
 from .pre_cache import cache_top_pages
 from .upstream import download_anidb
-from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mal, mu, nu
+from .web_api import ani_db, ani_list, anime_planet, kitsu, lndb, mu, nu
+
+from warnings import warn
 
 
 class Minoshiro:
-    def __init__(self, db_controller: DataController, mal_config: dict,
+    def __init__(self, db_controller: DataController,
                  *, logger=None, loop=None):
         """
         Represents the search instance.
@@ -33,12 +34,6 @@ class Minoshiro:
         :param db_controller:
             Any sub class of ``minoshiro.data_controller.abc.DataController``
             will work here.
-
-        :param mal_config:
-            A dict for MAL authorization.
-            It must contain the keys:
-                ``user``: Your MAL username
-                ``password``: Your MAL password
 
             It may also contain a key "description" for the description you
             wish to use in the auth header.
@@ -55,21 +50,8 @@ class Minoshiro:
             event loop.
         """
         self.session_manager = SessionManager()
-        mal_user, mal_pass = mal_config.get('user'), mal_config.get('password')
-        assert mal_user and mal_pass, ('Please provide MAL user'
-                                       'name and password.')
 
         self.db_controller = db_controller
-
-        mal_agent = mal_config.get(
-            'description', 'A Python library for anime search.'
-        )
-        mal_auth = b64encode(f'{mal_user}:{mal_pass}'.encode()).decode()
-
-        self.mal_headers = {
-            'Authorization': f'Basic {mal_auth}',
-            'User-Agent': mal_agent
-        }
 
         self.kitsu = kitsu.Kitsu(
             self.session_manager, '', ''
@@ -82,19 +64,13 @@ class Minoshiro:
         self.__anidb_time = None
 
     @classmethod
-    async def from_postgres(cls, mal_config: dict, db_config: dict = None,
+    async def from_postgres(cls, db_config: dict = None,
                             pool=None, *, schema='minoshiro',
-                            cache_pages: int = 0, cache_mal_entries: int = 0,
+                            cache_pages: int = 0,
                             logger=None, loop=None):
         """
         Get an instance of `minoshiro` with class `PostgresController` as the
         database controller.
-
-        :param mal_config:
-            A dict for MAL authorization.
-            It must contain the keys:
-                user: Your MAL username
-                password: Your MAL password
 
             It may also contain a key "description" for the description you
             wish to use in the auth header.
@@ -118,9 +94,6 @@ class Minoshiro:
             The number of pages of anime and manga from Anilist to cache
             before the instance is created. Each page contains 40 entries max.
 
-        :param cache_mal_entries:
-            The number of MAL entries you wish to cache.
-
         :param logger:
             The logger object. If it's not provided, will use the
             defualt logger provided by the library.
@@ -142,24 +115,18 @@ class Minoshiro:
         db_controller = await PostgresController.get_instance(
             logger, db_config, pool, schema=schema
         )
-        instance = cls(db_controller, mal_config, logger=logger, loop=loop)
-        await instance.pre_cache(cache_pages, cache_mal_entries)
+        instance = cls(db_controller, logger=logger, loop=loop)
+        await instance.pre_cache(cache_pages)
         return instance
 
     @classmethod
-    async def from_sqlite(cls, mal_config: dict,
-                          path: Union[str, Path], *,
-                          cache_pages: int = 0, cache_mal_entries: int = 0,
+    async def from_sqlite(cls, path: Union[str, Path], *,
+                          cache_pages: int = 0,
                           logger=None, loop=None):
         """
         Get an instance of `minoshiro` with class `SqliteController` as the
         database controller.
 
-        :param mal_config:
-            A dict for MAL authorization.
-            It must contain the keys:
-                user: Your MAL username
-                password: Your MAL password
 
             It may also contain a key "description" for the description you
             wish to use in the auth header.
@@ -175,9 +142,6 @@ class Minoshiro:
             The number of pages of anime and manga from Anilist to cache
             before the instance is created. Each page contains 40 entries max.
 
-        :param cache_mal_entries:
-            The number of MAL entries you wish to cache.
-
         :param logger:
             The logger object. If it's not provided, will use the
             defualt logger provided by the library.
@@ -192,26 +156,20 @@ class Minoshiro:
         """
         logger = logger or get_default_logger()
         db_controller = await SqliteController.get_instance(path, logger, loop)
-        instance = cls(db_controller, mal_config,
+        instance = cls(db_controller,
                        logger=logger, loop=loop)
-        await instance.pre_cache(cache_pages, cache_mal_entries)
+        await instance.pre_cache(cache_pages)
         return instance
 
-    async def pre_cache(self, cache_pages: int, cache_mal_entries: int):
+    async def pre_cache(self, cache_pages: int):
         """
         Pre cache the database with anime and managa data.
 
         :param cache_pages:
             Number of Anilist pages to cache. There are 40 entries per page.
 
-        :param cache_mal_entries: Number of MAL entries you wish to cache.
         """
         assert cache_pages >= 0, 'Param `cache_pages` must not be negative.'
-        assert cache_mal_entries >= 0, ('Param `cache_mal_entries`'
-                                        'must not be negative.')
-        if cache_mal_entries:
-            assert cache_pages > 0, ('You must have at least 1'
-                                     'cached page to cache MAL entries.')
         self.logger.info('Populating lookup...')
         await self.db_controller.pre_cache(self.session_manager)
         self.logger.info('Lookup populated.')
@@ -222,8 +180,7 @@ class Minoshiro:
             if cache_pages:
                 await cache_top_pages(
                     med, self.session_manager, self.db_controller,
-                    self.mal_headers, cache_pages, cache_mal_entries,
-                    self.logger
+                    cache_pages, self.logger
                 )
 
         self.logger.info('Data populated.')
@@ -398,6 +355,7 @@ class Minoshiro:
                     id_, medium, Site.ANILIST, resp
                 )
 
+    # Deprecated
     async def __find_mal(self, cached_data, cached_ids,
                          medium, query, timeout):
         """
@@ -421,6 +379,7 @@ class Minoshiro:
             The timeout in seconds for each HTTP request. Defualt is 3.
 
         :return: the MAL data and id in a tuple  if found.
+        """
         """
         if medium not in (Medium.ANIME, Medium.MANGA, Medium.LN):
             return None, None
@@ -450,6 +409,7 @@ class Minoshiro:
                 await self.db_controller.set_medium_data(
                     id_, medium, Site.MAL, resp
                 )
+        """
 
     async def __find_anidb(self, cached_ids, medium, query):
         """
@@ -679,9 +639,13 @@ class Minoshiro:
                 )
 
             if site == site.MAL:
-                return await self.__find_mal(
-                    cached_data, cached_id, medium, query, timeout
+                # 2018-10-05 Deprecating MAL
+                warn(
+                    "MyAnimeList functionality has been deprecated.",
+                    DeprecationWarning,
+                    stacklevel=2
                 )
+                pass
 
             if site == Site.ANIDB:
                 return await self.__find_anidb(cached_id, medium, query)

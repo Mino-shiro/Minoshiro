@@ -2,11 +2,6 @@ from pathlib import Path
 
 from minoshiro import Medium, Minoshiro, Site
 
-mal_config = {
-    'user': 'MAL User name',
-    'password': 'MAL password'
-}
-
 
 async def postgres():
     postgres_config = {
@@ -17,8 +12,8 @@ async def postgres():
     }
 
     robo = await Minoshiro.from_postgres(
-        mal_config, postgres_config,
-        cache_pages=1, cache_mal_entries=30
+        postgres_config,
+        cache_pages=1,
     )
 
     # get_data eagerly evaluates all the data and return them in a dict
@@ -39,7 +34,7 @@ async def sqlite():
     another_path = Path('another/sqlite/path')
 
     robo = await Minoshiro.from_sqlite(
-        mal_config, sqlite_path
+        sqlite_path
     )
 
     # We only want the results from those 2 sites.
@@ -48,7 +43,7 @@ async def sqlite():
         print(site, data)
 
     another_robo = await Minoshiro.from_sqlite(
-        mal_config, another_path
+        another_path
     )
     # Specify the seconds for HTTP request timeout.
     print(
@@ -56,3 +51,5 @@ async def sqlite():
             'Love Live Sunshine!', Medium.ANIME, timeout=10
         )
     )
+
+await sqlite()
