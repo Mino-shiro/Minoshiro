@@ -51,5 +51,3 @@ async def sqlite():
             'Love Live Sunshine!', Medium.ANIME, timeout=10
         )
     )
-
-await sqlite()
