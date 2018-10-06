@@ -15,11 +15,6 @@ PostgreSQL and SQLite3.
 
     from minoshiro import Medium, Minoshiro, Site
 
-    mal_config = {
-        'user': 'MAL User name',
-        'password': 'MAL password'
-    }
-
 
     async def postgres():
         postgres_config = {
@@ -30,8 +25,7 @@ PostgreSQL and SQLite3.
         }
 
         robo = await Minoshiro.from_postgres(
-            mal_config, postgres_config,
-            cache_pages=1, cache_mal_entries=30
+            postgres_config, cache_pages=1
         )
 
         # get_data eagerly evaluates all the data and return them in a dict
@@ -52,11 +46,11 @@ PostgreSQL and SQLite3.
         another_path = Path('another/sqlite/path')
 
         robo = await Minoshiro.from_sqlite(
-            mal_config, sqlite_path
+            sqlite_path
         )
 
         # We only want the results from those 2 sites.
-        sites = (Site.LNDB, Site.MAL)
+        sites = (Site.LNDB, Site.ANILIST)
         async for site, data in robo.get_data('overlord', Medium.LN, sites):
             print(site, data)
 

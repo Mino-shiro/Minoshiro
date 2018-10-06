@@ -38,7 +38,7 @@ async def cache_top_pages(medium: Medium, session_manager: SessionManager,
     assert page_count > 0, 'Please enter a page count greater than 0.'
     await __cache(
         __n_popular_anilist(page_count, medium, session_manager, logger),
-        db, medium, mal_headers, session_manager, cache_mal_entries, logger
+        db, medium, logger
     )
 
 
@@ -61,11 +61,9 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager,
 
     :param logger: the logger object.
     """
-    i = 0
     async for entry in async_iter:
         anilist_id = str(entry['id'])
         await db.set_medium_data(anilist_id, medium, Site.ANILIST, entry)
-
         romanji_name = entry.get('title_romaji')
         english_name = entry.get('title_english')
         anime_name = romanji_name or english_name
@@ -73,11 +71,6 @@ async def __cache(async_iter, db, medium, mal_headers, session_manager,
             continue
         for syn in get_synonyms(entry, Site.ANILIST):
             await db.set_identifier(syn, medium, Site.ANILIST, anilist_id)
-        if i < cache_mal_entries:
-            await __cache_mal_entry(
-                db, anime_name, medium, mal_headers, session_manager, logger
-            )
-            i += 1
 
 
 async def __n_popular_anilist(page_count: int, medium: Medium,

@@ -17,7 +17,7 @@ Default Logger
 
 Minoshiro
 --------------------
-.. py:class:: Minoshiro(db_controller, mal_config, \*, logger=None, loop=None)
+.. py:class:: Minoshiro(db_controller, \*, logger=None, loop=None)
 
     Represents the search instance.
 
@@ -32,18 +32,6 @@ Minoshiro
     * db_controller(:py:class:`DataController`) -
       Any sub class of :py:class:`DataController` will work here.
 
-    * mal_config(:py:class:`dict`) - A dict for MAL authorization.
-        It must contain the keys:
-            ``user``: Your MAL username
-
-            ``password``: Your MAL password
-
-        It may also contain a key ``description`` for the description you
-        wish to use in the auth header.
-
-        If this key is not present, the description defaults to:
-        ``A Python library for anime search.``
-
     * logger(Optional[:py:class:`logging.Logger`]) -  The logger object.
       If it's not provided, will use the defualt logger provided by the library.
 
@@ -52,7 +40,7 @@ Minoshiro
       An asyncio event loop. If not provided will use the default event loop.
 
 
-    .. py:classmethod:: from_postgres(mal_config, db_config = None, pool=None, \*, schema='minoshiro', cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
+    .. py:classmethod:: from_postgres( db_config = None, pool=None, \*, schema='minoshiro', cache_pages=0, logger=None, loop=None)
 
         This method is a *coroutine*
 
@@ -60,18 +48,6 @@ Minoshiro
         :py:class:`PostgresController` as the database controller.
 
         **Parameters**
-
-        * mal_config(:py:class:`dict`) - A dict for MAL authorization.
-            It must contain the keys:
-                ``user``: Your MAL username
-
-                ``password``: Your MAL password
-
-            It may also contain a key ``description`` for the description you
-            wish to use in the auth header.
-
-            If this key is not present, the description defaults to:
-            ``A Python library for anime search.``
 
         * db_config(:py:class:`dict`) -
           A dict of database config for the connection.
@@ -103,10 +79,6 @@ Minoshiro
           manga from Anilist to cache before the instance is created.
           Each page contains 40 entries max.
 
-        * cache_mal_entries(Optional[:py:class:`int`]) -
-          The number of MAL entries you wish to cache.
-          ``cache_pages`` must be greater than 0 to cache MAL entries.
-
         * logger(Optional[:py:class:`logging.Logger`]) -  The logger object.
           If it's not provided, will use the defualt logger
           provided by the library.
@@ -120,7 +92,7 @@ Minoshiro
         Instance of :py:class:`Minoshiro` with
         :py:class:`PostgresController` as the database controller.
 
-    .. py:classmethod:: from_sqlite(mal_config, path, \*, cache_pages=0, cache_mal_entries=0, logger=None, loop=None)
+    .. py:classmethod:: from_sqlite(path, \*, cache_pages=0, logger=None, loop=None)
 
         This method is a *coroutine*
 
@@ -129,18 +101,6 @@ Minoshiro
 
         **Parameters**
 
-        * mal_config(:py:class:`dict`) - A dict for MAL authorization.
-            It must contain the keys:
-                ``user``: Your MAL username
-
-                ``password``: Your MAL password
-
-            It may also contain a key ``description`` for the description you
-            wish to use in the auth header.
-
-            If this key is not present, the description defaults to:
-            ``A Python library for anime search.``
-
         * path(Union[:py:class:`str`, :py:class:`pathlib.Path`]) -
           The path to the SQLite3 database,
           can either be a string or a Pathlib Path object.
@@ -148,11 +108,6 @@ Minoshiro
         * cache_pages(Optional[:py:class:`int`]) -  The number of pages of
           anime and manga from Anilist to cache before the instance is created.
           Each page contains 40 entries max.
-
-        * cache_mal_entries(Optional[:py:class:`int`]) -
-          The number of MAL entries
-          you wish to cache. ``cache_pages`` must be greater than
-          0 to cache MAL entries.
 
         * logger(Optional[:py:class:`logging.Logger`]) -
           The logger object. If it's not provided,
@@ -168,7 +123,7 @@ Minoshiro
         Instance of :py:class:`Minoshiro` with
         :py:class:`PostgresController` as the database controller.
 
-    .. py:method:: pre_cache(cache_pages, cache_mal_entries)
+    .. py:method:: pre_cache(cache_pages)
 
         This method is a *coroutine*
 
@@ -182,9 +137,6 @@ Minoshiro
 
         * cache_pages(:py:class:`int`) - Number of Anilist pages to cache.
           There are 40 entries per page.
-
-        * cache_mal_entries(:py:class:`int`) -
-          Number of MAL entries you wish to cache.
 
     .. py:method:: yield_data(query, medium, sites, *, timeout=3)
 
