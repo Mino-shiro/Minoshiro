@@ -6,6 +6,7 @@ __pycache__/
 /docs/_build/
 /minoshiro.egg-info/
 /dist/
+.DS_Store
 
 # File ignores
 /minoshiro/data/anime-titles.xml
