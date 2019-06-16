@@ -298,11 +298,14 @@ class Minoshiro:
             )
 
         if not good or not self.__anidb_list:
-            self.logger.info('Reading anidb data from disk...')
-            with dump_path.open() as xml_file:
-                xml = xml_file.read()
-            self.__anidb_list = ani_db.process_xml(xml)
-            self.logger.info('Anidb data read from disk.')
+            try:
+                self.logger.info('Reading anidb data from disk...')
+                with dump_path.open() as xml_file:
+                    xml = xml_file.read()
+                self.__anidb_list = ani_db.process_xml(xml)
+                self.logger.info('Anidb data read from disk.')
+            except Exception as e:
+                self.logger.warn(f'Error loading anidb data from disk: {e}')
         self.__anidb_time = new_time
 
     async def __find_anilist(self, cached_data, cached_ids,
@@ -434,7 +437,7 @@ class Minoshiro:
             return {'url': f'{base_url}{cached_id}'}, cached_id
         await self.__fetch_anidb()
         res = await self.loop.run_in_executor(
-            None, ani_db.get_anime, query, self.__anidb_list
+            None, ani_db.get_animeani_db.get_anime, query, self.__anidb_list
         )
         if not res:
             return None, None
