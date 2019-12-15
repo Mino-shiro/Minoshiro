@@ -45,11 +45,12 @@ async def get_anime_url(session_manager, query, names: list,
     if ap.find('.cardDeck.pure-g.cd-narrow[data-type="anime"]'):
         anime_list = []
         for entry in ap.find('.card.pure-1-6'):
-            anime_list.append({
+            anime = {
                 'title': PyQuery(entry).find('h4').text(),
                 'url': (f'http://www.anime-planet.com'
                         f'{PyQuery(entry).find("a").attr("href")}')
-            })
+            }
+            anime_list.append(anime)
         return __get_closest(query, anime_list, names).get('url')
     return ap.find("meta[property='og:url']").attr('content')
 
@@ -129,7 +130,7 @@ def get_anime_url_by_id(anime_id) -> str:
 
     :return: the anime url.
     """
-    return 'http://www.anime-planet.com/anime/' + str(anime_id)
+    return f'http://www.anime-planet.com/anime/{anime_id!s}'
 
 
 def get_manga_url_by_id(manga_id) -> str:
@@ -140,7 +141,7 @@ def get_manga_url_by_id(manga_id) -> str:
 
     :return: the manga url.
     """
-    return 'http://www.anime-planet.com/manga/' + str(manga_id)
+    return f'http://www.anime-planet.com/manga/{manga_id!s}'
 
 
 def __get_closest(query: str, anime_list: List[dict], names) -> dict:
