@@ -55,7 +55,7 @@ def get_light_novel_by_id(ln_id: str) -> str:
 
     :return: the ln url.
     """
-    return 'http://novelupdates.com/series/' + str(ln_id)
+    return f'http://novelupdates.com/series/{ln_id!s}'
 
 
 def __get_closest(query: str, ln_list: List[dict], names) -> dict:
