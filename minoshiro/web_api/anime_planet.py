@@ -36,7 +36,9 @@ async def get_anime_url(session_manager, query, names: list,
     :return: the anime url if it's found.
     """
     query = sanitize_search_text(query)
-    params = {'name': quote(query)}
+    params = {
+        'name': quote(query)
+    }
     async with await session_manager.get(
             "http://www.anime-planet.com/anime/all?",
             params=params, timeout=timeout) as resp:
@@ -74,7 +76,9 @@ async def get_manga_url(session_manager, query,
 
     :return: the anime url if it's found.
     """
-    params = {'name': quote(query)}
+    params = {
+        'name': quote(query)
+    }
     if author_name:
         params['author'] = quote(author_name)
         async with await session_manager.get(
