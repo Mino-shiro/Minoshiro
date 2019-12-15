@@ -36,9 +36,7 @@ async def get_anime_url(session_manager, query, names: list,
     :return: the anime url if it's found.
     """
     query = sanitize_search_text(query)
-    params = {
-        'name': quote(query)
-    }
+    params = {'name': quote(query)}
     async with await session_manager.get(
             "http://www.anime-planet.com/anime/all?",
             params=params, timeout=timeout) as resp:
@@ -47,12 +45,11 @@ async def get_anime_url(session_manager, query, names: list,
     if ap.find('.cardDeck.pure-g.cd-narrow[data-type="anime"]'):
         anime_list = []
         for entry in ap.find('.card.pure-1-6'):
-            anime = {
+            anime_list.append({
                 'title': PyQuery(entry).find('h4').text(),
                 'url': (f'http://www.anime-planet.com'
                         f'{PyQuery(entry).find("a").attr("href")}')
-            }
-            anime_list.append(anime)
+            })
         return __get_closest(query, anime_list, names).get('url')
     return ap.find("meta[property='og:url']").attr('content')
 
@@ -76,9 +73,7 @@ async def get_manga_url(session_manager, query,
 
     :return: the anime url if it's found.
     """
-    params = {
-        'name': quote(query)
-    }
+    params = {'name': quote(query)}
     if author_name:
         params['author'] = quote(author_name)
         async with await session_manager.get(
