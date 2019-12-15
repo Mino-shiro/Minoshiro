@@ -134,7 +134,7 @@ def get_anime_url_by_id(anime_id) -> str:
 
     :return: the anime url.
     """
-    return 'http://www.anime-planet.com/anime/' + str(anime_id)
+    return f'http://www.anime-planet.com/anime/{anime_id!s}'
 
 
 def get_manga_url_by_id(manga_id) -> str:
@@ -145,7 +145,7 @@ def get_manga_url_by_id(manga_id) -> str:
 
     :return: the manga url.
     """
-    return 'http://www.anime-planet.com/manga/' + str(manga_id)
+    return f'http://www.anime-planet.com/manga/{manga_id!s}'
 
 
 def __get_closest(query: str, anime_list: List[dict], names) -> dict:
