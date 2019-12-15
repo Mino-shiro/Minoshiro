@@ -57,7 +57,7 @@ def get_manga_url_by_id(manga_id) -> str:
 
     :return: the manga url.
     """
-    return 'https://www.mangaupdates.com/series.html?id=' + str(manga_id)
+    return f'https://www.mangaupdates.com/series.html?id={manga_id!s}'
 
 
 def __get_closest(query: str, manga_list: List[dict], names) -> dict:
