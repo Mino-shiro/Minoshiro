@@ -61,7 +61,7 @@ def match_max(thing: dict, matcher: SequenceMatcher) -> float:
         matcher.set_seq1(name.lower())
         ratio = matcher.ratio()
         if 'one shot' in thing['type'].lower():
-            ratio = ratio - .05
+            ratio -= .05
         if ratio > max_ratio:
             max_ratio = ratio
     return max_ratio
