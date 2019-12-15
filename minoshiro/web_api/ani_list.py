@@ -75,7 +75,7 @@ def match_max(thing: dict, matcher: SequenceMatcher) -> float:
         matcher.set_seq1(name.lower())
         ratio = matcher.ratio()
         if 'one shot' in thing['type'].lower():
-            ratio = ratio - .05
+            ratio -= .05
         if ratio > max_ratio:
             max_ratio = ratio
     return max_ratio
@@ -193,10 +193,7 @@ async def get_page_by_popularity(session_manager, medium: Medium,
 
 
 def __get_query_string(medium, query, search=False) -> str:
-    if medium == Medium.ANIME:
-        med_str = 'ANIME'
-    else:
-        med_str = 'MANGA'
+    med_str = 'ANIME' if medium == Medium.ANIME else 'MANGA'
     if search:
         full_str = f'''Page (page: 1, perPage: 40) {{
                 media (search: "{query}" type: {med_str})'''
