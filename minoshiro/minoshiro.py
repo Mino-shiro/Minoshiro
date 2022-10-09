@@ -74,7 +74,6 @@ class Minoshiro:
     async def from_postgres(cls, db_config: dict = None,
                             pool=None, *, schema='minoshiro',
                             cache_pages: int = 0,
-                            logger=None, loop=None):
                             logger=None, loop=None, user_agent=None):
         """
         Get an instance of `minoshiro` with class `PostgresController` as the
