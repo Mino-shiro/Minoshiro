@@ -21,7 +21,7 @@ from warnings import warn
 
 class Minoshiro:
     def __init__(self, db_controller: DataController,
-                 *, logger=None, loop=None):
+                 *, logger=None, loop=None, user_agent=None):
         """
         Represents the search instance.
 
@@ -48,17 +48,24 @@ class Minoshiro:
         :param loop:
             An asyncio event loop. If not provided will use the default
             event loop.
-        """
-        self.session_manager = SessionManager()
 
+        :param user_agent:
+            The user agent that will be used for any requests.  If not provided,
+            will use a default provided by the library.
+        """
         self.db_controller = db_controller
+
+        self.loop = loop or get_event_loop()
+
+        self.logger = logger or get_default_logger()
+
+        self.user_agent = user_agent
+
+        self.session_manager = SessionManager()
 
         self.kitsu = kitsu.Kitsu(
             self.session_manager, '', ''
         )
-
-        self.loop = loop or get_event_loop()
-        self.logger = logger or get_default_logger()
 
         self.__anidb_list = None
         self.__anidb_time = None
@@ -68,6 +75,7 @@ class Minoshiro:
                             pool=None, *, schema='minoshiro',
                             cache_pages: int = 0,
                             logger=None, loop=None):
+                            logger=None, loop=None, user_agent=None):
         """
         Get an instance of `minoshiro` with class `PostgresController` as the
         database controller.
@@ -102,6 +110,10 @@ class Minoshiro:
             An asyncio event loop. If not provided will use the default
             event loop.
 
+        :param user_agent:
+            The user agent that will be used for any requests.  If not provided,
+            will use a default provided by the library.
+
         :return:
             Instance of `minoshiro` with class `PostgresController`
             as the database controller.
@@ -115,14 +127,16 @@ class Minoshiro:
         db_controller = await PostgresController.get_instance(
             logger, db_config, pool, schema=schema
         )
-        instance = cls(db_controller, logger=logger, loop=loop)
+        instance = cls(
+            db_controller, logger=logger, loop=loop, user_agent=user_agent
+        )
         await instance.pre_cache(cache_pages)
         return instance
 
     @classmethod
     async def from_sqlite(cls, path: Union[str, Path], *,
                           cache_pages: int = 0,
-                          logger=None, loop=None):
+                          logger=None, loop=None, user_agent=None):
         """
         Get an instance of `minoshiro` with class `SqliteController` as the
         database controller.
@@ -150,6 +164,10 @@ class Minoshiro:
             An asyncio event loop. If not provided will use the default
             event loop.
 
+        :param user_agent:
+            The user agent that will be used for any requests.  If not provided,
+            will use a default provided by the library.
+
         :return:
             Instance of `minoshiro` with class `PostgresController`
             as the database controller.
@@ -157,7 +175,7 @@ class Minoshiro:
         logger = logger or get_default_logger()
         db_controller = await SqliteController.get_instance(path, logger, loop)
         instance = cls(db_controller,
-                       logger=logger, loop=loop)
+                       logger=logger, loop=loop, user_agent=user_agent)
         await instance.pre_cache(cache_pages)
         return instance
 
@@ -286,7 +304,7 @@ class Minoshiro:
         dump_path = data_path.joinpath('anime-titles.xml')
         self.logger.info('Checking anidb conditions...')
         good, new_time = await download_anidb(
-            self.session_manager, self.__anidb_time
+            self.session_manager, self.__anidb_time, self.user_agent
         )
         if good:
             self.logger.info(
