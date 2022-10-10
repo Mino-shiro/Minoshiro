@@ -456,7 +456,7 @@ class Minoshiro:
             return {'url': f'{base_url}{cached_id}'}, cached_id
         await self.__fetch_anidb()
         res = await self.loop.run_in_executor(
-            None, ani_db.get_animeani_db.get_anime, query, self.__anidb_list
+            None, ani_db.get_anime, query, self.__anidb_list
         )
         if not res:
             return None, None
