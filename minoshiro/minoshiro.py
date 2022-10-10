@@ -4,6 +4,8 @@ from pathlib import Path
 from traceback import format_exc
 from typing import Dict, Iterable, Union
 
+import gzip
+
 from aiohttp_wrapper import SessionManager
 
 from .data import data_path
@@ -317,7 +319,7 @@ class Minoshiro:
         if not good or not self.__anidb_list:
             try:
                 self.logger.info('Reading anidb data from disk...')
-                with dump_path.open() as xml_file:
+                with gzip.open(dump_path) as xml_file:
                     xml = xml_file.read()
                 self.__anidb_list = ani_db.process_xml(xml)
                 self.logger.info('Anidb data read from disk.')
